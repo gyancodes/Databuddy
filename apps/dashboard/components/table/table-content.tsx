@@ -1,12 +1,10 @@
 import {
 	ArrowDownIcon,
-	ArrowsDownUpIcon,
 	ArrowUpIcon,
 	DatabaseIcon,
 } from '@phosphor-icons/react';
 import {
 	flexRender,
-	type SortDirection,
 	type Table,
 } from '@tanstack/react-table';
 import { Fragment, useCallback, useState } from 'react';
@@ -35,18 +33,6 @@ function getRowPercentage(row: PercentageRow): number {
 	return value !== undefined ? Number.parseFloat(String(value)) || 0 : 0;
 }
 
-function getSortAriaLabel(
-	headerText: string,
-	sortDirection: SortDirection | false
-): string {
-	if (sortDirection === 'asc') {
-		return `${headerText}: sorted ascending, click to sort descending`;
-	}
-	if (sortDirection === 'desc') {
-		return `${headerText}: sorted descending, click to remove sort`;
-	}
-	return `${headerText}: click to sort ascending`;
-}
 
 const GRADIENT_COLORS = {
 	high: {
@@ -190,13 +176,7 @@ export function TableContent<TData extends { name: string | number }>({
 	}, []);
 
 	const displayData = table.getRowModel().rows;
-	const tableData = displayData.map((row) => row.original);
 	const headerGroups = table.getHeaderGroups();
-
-	const hasPercentageData = tableData.some((row) => {
-		const percentage = getRowPercentage(row as PercentageRow);
-		return percentage > 0;
-	});
 
 
 	if (!displayData.length) {
@@ -238,79 +218,29 @@ export function TableContent<TData extends { name: string | number }>({
 							className="sticky top-0 z-10 border-sidebar-border/30 bg-sidebar-accent"
 							key={headerGroup.id}
 						>
-							{headerGroup.headers.map((header) => {
-								const sortDirection = header.column.getIsSorted();
-								const sortHandler = header.column.getToggleSortingHandler();
-
-								return (
-									<TableHead
-										aria-label={getSortAriaLabel(
-											String(header.column.columnDef.header) || header.id,
-											sortDirection
-										)}
-										aria-sort={
-											sortDirection === 'asc'
-												? 'ascending'
-												: sortDirection === 'desc'
-													? 'descending'
-													: 'none'
-										}
-										className={cn(
-											'group h-10 cursor-pointer select-none bg-sidebar-accent px-2 font-semibold text-sidebar-foreground/70 text-xs uppercase tracking-wide transition-colors hover:text-sidebar-foreground focus:outline-none focus:ring-2 focus:ring-sidebar-ring focus:ring-offset-2 active:bg-sidebar-accent/80',
-											(header.column.columnDef.meta as any)?.className
-										)}
-										key={header.id}
-										onClick={sortHandler}
-										onKeyDown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												e.preventDefault();
-												sortHandler?.(e);
-											}
-										}}
-										role="columnheader button"
-										style={{
-											width:
-												header.getSize() !== 150
-													? `${Math.min(header.getSize(), 300)}px`
-													: undefined,
-											maxWidth: '300px',
-											minWidth: '80px',
-										}}
-										tabIndex={0}
-									>
-										<div className="flex items-center gap-1.5 pointer-events-none">
-											<span className="truncate">
-												{header.isPlaceholder
-													? null
-													: flexRender(
-															header.column.columnDef.header,
-															header.getContext()
-														)}
-											</span>
-											<div className="flex h-3.5 w-3.5 flex-col items-center justify-center">
-												{sortDirection === 'asc' && (
-													<ArrowUpIcon
-														aria-hidden="true"
-														className="h-3.5 w-3.5 text-sidebar-ring"
-													/>
+							{headerGroup.headers.map((header) => (
+								<TableHead
+									className={cn(
+										'h-10 bg-sidebar-accent px-2 font-semibold text-sidebar-foreground/70 text-xs uppercase tracking-wide',
+										(header.column.columnDef.meta as any)?.className
+									)}
+									key={header.id}
+									style={{
+										width: header.getSize() !== 150 ? `${Math.min(header.getSize(), 300)}px` : undefined,
+										maxWidth: '300px',
+										minWidth: '80px',
+									}}
+								>
+									<span className="truncate">
+										{header.isPlaceholder
+											? null
+											: flexRender(
+													header.column.columnDef.header,
+													header.getContext()
 												)}
-												{sortDirection === 'desc' && (
-													<ArrowDownIcon
-														aria-hidden="true"
-														className="h-3.5 w-3.5 text-sidebar-ring"
-													/>
-												)}
-												{!sortDirection && (
-													<ArrowsDownUpIcon
-														aria-hidden="true"
-														className="h-3.5 w-3.5 text-sidebar-foreground/40 transition-colors group-hover:text-sidebar-foreground/70"
-													/>
-												)}
-											</div>
-										</div>
-									</TableHead>
-								);
-							})}
+									</span>
+								</TableHead>
+							))}
 						</TableRow>
 					))}
 				</TableHeader>
@@ -320,26 +250,17 @@ export function TableContent<TData extends { name: string | number }>({
 							expandable && getSubRows ? getSubRows(row.original) : undefined;
 						const hasSubRows = subRows && subRows.length > 0;
 						const isExpanded = expandedRow === row.id;
-						const percentage = hasPercentageData
-							? getRowPercentage(row.original as PercentageRow)
-							: 0;
-						const gradient =
-							hasPercentageData && percentage > 0
-								? getPercentageGradient(percentage)
-								: null;
+						const percentage = getRowPercentage(row.original as PercentageRow);
+						const gradient = percentage > 0 ? getPercentageGradient(percentage) : null;
 
 						return (
 							<Fragment key={row.id}>
 								<TableRow
 									className={cn(
 										'relative h-11 border-border/20 pl-3 transition-all duration-300 ease-in-out',
-										(onRowClick && !hasSubRows) ||
-											hasSubRows ||
-											onAddFilter ||
-											onRowAction
-											? 'cursor-pointer'
-											: '',
-										!(percentage > 0 && gradient) &&
+										((onRowClick && !hasSubRows) || hasSubRows || onAddFilter || onRowAction) &&
+											'cursor-pointer',
+										!gradient &&
 											(rowIndex % 2 === 0 ? 'bg-background/50' : 'bg-muted/10')
 									)}
 									onClick={() => {
@@ -369,47 +290,26 @@ export function TableContent<TData extends { name: string | number }>({
 										}
 									}}
 									role={
-										(onRowClick && !hasSubRows) ||
-										hasSubRows ||
-										onAddFilter ||
-										onRowAction
-											? 'button'
-											: undefined
+										((onRowClick && !hasSubRows) || hasSubRows || onAddFilter || onRowAction) ? 'button' : undefined
 									}
 									style={{
-										background:
-											percentage > 0 && gradient
-												? gradient.background
-												: undefined,
-										boxShadow:
-											percentage > 0 && gradient
-												? `inset 3px 0 0 0 ${gradient.accentColor}`
-												: undefined,
+										background: gradient?.background,
+										boxShadow: gradient ? `inset 3px 0 0 0 ${gradient.accentColor}` : undefined,
 									}}
 									tabIndex={
-										(onRowClick && !hasSubRows) ||
-										hasSubRows ||
-										onAddFilter ||
-										onRowAction
-											? 0
-											: -1
+										((onRowClick && !hasSubRows) || hasSubRows || onAddFilter || onRowAction) ? 0 : -1
 									}
 								>
 									{row.getVisibleCells().map((cell, cellIndex) => (
 										<TableCell
 											className={cn(
-												'px-2 py-2 font-medium text-sm transition-colors',
-												cellIndex === 0 &&
-													'font-semibold text-sidebar-foreground',
-												'text-sidebar-foreground/80',
+												'px-2 py-2 font-medium text-sm transition-colors text-sidebar-foreground/80',
+												cellIndex === 0 && 'font-semibold text-sidebar-foreground',
 												(cell.column.columnDef.meta as any)?.className
 											)}
 											key={cell.id}
 											style={{
-												width:
-													cell.column.getSize() !== 150
-														? `${Math.min(cell.column.getSize(), 300)}px`
-														: undefined,
+												width: cell.column.getSize() !== 150 ? `${Math.min(cell.column.getSize(), 300)}px` : undefined,
 												maxWidth: '300px',
 												minWidth: '80px',
 											}}
@@ -470,23 +370,17 @@ export function TableContent<TData extends { name: string | number }>({
 														)}
 														key={`sub-${cell.id}`}
 														style={{
-															width:
-																cell.column.getSize() !== 150
-																	? `${Math.min(cell.column.getSize(), 300)}px`
-																	: undefined,
+															width: cell.column.getSize() !== 150 ? `${Math.min(cell.column.getSize(), 300)}px` : undefined,
 															maxWidth: '300px',
 															minWidth: '80px',
 														}}
 													>
-														<div className="truncate">
-															{cellIndex === 0 ? (
-																<span className="text-xs">
-																	↳ {(subRow as any)[cell.column.id] || ''}
-																</span>
-															) : (
-																(subRow as any)[cell.column.id] || ''
-															)}
-														</div>
+													<div className="truncate">
+														{cellIndex === 0 && (
+															<span className="text-xs">↳ </span>
+														)}
+														{(subRow as any)[cell.column.id] || ''}
+													</div>
 													</TableCell>
 												))
 											)}

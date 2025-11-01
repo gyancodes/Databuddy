@@ -35,7 +35,6 @@ export function createPageTimeColumns(): ColumnDef<PageTimeEntry>[] {
 			id: 'name',
 			accessorKey: 'name',
 			header: 'Page',
-			enableSorting: true,
 			cell: (info: CellContext<PageTimeEntry, any>) => {
 				const name = (info.getValue() as string) || '';
 				return (
@@ -49,7 +48,6 @@ export function createPageTimeColumns(): ColumnDef<PageTimeEntry>[] {
 			id: 'median_time_on_page',
 			accessorKey: 'median_time_on_page',
 			header: 'Avg Time',
-			enableSorting: true,
 			cell: (info: CellContext<PageTimeEntry, any>) => {
 				const seconds = (info.getValue() as number) ?? 0;
 				return (
@@ -65,7 +63,6 @@ export function createPageTimeColumns(): ColumnDef<PageTimeEntry>[] {
 			id: 'sessions_with_time',
 			accessorKey: 'sessions_with_time',
 			header: 'Sessions',
-			enableSorting: true,
 			cell: (info: CellContext<PageTimeEntry, any>) => (
 				<span className="font-medium">{formatNumber(info.getValue())}</span>
 			),
@@ -74,7 +71,6 @@ export function createPageTimeColumns(): ColumnDef<PageTimeEntry>[] {
 			id: 'visitors',
 			accessorKey: 'visitors',
 			header: 'Visitors',
-			enableSorting: true,
 			cell: (info: CellContext<PageTimeEntry, any>) => (
 				<span className="font-medium">{formatNumber(info.getValue())}</span>
 			),
@@ -83,7 +79,6 @@ export function createPageTimeColumns(): ColumnDef<PageTimeEntry>[] {
 			id: 'percentage',
 			accessorKey: 'percentage',
 			header: 'Share',
-			enableSorting: true,
 			cell: (info: CellContext<PageTimeEntry, any>) => {
 				const percentage = info.getValue() as number;
 				return <PercentageBadge percentage={percentage} />;

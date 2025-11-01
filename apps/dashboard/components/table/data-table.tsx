@@ -1,13 +1,10 @@
 import {
 	type ColumnDef,
 	getCoreRowModel,
-	getFilteredRowModel,
-	getSortedRowModel,
-	type SortingState,
 	useReactTable,
 } from '@tanstack/react-table';
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -50,7 +47,6 @@ interface DataTableProps<TData extends { name: string | number }, TValue> {
 		index: number
 	) => React.ReactNode;
 	expandable?: boolean;
-	showSearch?: boolean;
 }
 
 const EnhancedSkeleton = ({ minHeight }: { minHeight: string | number }) => (
@@ -100,11 +96,8 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 	expandable = false,
 	onAddFilter,
 	onRowAction,
-	showSearch = true,
 }: DataTableProps<TData, TValue>) {
 	const [activeTab, setActiveTab] = useState(tabs?.[0]?.id || '');
-	const [sorting, setSorting] = useState<SortingState>([]);
-	const [globalFilter, setGlobalFilter] = useState('');
 
 	const { fullScreen, setFullScreen, hasMounted, modalRef } = useFullScreen();
 
@@ -115,30 +108,13 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 	const table = useReactTable({
 		data: tableData,
 		columns: tableColumns,
-		enableSorting: true,
-		getRowId: (row, index) => {
-			if ((row as any)._uniqueKey) {
-				return (row as any)._uniqueKey;
-			}
-			return activeTab ? `${activeTab}-${index}` : `row-${index}`;
-		},
-		state: {
-			sorting,
-			globalFilter,
-		},
-		onSortingChange: setSorting,
-		onGlobalFilterChange: setGlobalFilter,
+		getRowId: (_row, index) => `${activeTab || 'row'}-${index}`,
 		getCoreRowModel: getCoreRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		globalFilterFn: 'includesString',
 	});
 
 	const handleTabChange = (tabId: string) => {
 		if (tabId === activeTab) return;
 		setActiveTab(tabId);
-		setSorting([]);
-		setGlobalFilter('');
 	};
 
 	if (isLoading) {
@@ -186,9 +162,6 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 				<TableToolbar
 					description={description}
 					onFullScreenToggle={() => setFullScreen(true)}
-					onSearchChange={setGlobalFilter}
-					searchValue={globalFilter}
-					showSearch={showSearch}
 					title={title}
 				/>
 
@@ -246,10 +219,8 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 								onClose={() => setFullScreen(false)}
 								onRowAction={onRowAction}
 								onRowClick={onRowClick}
-								onSearchChange={setGlobalFilter}
 								onTabChange={handleTabChange}
 								renderSubRow={renderSubRow}
-								searchValue={globalFilter}
 								tabs={tabs}
 								title={title}
 							/>
