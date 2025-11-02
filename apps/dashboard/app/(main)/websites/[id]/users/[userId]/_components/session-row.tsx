@@ -1,23 +1,4 @@
-'use client';
-
-import {
-	ArrowSquareOutIcon,
-	CaretDownIcon,
-	CaretRightIcon,
-	EyeIcon,
-	SparkleIcon,
-} from '@phosphor-icons/react';
-import lazy from 'next/dynamic';
-import React, { useCallback } from 'react';
-import { FaviconImage } from '@/components/analytics/favicon-image';
-import { Badge } from '@/components/ui/badge';
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { generateSessionName } from './generate-session-name';
-import { SessionEventTimeline } from './session-event-timeline';
+"use client";
 
 import type {
 	RawSessionEventTuple,
@@ -25,12 +6,30 @@ import type {
 	SessionEvent,
 	SessionReferrer,
 	SessionRowProps,
-} from '@databuddy/shared/types/sessions';
-import { BrowserIcon, CountryFlag, OSIcon } from '@/components/icon';
-import { getDeviceIcon } from '@/lib/utils';
+} from "@databuddy/shared/types/sessions";
+import {
+	ArrowSquareOutIcon,
+	CaretDownIcon,
+	CaretRightIcon,
+	EyeIcon,
+	SparkleIcon,
+} from "@phosphor-icons/react";
+import lazy from "next/dynamic";
+import React, { useCallback } from "react";
+import { FaviconImage } from "@/components/analytics/favicon-image";
+import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
+import { Badge } from "@/components/ui/badge";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { getDeviceIcon } from "@/lib/utils";
+import { generateSessionName } from "./generate-session-name";
+import { SessionEventTimeline } from "./session-event-timeline";
 
 function transformSessionEvents(
-	events: RawSessionEventTuple[]
+	events: RawSessionEventTuple[],
 ): SessionEvent[] {
 	return events
 		.map((tuple) => {
@@ -66,7 +65,7 @@ function getReferrerInfo(session: Session): SessionReferrer {
 			name:
 				session.referrer_parsed.name ||
 				session.referrer_parsed.domain ||
-				'Unknown',
+				"Unknown",
 			domain: session.referrer_parsed.domain || null,
 		};
 	}
@@ -80,14 +79,14 @@ function getReferrerInfo(session: Session): SessionReferrer {
 			};
 		} catch {
 			return {
-				name: 'Direct',
+				name: "Direct",
 				domain: null,
 			};
 		}
 	}
 
 	return {
-		name: 'Direct',
+		name: "Direct",
 		domain: null,
 	};
 }
@@ -108,9 +107,9 @@ function SessionRowInternal({
 	const customEventCount =
 		events?.filter(
 			(event) =>
-				!['screen_view', 'page_exit', 'web_vitals', 'link_out'].includes(
-					event.event_name
-				)
+				!["screen_view", "page_exit", "web_vitals", "link_out"].includes(
+					event.event_name,
+				),
 		).length || 0;
 	const referrerInfo = getReferrerInfo(session);
 
@@ -149,10 +148,10 @@ function SessionRowInternal({
 								{sessionDisplayName}
 							</div>
 							<div className="flex items-center gap-2 text-muted-foreground text-sm">
-								<span>{session.browser_name || 'Unknown'}</span>
+								<span>{session.browser_name || "Unknown"}</span>
 								<span className="text-muted-foreground/60">•</span>
 								<span>
-									{session.country_name || session.country || 'Unknown'}
+									{session.country_name || session.country || "Unknown"}
 								</span>
 								{session.is_returning_visitor && (
 									<>

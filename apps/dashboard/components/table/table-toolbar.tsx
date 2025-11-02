@@ -1,4 +1,4 @@
-import { ArrowsOutSimpleIcon } from '@phosphor-icons/react';
+import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
 
 interface TableToolbarProps {
 	title: string;

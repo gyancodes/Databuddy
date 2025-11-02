@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 type SpotlightProps = {
 	className?: string;
@@ -18,8 +18,8 @@ export const Spotlight = ({
 	return (
 		<svg
 			className={cn(
-				'pointer-events-none absolute z-[1] h-[169%] w-[138%] lg:w-[84%]',
-				className
+				"pointer-events-none absolute z-[1] h-[169%] w-[138%] lg:w-[84%]",
+				className,
 			)}
 			fill="none"
 			style={{ top, left, transform }}
@@ -31,7 +31,7 @@ export const Spotlight = ({
 				<ellipse
 					cx="1924.71"
 					cy="273.501"
-					fill={fill || 'currentColor'}
+					fill={fill || "currentColor"}
 					fillOpacity="0.08"
 					rx="1924.71"
 					ry="273.501"

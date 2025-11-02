@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { toast } from 'sonner';
-import { trpc } from '@/lib/trpc';
+import { useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 
 export interface Experiment {
 	id: string;
 	websiteId: string;
 	name: string;
 	description?: string | null;
-	status: 'draft' | 'running' | 'paused' | 'completed';
+	status: "draft" | "running" | "paused" | "completed";
 	trafficAllocation: number;
 	startDate?: string | null;
 	endDate?: string | null;
@@ -26,7 +26,7 @@ export interface ExperimentVariant {
 	id: string;
 	experimentId: string;
 	name: string;
-	type: 'visual' | 'redirect' | 'code';
+	type: "visual" | "redirect" | "code";
 	content: unknown;
 	trafficWeight: number;
 	isControl: boolean;
@@ -49,14 +49,14 @@ export interface CreateExperimentData {
 	websiteId: string;
 	name: string;
 	description?: string;
-	status?: 'draft' | 'running' | 'paused' | 'completed';
+	status?: "draft" | "running" | "paused" | "completed";
 	trafficAllocation?: number;
 	startDate?: string;
 	endDate?: string;
 	primaryGoal?: string;
 	variants?: {
 		name: string;
-		type: 'visual' | 'redirect' | 'code';
+		type: "visual" | "redirect" | "code";
 		content: unknown;
 		trafficWeight: number;
 		isControl: boolean;
@@ -72,7 +72,7 @@ export interface CreateExperimentData {
 export interface UpdateExperimentData {
 	name?: string;
 	description?: string;
-	status?: 'draft' | 'running' | 'paused' | 'completed';
+	status?: "draft" | "running" | "paused" | "completed";
 	trafficAllocation?: number;
 	startDate?: string;
 	endDate?: string;
@@ -93,22 +93,22 @@ export function useExperiments(websiteId: string) {
 			enabled: !!websiteId,
 			refetchOnWindowFocus: false,
 			staleTime: 5 * 60 * 1000, // 5 minutes
-		}
+		},
 	);
 
 	const createMutation = trpc.experiments.create.useMutation({
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: [
-					['experiments', 'list'],
-					{ input: { websiteId }, type: 'query' },
+					["experiments", "list"],
+					{ input: { websiteId }, type: "query" },
 				],
 			});
-			toast.success('Experiment created successfully');
+			toast.success("Experiment created successfully");
 		},
 		onError: (createError) => {
-			console.error('Failed to create experiment:', createError);
-			toast.error('Failed to create experiment');
+			console.error("Failed to create experiment:", createError);
+			toast.error("Failed to create experiment");
 		},
 	});
 
@@ -116,15 +116,15 @@ export function useExperiments(websiteId: string) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: [
-					['experiments', 'list'],
-					{ input: { websiteId }, type: 'query' },
+					["experiments", "list"],
+					{ input: { websiteId }, type: "query" },
 				],
 			});
-			toast.success('Experiment updated successfully');
+			toast.success("Experiment updated successfully");
 		},
 		onError: (updateError) => {
-			console.error('Failed to update experiment:', updateError);
-			toast.error('Failed to update experiment');
+			console.error("Failed to update experiment:", updateError);
+			toast.error("Failed to update experiment");
 		},
 	});
 
@@ -132,15 +132,15 @@ export function useExperiments(websiteId: string) {
 		onSuccess: () => {
 			queryClient.invalidateQueries({
 				queryKey: [
-					['experiments', 'list'],
-					{ input: { websiteId }, type: 'query' },
+					["experiments", "list"],
+					{ input: { websiteId }, type: "query" },
 				],
 			});
-			toast.success('Experiment deleted successfully');
+			toast.success("Experiment deleted successfully");
 		},
 		onError: (deleteError) => {
-			console.error('Failed to delete experiment:', deleteError);
-			toast.error('Failed to delete experiment');
+			console.error("Failed to delete experiment:", deleteError);
+			toast.error("Failed to delete experiment");
 		},
 	});
 
@@ -185,7 +185,7 @@ export function useExperiment(experimentId: string, websiteId: string) {
 			enabled: !!experimentId && !!websiteId,
 			refetchOnWindowFocus: false,
 			staleTime: 5 * 60 * 1000, // 5 minutes
-		}
+		},
 	);
 
 	return {

@@ -1,8 +1,8 @@
-import { type App, reactive } from 'vue';
-import type { FlagResult, FlagState, FlagsConfig } from '@/core/flags';
-import { BrowserFlagStorage, CoreFlagsManager } from '@/core/flags';
+import { type App, reactive } from "vue";
+import type { FlagResult, FlagState, FlagsConfig } from "@/core/flags";
+import { BrowserFlagStorage, CoreFlagsManager } from "@/core/flags";
 
-const FLAGS_SYMBOL = Symbol('flags');
+const FLAGS_SYMBOL = Symbol("flags");
 
 interface VueFlagsState {
 	memoryFlags: Record<string, FlagResult>;
@@ -45,13 +45,13 @@ export function createFlagsPlugin(options: FlagsPluginOptions) {
 export function useFlags() {
 	if (!globalState) {
 		throw new Error(
-			'Flags plugin not installed. Install with app.use(createFlagsPlugin(config))'
+			"Flags plugin not installed. Install with app.use(createFlagsPlugin(config))",
 		);
 	}
 
 	if (!globalManager) {
 		throw new Error(
-			'Flags manager not initialized. Please reinstall the plugin.'
+			"Flags manager not initialized. Please reinstall the plugin.",
 		);
 	}
 
@@ -66,7 +66,7 @@ export function useFlags() {
 		return manager.fetchAllFlags();
 	};
 
-	const updateUser = (user: FlagsConfig['user']) => {
+	const updateUser = (user: FlagsConfig["user"]) => {
 		manager.updateUser(user);
 	};
 

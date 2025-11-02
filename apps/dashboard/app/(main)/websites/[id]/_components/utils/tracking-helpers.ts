@@ -1,12 +1,12 @@
-import { RECOMMENDED_DEFAULTS } from './tracking-defaults';
-import type { TrackingOptions } from './types';
+import { RECOMMENDED_DEFAULTS } from "./tracking-defaults";
+import type { TrackingOptions } from "./types";
 
 /**
  * Toggle a specific tracking option
  */
 export function toggleTrackingOption(
 	options: TrackingOptions,
-	option: keyof TrackingOptions
+	option: keyof TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -18,7 +18,7 @@ export function toggleTrackingOption(
  * Enable all basic tracking options
  */
 export function enableAllBasicTracking(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -33,7 +33,7 @@ export function enableAllBasicTracking(
  * Enable all interaction tracking options
  */
 export function enableAllInteractionTracking(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -48,7 +48,7 @@ export function enableAllInteractionTracking(
  * Enable all engagement tracking options
  */
 export function enableAllEngagementTracking(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -63,7 +63,7 @@ export function enableAllEngagementTracking(
  * Enable all performance tracking options
  */
 export function enableAllPerformanceTracking(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -77,7 +77,7 @@ export function enableAllPerformanceTracking(
  * Enable all advanced tracking options
  */
 export function enableAllAdvancedTracking(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -93,7 +93,7 @@ export function enableAllAdvancedTracking(
  * Enable batching with optimal settings
  */
 export function enableOptimalBatching(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,
@@ -107,7 +107,7 @@ export function enableOptimalBatching(
  * Enable all optimization options
  */
 export function enableAllOptimization(
-	options: TrackingOptions
+	options: TrackingOptions,
 ): TrackingOptions {
 	return {
 		...options,

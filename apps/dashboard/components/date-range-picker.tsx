@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { CalendarDotsIcon } from '@phosphor-icons/react';
-import { useCallback, useEffect, useState } from 'react';
-import type { DateRange } from 'react-day-picker';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { CalendarDotsIcon } from "@phosphor-icons/react";
+import { useCallback, useEffect, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
 	formatDateOnly,
 	formatDateRange,
 	formatMonthDay,
-} from '@/lib/formatters';
-import { cn } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
+} from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 
 interface DateRangePickerProps {
 	className?: string;
@@ -39,7 +39,7 @@ export function DateRangePicker({
 	const [isOpen, setIsOpen] = useState(false);
 	const [tempRange, setTempRange] = useState<DateRange | undefined>(value);
 	const [appliedRange, setAppliedRange] = useState<DateRange | undefined>(
-		value
+		value,
 	);
 
 	useEffect(() => {
@@ -73,7 +73,7 @@ export function DateRangePicker({
 
 	const getDisplayText = useCallback(() => {
 		if (!appliedRange?.from) {
-			return 'Select dates';
+			return "Select dates";
 		}
 
 		if (appliedRange.from && !appliedRange.to) {
@@ -100,28 +100,26 @@ export function DateRangePicker({
 			return formatDateRange(appliedRange.from, appliedRange.to);
 		}
 
-		return 'Select dates';
+		return "Select dates";
 	}, [appliedRange]);
 
 	const hasSelection = appliedRange?.from && appliedRange?.to;
 	const hasValidTempSelection = tempRange?.from && tempRange?.to;
 
 	return (
-		<div className={cn('grid gap-2', className)}>
+		<div className={cn("grid gap-2", className)}>
 			<Popover onOpenChange={setIsOpen} open={isOpen}>
 				<PopoverTrigger asChild>
 					<Button
 						className={cn(
-							'h-8 justify-start gap-2 whitespace-nowrap rounded border px-3 text-left font-medium text-xs shadow-sm transition-colors hover:bg-accent/50',
-							!hasSelection && 'text-muted-foreground'
+							"h-8 justify-start gap-2 whitespace-nowrap rounded border px-3 text-left font-medium text-xs shadow-sm transition-colors hover:bg-accent/50",
+							!hasSelection && "text-muted-foreground",
 						)}
 						disabled={disabled}
 						variant="outline"
 					>
 						<CalendarDotsIcon className="h-4 w-4" weight="duotone" />
-						<span className="truncate">
-							{getDisplayText()}
-						</span>
+						<span className="truncate">{getDisplayText()}</span>
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent
@@ -155,7 +153,7 @@ export function DateRangePicker({
 										{formatDateOnly(tempRange.from)}
 									</span>
 									<span className="text-muted-foreground">
-										{' '}
+										{" "}
 										→ Select end date
 									</span>
 								</span>

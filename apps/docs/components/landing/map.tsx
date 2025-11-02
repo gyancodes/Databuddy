@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from "next/image";
 
 export const WorldMap = () => {
 	return (
@@ -7,7 +7,7 @@ export const WorldMap = () => {
 			draggable={false}
 			height={327}
 			priority={true}
-			src={'/world.svg'}
+			src={"/world.svg"}
 			width={559}
 		/>
 	);

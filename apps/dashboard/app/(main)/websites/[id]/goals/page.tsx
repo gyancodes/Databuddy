@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { TargetIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import { useParams } from 'next/navigation';
+import { TargetIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import { useParams } from "next/navigation";
 import {
 	Suspense,
 	useCallback,
@@ -10,22 +10,22 @@ import {
 	useMemo,
 	useRef,
 	useState,
-} from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useDateFilters } from '@/hooks/use-date-filters';
-import { useAutocompleteData } from '@/hooks/use-funnels';
+} from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useDateFilters } from "@/hooks/use-date-filters";
+import { useAutocompleteData } from "@/hooks/use-funnels";
 import {
 	type CreateGoalData,
 	type Goal,
 	useBulkGoalAnalytics,
 	useGoals,
-} from '@/hooks/use-goals';
-import { useWebsite } from '@/hooks/use-websites';
-import { isAnalyticsRefreshingAtom } from '@/stores/jotai/filterAtoms';
-import { WebsitePageHeader } from '../_components/website-page-header';
-import { DeleteGoalDialog } from './_components/delete-goal-dialog';
-import { EditGoalDialog } from './_components/edit-goal-dialog';
-import { GoalsList } from './_components/goals-list';
+} from "@/hooks/use-goals";
+import { useWebsite } from "@/hooks/use-websites";
+import { isAnalyticsRefreshingAtom } from "@/stores/jotai/filterAtoms";
+import { WebsitePageHeader } from "../_components/website-page-header";
+import { DeleteGoalDialog } from "./_components/delete-goal-dialog";
+import { EditGoalDialog } from "./_components/edit-goal-dialog";
+import { GoalsList } from "./_components/goals-list";
 
 const GoalsListSkeleton = () => (
 	<div className="space-y-3">
@@ -81,7 +81,7 @@ export default function GoalsPage() {
 					observer.disconnect();
 				}
 			},
-			{ threshold: 0.1 }
+			{ threshold: 0.1 },
 		);
 
 		if (pageRef.current) {
@@ -125,7 +125,7 @@ export default function GoalsPage() {
 				refetchAnalytics();
 			}
 		} catch (error) {
-			console.error('Failed to refresh goal data:', error);
+			console.error("Failed to refresh goal data:", error);
 		} finally {
 			setIsRefreshing(false);
 		}
@@ -138,10 +138,10 @@ export default function GoalsPage() {
 	]);
 
 	const handleSaveGoal = async (
-		data: Goal | Omit<CreateGoalData, 'websiteId'>
+		data: Goal | Omit<CreateGoalData, "websiteId">,
 	) => {
 		try {
-			if ('id' in data) {
+			if ("id" in data) {
 				await updateGoal({
 					goalId: data.id,
 					updates: {
@@ -161,7 +161,7 @@ export default function GoalsPage() {
 			setIsDialogOpen(false);
 			setEditingGoal(null);
 		} catch (error) {
-			console.error('Failed to save goal:', error);
+			console.error("Failed to save goal:", error);
 		}
 	};
 
@@ -170,7 +170,7 @@ export default function GoalsPage() {
 			await deleteGoal(goalId);
 			setDeletingGoalId(null);
 		} catch (error) {
-			console.error('Failed to delete goal:', error);
+			console.error("Failed to delete goal:", error);
 		}
 	};
 
@@ -219,7 +219,7 @@ export default function GoalsPage() {
 				subtitle={
 					goalsLoading
 						? undefined
-						: `${goals.length} active goal${goals.length !== 1 ? 's' : ''}`
+						: `${goals.length} active goal${goals.length !== 1 ? "s" : ""}`
 				}
 				title="Goals"
 				websiteId={websiteId}

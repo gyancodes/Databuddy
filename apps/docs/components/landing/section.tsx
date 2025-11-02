@@ -1,6 +1,6 @@
-import type React from 'react';
-import { cn } from '@/lib/utils';
-import SectionSvg from './section-svg';
+import type React from "react";
+import { cn } from "@/lib/utils";
+import SectionSvg from "./section-svg";
 
 const Section = ({
 	className,
@@ -20,9 +20,9 @@ const Section = ({
 	return (
 		<div
 			className={cn(
-				'relative w-full border-x-0 lg:border-x',
-				!customPaddings && 'py-8 sm:py-12 lg:py-16 xl:py-20',
-				className
+				"relative w-full border-x-0 lg:border-x",
+				!customPaddings && "py-8 sm:py-12 lg:py-16 xl:py-20",
+				className,
 			)}
 			id={id}
 		>

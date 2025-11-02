@@ -1,17 +1,17 @@
-import type { Metadata } from 'next';
-import { cache } from 'react';
-import { Footer } from '@/components/footer';
-import Section from '@/components/landing/section';
-import { Spotlight } from '@/components/landing/spotlight';
-import { StructuredData } from '@/components/structured-data';
-import ActivityStats from './activity-stats';
-import AppreciationFlipCards from './appreciation-flip-cards';
-import CodeChurnChart from './code-churn-chart';
-import CommitActivityChart from './commit-activity-chart';
-import ContributorsGrid from './contributors-grid';
-import ContributorsHero from './contributors-hero';
-import PunchCardHeatmap from './punch-card-heatmap';
-import ReleasesTimeline from './releases-timeline';
+import type { Metadata } from "next";
+import { cache } from "react";
+import { Footer } from "@/components/footer";
+import Section from "@/components/landing/section";
+import { Spotlight } from "@/components/landing/spotlight";
+import { StructuredData } from "@/components/structured-data";
+import ActivityStats from "./activity-stats";
+import AppreciationFlipCards from "./appreciation-flip-cards";
+import CodeChurnChart from "./code-churn-chart";
+import CommitActivityChart from "./commit-activity-chart";
+import ContributorsGrid from "./contributors-grid";
+import ContributorsHero from "./contributors-hero";
+import PunchCardHeatmap from "./punch-card-heatmap";
+import ReleasesTimeline from "./releases-timeline";
 
 const statsCache: {
 	commitActivity?: ProcessedCommitActivity[];
@@ -21,18 +21,18 @@ const statsCache: {
 } = {};
 
 export const metadata: Metadata = {
-	title: 'Contributors | Databuddy',
+	title: "Contributors | Databuddy",
 	description:
-		'Meet the amazing developers building the future of privacy-first analytics',
+		"Meet the amazing developers building the future of privacy-first analytics",
 	alternates: {
-		canonical: 'https://www.databuddy.cc/contributors',
+		canonical: "https://www.databuddy.cc/contributors",
 	},
 	openGraph: {
-		title: 'Contributors | Databuddy',
+		title: "Contributors | Databuddy",
 		description:
-			'Meet the amazing developers building the future of privacy-first analytics',
-		url: 'https://www.databuddy.cc/contributors',
-		images: ['/og-image.png'],
+			"Meet the amazing developers building the future of privacy-first analytics",
+		url: "https://www.databuddy.cc/contributors",
+		images: ["/og-image.png"],
 	},
 };
 
@@ -59,7 +59,7 @@ interface GitHubLanguages {
 }
 
 interface GitHubPullRequest {
-	state: 'open' | 'closed';
+	state: "open" | "closed";
 	merged_at: string | null;
 }
 
@@ -120,7 +120,7 @@ interface ProcessedRelease {
 function fetchWithRetry(
 	url: string,
 	options: RequestInit,
-	maxRetries = 5
+	maxRetries = 5,
 ): Promise<Response> {
 	async function attemptFetch(attempt: number): Promise<Response> {
 		const response = await fetch(url, options);
@@ -142,8 +142,8 @@ function fetchBasicRepoData(requestInit: RequestInit): Promise<GitHubRepo> {
 	// Fetch repository info
 	const cachedRepoResponse = cache(async () => {
 		const repoResponse = await fetch(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy',
-			requestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy",
+			requestInit,
 		);
 		if (!repoResponse.ok) {
 			throw new Error(`Failed to fetch repo: ${repoResponse.status}`);
@@ -154,16 +154,16 @@ function fetchBasicRepoData(requestInit: RequestInit): Promise<GitHubRepo> {
 }
 
 function fetchContributorsData(
-	requestInit: RequestInit
+	requestInit: RequestInit,
 ): Promise<GitHubContributor[]> {
 	const cachedContributorsResponse = cache(async () => {
 		const contributorsResponse = await fetch(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/contributors?per_page=100',
-			requestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/contributors?per_page=100",
+			requestInit,
 		);
 		if (!contributorsResponse.ok) {
 			throw new Error(
-				`Failed to fetch contributors: ${contributorsResponse.status}`
+				`Failed to fetch contributors: ${contributorsResponse.status}`,
 			);
 		}
 		return await contributorsResponse.json();
@@ -172,12 +172,12 @@ function fetchContributorsData(
 }
 
 function fetchLanguagesData(
-	requestInit: RequestInit
+	requestInit: RequestInit,
 ): Promise<GitHubLanguages> {
 	const cachedLanguagesResponse = cache(async () => {
 		const languagesResponse = await fetch(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/languages',
-			requestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/languages",
+			requestInit,
 		);
 		if (!languagesResponse.ok) {
 			throw new Error(`Failed to fetch languages: ${languagesResponse.status}`);
@@ -188,12 +188,12 @@ function fetchLanguagesData(
 }
 
 function fetchPullRequestsData(
-	requestInit: RequestInit
+	requestInit: RequestInit,
 ): Promise<GitHubPullRequest[]> {
 	const cachedPrsResponse = cache(async () => {
 		const prsResponse = await fetch(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/pulls?state=all&per_page=50',
-			requestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/pulls?state=all&per_page=50",
+			requestInit,
 		);
 		if (!prsResponse.ok) {
 			throw new Error(`Failed to fetch PRs: ${prsResponse.status}`);
@@ -204,12 +204,12 @@ function fetchPullRequestsData(
 }
 
 function fetchCommitActivity(
-	statsRequestInit: RequestInit
+	statsRequestInit: RequestInit,
 ): Promise<ProcessedCommitActivity[]> {
 	const cachedCommitActivityResponse = cache(async () => {
 		const response = await fetchWithRetry(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/stats/commit_activity',
-			statsRequestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/stats/commit_activity",
+			statsRequestInit,
 		);
 
 		if (response.ok) {
@@ -219,14 +219,14 @@ function fetchCommitActivity(
 					.filter(
 						(week: unknown): week is GitHubCommitActivity =>
 							week !== null &&
-							typeof week === 'object' &&
-							'week' in week &&
-							'total' in week &&
-							typeof (week as GitHubCommitActivity).week === 'number' &&
-							typeof (week as GitHubCommitActivity).total === 'number'
+							typeof week === "object" &&
+							"week" in week &&
+							"total" in week &&
+							typeof (week as GitHubCommitActivity).week === "number" &&
+							typeof (week as GitHubCommitActivity).total === "number",
 					)
 					.map((week: GitHubCommitActivity) => ({
-						week: new Date(week.week * 1000).toISOString().split('T')[0],
+						week: new Date(week.week * 1000).toISOString().split("T")[0],
 						commits: week.total,
 						date: new Date(week.week * 1000),
 					}));
@@ -237,7 +237,7 @@ function fetchCommitActivity(
 			}
 		} else {
 			console.warn(
-				`GitHub API returned ${response.status} for commit activity`
+				`GitHub API returned ${response.status} for commit activity`,
 			);
 		}
 		return [];
@@ -246,12 +246,12 @@ function fetchCommitActivity(
 }
 
 function fetchCodeFrequency(
-	statsRequestInit: RequestInit
+	statsRequestInit: RequestInit,
 ): Promise<ProcessedCodeFrequency[]> {
 	const cachedCodeFrequencyResponse = cache(async () => {
 		const response = await fetchWithRetry(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/stats/code_frequency',
-			statsRequestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/stats/code_frequency",
+			statsRequestInit,
 		);
 
 		if (response.ok) {
@@ -260,7 +260,7 @@ function fetchCodeFrequency(
 				const processedData = data
 					.filter((week: unknown) => Array.isArray(week) && week.length === 3)
 					.map((week: GitHubCodeFrequency) => ({
-						week: new Date(week[0] * 1000).toISOString().split('T')[0],
+						week: new Date(week[0] * 1000).toISOString().split("T")[0],
 						additions: week[1],
 						deletions: Math.abs(week[2]), // Make deletions positive for display
 						date: new Date(week[0] * 1000),
@@ -281,25 +281,25 @@ function fetchCodeFrequency(
 }
 
 function fetchPunchCard(
-	statsRequestInit: RequestInit
+	statsRequestInit: RequestInit,
 ): Promise<ProcessedPunchCard[]> {
 	const cachedPunchCardResponse = cache(async () => {
 		const response = await fetchWithRetry(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/stats/punch_card',
-			statsRequestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/stats/punch_card",
+			statsRequestInit,
 		);
 
 		if (response.ok) {
 			const data = await response.json();
 			if (Array.isArray(data) && data.length > 0) {
-				const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+				const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 				const processedData = data
 					.filter((item: unknown) => Array.isArray(item) && item.length === 3)
 					.map((item: GitHubPunchCard) => ({
 						day: item[0],
 						hour: item[1],
 						commits: item[2],
-						dayName: dayNames[item[0]] || 'Unknown',
+						dayName: dayNames[item[0]] || "Unknown",
 					}));
 
 				// Cache the successful result
@@ -318,8 +318,8 @@ function fetchPunchCard(
 function fetchReleases(requestInit: RequestInit): Promise<ProcessedRelease[]> {
 	const cachedReleasesResponse = cache(async () => {
 		const response = await fetch(
-			'https://api.github.com/repos/databuddy-analytics/Databuddy/releases?per_page=20',
-			requestInit
+			"https://api.github.com/repos/databuddy-analytics/Databuddy/releases?per_page=20",
+			requestInit,
 		);
 
 		if (response.ok) {
@@ -344,8 +344,8 @@ function fetchReleases(requestInit: RequestInit): Promise<ProcessedRelease[]> {
 
 async function fetchGitHubData() {
 	const headers: Record<string, string> = {
-		Accept: 'application/vnd.github.v3+json',
-		'User-Agent': 'Databuddy-Docs',
+		Accept: "application/vnd.github.v3+json",
+		"User-Agent": "Databuddy-Docs",
 	};
 
 	// Add GitHub token if available for higher rate limits
@@ -380,11 +380,11 @@ async function fetchGitHubData() {
 		// Process the data
 		const totalContributions = contributors.reduce(
 			(sum, contributor) => sum + contributor.contributions,
-			0
+			0,
 		);
 
 		const processedContributors = contributors
-			.filter((contributor) => contributor.type === 'User')
+			.filter((contributor) => contributor.type === "User")
 			.slice(0, 12) // Top 12 contributors
 			.map((contributor, index) => ({
 				...contributor,
@@ -397,7 +397,7 @@ async function fetchGitHubData() {
 
 		const totalLanguageBytes = Object.values(languages).reduce(
 			(sum, bytes) => sum + bytes,
-			0
+			0,
 		);
 
 		const processedLanguages = Object.entries(languages)
@@ -409,10 +409,10 @@ async function fetchGitHubData() {
 			.sort((a, b) => b.bytes - a.bytes)
 			.slice(0, 6);
 
-		const openPRs = prs.filter((pr) => pr.state === 'open').length;
+		const openPRs = prs.filter((pr) => pr.state === "open").length;
 		const mergedPRs = prs.filter((pr) => pr.merged_at !== null).length;
 		const closedPRs = prs.filter(
-			(pr) => pr.state === 'closed' && pr.merged_at === null
+			(pr) => pr.state === "closed" && pr.merged_at === null,
 		).length;
 
 		return {
@@ -432,7 +432,7 @@ async function fetchGitHubData() {
 			},
 		};
 	} catch (error) {
-		console.error('Failed to fetch GitHub data:', error);
+		console.error("Failed to fetch GitHub data:", error);
 		// Return default data if API fails
 		return {
 			repo: {
@@ -440,7 +440,7 @@ async function fetchGitHubData() {
 				forks_count: 0,
 				open_issues_count: 0,
 				watchers_count: 0,
-				language: 'TypeScript',
+				language: "TypeScript",
 			},
 			contributors: [],
 			languages: [],
@@ -462,10 +462,10 @@ async function fetchGitHubData() {
 export default async function ContributorsPage() {
 	const data = await fetchGitHubData();
 
-	const title = 'Contributors | Databuddy';
+	const title = "Contributors | Databuddy";
 	const description =
-		'Meet the amazing developers building the future of privacy-first analytics';
-	const url = 'https://www.databuddy.cc/contributors';
+		"Meet the amazing developers building the future of privacy-first analytics";
+	const url = "https://www.databuddy.cc/contributors";
 
 	return (
 		<div className="overflow-hidden">

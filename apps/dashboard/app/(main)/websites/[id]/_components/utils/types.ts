@@ -1,12 +1,12 @@
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import type { DateRange as BaseDateRange } from '@databuddy/shared/types/analytics';
-import type { Website } from '@databuddy/shared/types/website';
+import type { DateRange as BaseDateRange } from "@databuddy/shared/types/analytics";
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import type { Website } from "@databuddy/shared/types/website";
 
 export interface DateRange extends BaseDateRange {
-	granularity?: 'daily' | 'hourly';
+	granularity?: "daily" | "hourly";
 }
 
-export type SettingsTab = 'privacy' | 'export';
+export type SettingsTab = "privacy" | "export";
 
 export interface BaseTabProps {
 	websiteId: string;
@@ -122,7 +122,7 @@ export interface TrackingTabProps {
 export interface OptimizationTabProps {
 	trackingOptions: TrackingOptions;
 	setTrackingOptions: (
-		options: TrackingOptions | ((prev: TrackingOptions) => TrackingOptions)
+		options: TrackingOptions | ((prev: TrackingOptions) => TrackingOptions),
 	) => void;
 }
 
@@ -132,14 +132,14 @@ export interface PrivacyTabProps {
 	websiteId: string;
 }
 
-export type ExportFormat = 'json' | 'csv' | 'txt' | 'proto';
+export type ExportFormat = "json" | "csv" | "txt" | "proto";
 
 export interface ExportTabProps {
 	isExporting: boolean;
 	onExportData: (
 		format: ExportFormat,
 		startDate?: string,
-		endDate?: string
+		endDate?: string,
 	) => void;
 	websiteData: Website;
 	websiteId: string;

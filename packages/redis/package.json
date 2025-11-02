@@ -1,15 +1,15 @@
 {
-  "name": "@databuddy/redis",
-  "version": "1.0.0",
-  "description": "Redis caching and pub/sub utilities for Databuddy",
-  "main": "index.ts",
-  "dependencies": {
-    "ioredis": "^5.4.3",
-    "superjson": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.19",
-    "typescript": "catalog:"
-  }
+	"name": "@databuddy/redis",
+	"version": "1.0.0",
+	"description": "Redis caching and pub/sub utilities for Databuddy",
+	"main": "index.ts",
+	"dependencies": {
+		"ioredis": "^5.4.3",
+		"superjson": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.19",
+		"typescript": "catalog:"
+	}
 }

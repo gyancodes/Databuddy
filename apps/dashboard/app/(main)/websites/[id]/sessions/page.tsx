@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { SpinnerIcon } from '@phosphor-icons/react';
-import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { SpinnerIcon } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
 
 const SessionsList = dynamic(
 	() =>
-		import('./_components/sessions-list').then((mod) => ({
+		import("./_components/sessions-list").then((mod) => ({
 			default: mod.SessionsList,
 		})),
 	{
@@ -16,7 +16,7 @@ const SessionsList = dynamic(
 			</div>
 		),
 		ssr: false,
-	}
+	},
 );
 
 export default function SessionsPage() {

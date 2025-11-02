@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
 import {
 	convertToTimezone,
 	formatDate,
 	getBrowserTimezone,
-} from '@databuddy/shared/utils/date-utils';
-import { useCallback } from 'react';
-import { trpc } from '@/lib/trpc';
+} from "@databuddy/shared/utils/date-utils";
+import { useCallback } from "react";
+import { trpc } from "@/lib/trpc";
 
 interface UserPreferences {
 	timezone: string;
@@ -15,9 +15,9 @@ interface UserPreferences {
 }
 
 const defaultPreferences: UserPreferences = {
-	timezone: 'auto',
-	dateFormat: 'MMM D, YYYY',
-	timeFormat: 'h:mm a',
+	timezone: "auto",
+	dateFormat: "MMM D, YYYY",
+	timeFormat: "h:mm a",
 };
 
 export function usePreferences() {
@@ -34,7 +34,7 @@ export function usePreferences() {
 		if (!preferences) {
 			return getBrowserTimezone();
 		}
-		return preferences.timezone === 'auto'
+		return preferences.timezone === "auto"
 			? getBrowserTimezone()
 			: preferences.timezone;
 	}, [preferences]);
@@ -45,10 +45,10 @@ export function usePreferences() {
 			options?: {
 				showTime?: boolean;
 				customFormat?: string;
-			}
+			},
 		) => {
 			if (!date) {
-				return '';
+				return "";
 			}
 			const timezone = getEffectiveTimezone();
 			return formatDate(date, {
@@ -59,7 +59,7 @@ export function usePreferences() {
 				customFormat: options?.customFormat,
 			});
 		},
-		[preferences, getEffectiveTimezone]
+		[preferences, getEffectiveTimezone],
 	);
 
 	const convertToUserTimezone = useCallback(
@@ -67,7 +67,7 @@ export function usePreferences() {
 			const timezone = getEffectiveTimezone();
 			return convertToTimezone(date, timezone);
 		},
-		[getEffectiveTimezone]
+		[getEffectiveTimezone],
 	);
 
 	return {

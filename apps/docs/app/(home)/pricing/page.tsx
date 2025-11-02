@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { Footer } from '@/components/footer';
-import { displayNameForPlan, selectBestPlan } from './_pricing/best-plan';
-import { Estimator } from './_pricing/estimator';
-import { estimateTieredOverageCostFromTiers } from './_pricing/estimator-utils';
-import { normalizePlans } from './_pricing/normalize';
-import { PlansComparisonTable } from './_pricing/table';
-import type { NormalizedPlan } from './_pricing/types';
-import { RAW_PLANS } from './data';
+import { useMemo, useState } from "react";
+import { Footer } from "@/components/footer";
+import { displayNameForPlan, selectBestPlan } from "./_pricing/best-plan";
+import { Estimator } from "./_pricing/estimator";
+import { estimateTieredOverageCostFromTiers } from "./_pricing/estimator-utils";
+import { normalizePlans } from "./_pricing/normalize";
+import { PlansComparisonTable } from "./_pricing/table";
+import type { NormalizedPlan } from "./_pricing/types";
+import { RAW_PLANS } from "./data";
 
 const PLANS: NormalizedPlan[] = normalizePlans(RAW_PLANS);
 
@@ -17,12 +17,12 @@ export default function PricingPage() {
 
 	const bestPlan = useMemo(
 		() => selectBestPlan(monthlyEvents, PLANS),
-		[monthlyEvents]
+		[monthlyEvents],
 	);
 
 	const bestPlanDisplayName = useMemo(
 		() => displayNameForPlan(monthlyEvents, PLANS, bestPlan),
-		[monthlyEvents, bestPlan]
+		[monthlyEvents, bestPlan],
 	);
 
 	const estimatedOverage = useMemo(() => {
@@ -36,7 +36,7 @@ export default function PricingPage() {
 
 	const estimatedMonthly = useMemo(
 		() => (bestPlan ? bestPlan.priceMonthly : 0) + estimatedOverage,
-		[bestPlan, estimatedOverage]
+		[bestPlan, estimatedOverage],
 	);
 
 	return (

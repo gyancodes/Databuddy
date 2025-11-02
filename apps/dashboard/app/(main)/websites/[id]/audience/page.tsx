@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import { useAtom } from 'jotai';
-import { useParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { useCallback } from 'react';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useDateFilters } from '@/hooks/use-date-filters';
-import { useTrackingSetup } from '@/hooks/use-tracking-setup';
-import { useWebsite } from '@/hooks/use-websites';
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { useAtom } from "jotai";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
+import { useCallback } from "react";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDateFilters } from "@/hooks/use-date-filters";
+import { useTrackingSetup } from "@/hooks/use-tracking-setup";
+import { useWebsite } from "@/hooks/use-websites";
 import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 	isAnalyticsRefreshingAtom,
-} from '@/stores/jotai/filterAtoms';
+} from "@/stores/jotai/filterAtoms";
 
 const AudienceContent = dynamic(
 	() =>
-		import('../_components/tabs/audience-tab').then((mod) => ({
+		import("../_components/tabs/audience-tab").then((mod) => ({
 			default: mod.WebsiteAudienceTab,
 		})),
 	{
@@ -41,7 +41,7 @@ const AudienceContent = dynamic(
 			</div>
 		),
 		ssr: false,
-	}
+	},
 );
 
 export default function AudiencePage() {
@@ -53,13 +53,14 @@ export default function AudiencePage() {
 
 	const { dateRange } = useDateFilters();
 	const { data: websiteData } = useWebsite(websiteId);
-	const { isTrackingSetup, isTrackingSetupLoading } = useTrackingSetup(websiteId);
+	const { isTrackingSetup, isTrackingSetupLoading } =
+		useTrackingSetup(websiteId);
 
 	const addFilter = useCallback(
 		(filter: DynamicQueryFilter) => {
 			addFilterAction(filter);
 		},
-		[addFilterAction]
+		[addFilterAction],
 	);
 
 	if (isTrackingSetupLoading) {
@@ -99,4 +100,3 @@ export default function AudiencePage() {
 		</div>
 	);
 }
-

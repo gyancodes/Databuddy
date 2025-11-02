@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type React from 'react';
-import { formatMetricNumber } from '@/lib/formatters';
+import type React from "react";
+import { formatMetricNumber } from "@/lib/formatters";
 
 interface FormattedNumberProps {
 	id?: string;

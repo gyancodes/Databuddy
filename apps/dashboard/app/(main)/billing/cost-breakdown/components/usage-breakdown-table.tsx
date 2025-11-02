@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import type { UsageResponse } from '@databuddy/shared/types/billing';
+import type { UsageResponse } from "@databuddy/shared/types/billing";
 import {
 	BugIcon,
 	ChartBarIcon,
@@ -8,8 +8,8 @@ import {
 	LinkIcon,
 	SparkleIcon,
 	TableIcon,
-} from '@phosphor-icons/react';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@phosphor-icons/react";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
@@ -17,39 +17,39 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/components/ui/table';
-import { calculateOverageCost, type OverageInfo } from '../utils/billing-utils';
+} from "@/components/ui/table";
+import { calculateOverageCost, type OverageInfo } from "../utils/billing-utils";
 
 const EVENT_TYPE_CONFIG = {
 	event: {
-		name: 'Page Views & Events',
-		description: 'Standard analytics events and page views',
+		name: "Page Views & Events",
+		description: "Standard analytics events and page views",
 		icon: ChartBarIcon,
-		color: 'blue',
+		color: "blue",
 	},
 	error: {
-		name: 'Error Events',
-		description: 'JavaScript errors and exceptions',
+		name: "Error Events",
+		description: "JavaScript errors and exceptions",
 		icon: BugIcon,
-		color: 'red',
+		color: "red",
 	},
 	web_vitals: {
-		name: 'Web Vitals',
-		description: 'Core Web Vitals performance metrics',
+		name: "Web Vitals",
+		description: "Core Web Vitals performance metrics",
 		icon: LightningIcon,
-		color: 'green',
+		color: "green",
 	},
 	custom_event: {
-		name: 'Custom Events',
-		description: 'Custom tracking events',
+		name: "Custom Events",
+		description: "Custom tracking events",
 		icon: SparkleIcon,
-		color: 'purple',
+		color: "purple",
 	},
 	outgoing_link: {
-		name: 'Outgoing Links',
-		description: 'External link click tracking',
+		name: "Outgoing Links",
+		description: "External link click tracking",
 		icon: LinkIcon,
-		color: 'orange',
+		color: "orange",
 	},
 } as const;
 
@@ -88,7 +88,11 @@ export function UsageBreakdownTable({
 		);
 	}
 
-	if (!usageData || !usageData.eventTypeBreakdown || usageData.eventTypeBreakdown.length === 0) {
+	if (
+		!usageData ||
+		!usageData.eventTypeBreakdown ||
+		usageData.eventTypeBreakdown.length === 0
+	) {
 		return (
 			<div className="flex h-full items-center justify-center">
 				<div className="text-center">
@@ -105,7 +109,7 @@ export function UsageBreakdownTable({
 	const { eventTypeBreakdown } = usageData;
 
 	const sortedBreakdown = [...eventTypeBreakdown].sort(
-		(a, b) => b.event_count - a.event_count
+		(a, b) => b.event_count - a.event_count,
 	);
 
 	return (
@@ -133,7 +137,7 @@ export function UsageBreakdownTable({
 							? calculateOverageCost(
 									item.event_count,
 									usageData.totalEvents,
-									overageInfo
+									overageInfo,
 								)
 							: 0;
 

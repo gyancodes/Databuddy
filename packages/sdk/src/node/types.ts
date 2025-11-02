@@ -1,4 +1,4 @@
-import type { Logger } from './logger';
+import type { Logger } from "./logger";
 
 export type { Logger };
 
@@ -7,7 +7,7 @@ export type { Logger };
  * Return null to drop the event, or return a modified event
  */
 export type Middleware = (
-	event: BatchEventInput
+	event: BatchEventInput,
 ) => BatchEventInput | null | Promise<BatchEventInput | null>;
 
 export interface DatabuddyConfig {
@@ -61,7 +61,7 @@ export interface EventResponse {
 
 export interface BatchEventInput {
 	/** Event type */
-	type: 'custom';
+	type: "custom";
 	/** Event name */
 	name: string;
 	/** Unique event ID for deduplication */
@@ -99,4 +99,3 @@ export interface BatchEventResponse {
 	/** Error message if batch failed */
 	error?: string;
 }
-

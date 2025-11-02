@@ -1,14 +1,14 @@
 {
-  "title": "Integrations",
-  "description": "Add Databuddy to your favorite platforms",
-  "icon": "Plug",
-  "pages": [
-    "react",
-    "nextjs",
-    "wordpress",
-    "shopify",
-    "stripe",
-    "framer",
-    "gtm"
-  ]
+	"title": "Integrations",
+	"description": "Add Databuddy to your favorite platforms",
+	"icon": "Plug",
+	"pages": [
+		"react",
+		"nextjs",
+		"wordpress",
+		"shopify",
+		"stripe",
+		"framer",
+		"gtm"
+	]
 }

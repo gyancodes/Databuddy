@@ -1,16 +1,16 @@
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import { useCallback } from 'react';
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { useCallback } from "react";
 
 export const operatorOptions = [
-	{ value: 'equals', label: 'equals' },
-	{ value: 'contains', label: 'contains' },
-	{ value: 'not_equals', label: 'does not equal' },
+	{ value: "equals", label: "equals" },
+	{ value: "contains", label: "contains" },
+	{ value: "not_equals", label: "does not equal" },
 ] as const;
 
 type BaseFilterType = {
-	field: DynamicQueryFilter['field'];
+	field: DynamicQueryFilter["field"];
 	operator: string;
-	value: DynamicQueryFilter['value'];
+	value: DynamicQueryFilter["value"];
 };
 
 interface UseFiltersProps<T extends BaseFilterType> {
@@ -32,7 +32,7 @@ export function useFilters<T extends BaseFilterType>({
 				onFiltersChange([...filters, defaultFilter]);
 			}
 		},
-		[filters, onFiltersChange, defaultFilter]
+		[filters, onFiltersChange, defaultFilter],
 	);
 
 	const removeFilter = useCallback(
@@ -40,17 +40,17 @@ export function useFilters<T extends BaseFilterType>({
 			const newFilters = filters.filter((_, i) => i !== index);
 			onFiltersChange(newFilters);
 		},
-		[filters, onFiltersChange]
+		[filters, onFiltersChange],
 	);
 
 	const updateFilter = useCallback(
 		(index: number, field: keyof T, value: T[keyof T]) => {
 			const newFilters = filters.map((filter, i) =>
-				i === index ? { ...filter, [field]: value } : filter
+				i === index ? { ...filter, [field]: value } : filter,
 			);
 			onFiltersChange(newFilters);
 		},
-		[filters, onFiltersChange]
+		[filters, onFiltersChange],
 	);
 
 	return {

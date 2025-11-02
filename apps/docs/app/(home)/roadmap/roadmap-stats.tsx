@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
 	CalendarIcon,
@@ -7,10 +7,10 @@ import {
 	ClockIcon,
 	PauseCircleIcon,
 	TrendUpIcon,
-} from '@phosphor-icons/react';
-import { useMemo } from 'react';
-import { SciFiCard } from '@/components/scifi-card';
-import type { RoadmapItem, RoadmapStats } from './roadmap-types';
+} from "@phosphor-icons/react";
+import { useMemo } from "react";
+import { SciFiCard } from "@/components/scifi-card";
+import type { RoadmapItem, RoadmapStats } from "./roadmap-types";
 
 interface Props {
 	items: RoadmapItem[];
@@ -30,13 +30,13 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 					};
 				}
 				acc[item.category].total++;
-				if (item.status === 'completed') {
+				if (item.status === "completed") {
 					acc[item.category].completed++;
 				}
-				if (item.status === 'in-progress') {
+				if (item.status === "in-progress") {
 					acc[item.category].inProgress++;
 				}
-				if (item.status === 'planned') {
+				if (item.status === "planned") {
 					acc[item.category].planned++;
 				}
 				return acc;
@@ -49,7 +49,7 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 					inProgress: number;
 					planned: number;
 				}
-			>
+			>,
 		);
 
 		return Object.entries(categories)
@@ -73,10 +73,10 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 					};
 				}
 				acc[item.priority].total++;
-				if (item.status === 'completed') {
+				if (item.status === "completed") {
 					acc[item.priority].completed++;
 				}
-				if (item.status === 'in-progress') {
+				if (item.status === "in-progress") {
 					acc[item.priority].inProgress++;
 				}
 				return acc;
@@ -84,7 +84,7 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 			{} as Record<
 				string,
 				{ total: number; completed: number; inProgress: number }
-			>
+			>,
 		);
 
 		return Object.entries(priorities)
@@ -106,7 +106,7 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 	const upcomingItems = useMemo(() => {
 		const now = new Date();
 		const thirtyDaysFromNow = new Date(
-			now.getTime() + 30 * 24 * 60 * 60 * 1000
+			now.getTime() + 30 * 24 * 60 * 60 * 1000,
 		);
 
 		return items
@@ -118,7 +118,7 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 				return (
 					targetDate <= thirtyDaysFromNow &&
 					targetDate >= now &&
-					(item.status === 'in-progress' || item.status === 'planned')
+					(item.status === "in-progress" || item.status === "planned")
 				);
 			})
 			.sort((a, b) => {
@@ -137,9 +137,9 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 
 	const formatCategoryName = (category: string) => {
 		return category
-			.split('-')
+			.split("-")
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
+			.join(" ");
 	};
 
 	const formatPriorityName = (priority: string) => {
@@ -147,9 +147,9 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 	};
 
 	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
+		return new Date(dateString).toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
 		});
 	};
 
@@ -279,10 +279,10 @@ export default function RoadmapStatsComponent({ items, stats }: Props) {
 								</div>
 								<div className="text-right">
 									<div className="font-medium text-sm">
-										{item.targetDate ? formatDate(item.targetDate) : 'TBD'}
+										{item.targetDate ? formatDate(item.targetDate) : "TBD"}
 									</div>
 									<div className="text-muted-foreground text-xs capitalize">
-										{item.status.replace('-', ' ')}
+										{item.status.replace("-", " ")}
 									</div>
 								</div>
 							</div>

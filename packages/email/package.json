@@ -1,26 +1,26 @@
 {
-  "name": "@databuddy/email",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./src/emails/index.ts",
-    "./*": "./src/emails/*.tsx",
-    "./config": "./config.ts"
-  },
-  "scripts": {
-    "preview": "email dev --dir src/emails --port 3001"
-  },
-  "main": "./src/emails/index.ts",
-  "dependencies": {
-    "@react-email/components": "0.3.2",
-    "@types/node": "^24.0.3",
-    "react": "catalog:",
-    "react-dom": "catalog:"
-  },
-  "devDependencies": {
-    "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "react-email": "^4.0.17"
-  }
+	"name": "@databuddy/email",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/emails/index.ts",
+		"./*": "./src/emails/*.tsx",
+		"./config": "./config.ts"
+	},
+	"scripts": {
+		"preview": "email dev --dir src/emails --port 3001"
+	},
+	"main": "./src/emails/index.ts",
+	"dependencies": {
+		"@react-email/components": "0.3.2",
+		"@types/node": "^24.0.3",
+		"react": "catalog:",
+		"react-dom": "catalog:"
+	},
+	"devDependencies": {
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"react-email": "^4.0.17"
+	}
 }

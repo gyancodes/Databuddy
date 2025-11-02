@@ -18,7 +18,7 @@ const SectionSvg = ({ crossesOffset }: { crossesOffset?: string }) => {
 
 export default SectionSvg;
 
-export const PlusSvg = ({ className = '' }) => {
+export const PlusSvg = ({ className = "" }) => {
 	return (
 		<svg
 			aria-label="Plus"

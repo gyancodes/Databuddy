@@ -2,21 +2,21 @@ import {
 	type ColumnDef,
 	getCoreRowModel,
 	useReactTable,
-} from '@tanstack/react-table';
-import type React from 'react';
-import { useState } from 'react';
-import ReactDOM from 'react-dom';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { FullScreenModal } from './fullscreen-modal';
-import { useFullScreen } from './hooks/use-fullscreen';
-import { TableContent } from './table-content';
-import { TableTabs } from './table-tabs';
-import { TableToolbar } from './table-toolbar';
+} from "@tanstack/react-table";
+import type React from "react";
+import { useState } from "react";
+import ReactDOM from "react-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { FullScreenModal } from "./fullscreen-modal";
+import { useFullScreen } from "./hooks/use-fullscreen";
+import { TableContent } from "./table-content";
+import { TableTabs } from "./table-tabs";
+import { TableToolbar } from "./table-toolbar";
 
 const DEFAULT_MIN_HEIGHT = 200;
-const FULLSCREEN_HEIGHT = 'h-[92vh]';
-const FULLSCREEN_WIDTH = 'w-[92vw]';
+const FULLSCREEN_HEIGHT = "h-[92vh]";
+const FULLSCREEN_WIDTH = "w-[92vw]";
 
 interface TabConfig<TData> {
 	id: string;
@@ -44,7 +44,7 @@ interface DataTableProps<TData extends { name: string | number }, TValue> {
 	renderSubRow?: (
 		subRow: TData,
 		parentRow: TData,
-		index: number
+		index: number,
 	) => React.ReactNode;
 	expandable?: boolean;
 }
@@ -87,7 +87,7 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 	title,
 	description,
 	isLoading = false,
-	emptyMessage = 'No data available',
+	emptyMessage = "No data available",
 	className,
 	onRowClick,
 	minHeight = DEFAULT_MIN_HEIGHT,
@@ -97,7 +97,7 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 	onAddFilter,
 	onRowAction,
 }: DataTableProps<TData, TValue>) {
-	const [activeTab, setActiveTab] = useState(tabs?.[0]?.id || '');
+	const [activeTab, setActiveTab] = useState(tabs?.[0]?.id || "");
 
 	const { fullScreen, setFullScreen, hasMounted, modalRef } = useFullScreen();
 
@@ -108,7 +108,7 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 	const table = useReactTable({
 		data: tableData,
 		columns: tableColumns,
-		getRowId: (_row, index) => `${activeTab || 'row'}-${index}`,
+		getRowId: (_row, index) => `${activeTab || "row"}-${index}`,
 		getCoreRowModel: getCoreRowModel(),
 	});
 
@@ -121,8 +121,8 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 		return (
 			<div
 				className={cn(
-					'w-full overflow-hidden rounded border-sidebar-border bg-sidebar/50 shadow-sm backdrop-blur-sm',
-					className
+					"w-full overflow-hidden rounded border-sidebar-border bg-sidebar/50 shadow-sm backdrop-blur-sm",
+					className,
 				)}
 			>
 				<div className="p-4 px-2 pb-2 sm:px-3">
@@ -154,8 +154,8 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 		<>
 			<div
 				className={cn(
-					'w-full overflow-hidden rounded border bg-card/50 shadow-sm backdrop-blur-sm',
-					className
+					"w-full overflow-hidden rounded border bg-card/50 shadow-sm backdrop-blur-sm",
+					className,
 				)}
 			>
 				{/* Toolbar */}
@@ -203,9 +203,9 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 						<div className="absolute inset-0 animate-fadein bg-black/70 backdrop-blur-[3px] transition-opacity" />
 						<div
 							className={cn(
-								'relative flex scale-100 animate-scalein flex-col overflow-hidden rounded border border-border bg-background shadow-2xl',
+								"relative flex scale-100 animate-scalein flex-col overflow-hidden rounded border border-border bg-background shadow-2xl",
 								FULLSCREEN_HEIGHT,
-								FULLSCREEN_WIDTH
+								FULLSCREEN_WIDTH,
 							)}
 						>
 							<FullScreenModal
@@ -226,7 +226,7 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 							/>
 						</div>
 					</div>,
-					document.body
+					document.body,
 				)}
 		</>
 	);

@@ -1,22 +1,12 @@
-'use client';
+"use client";
 
 import {
 	NoteIcon,
 	PencilIcon,
 	TagIcon,
 	TrashIcon,
-} from '@phosphor-icons/react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-	SheetTrigger,
-} from '@/components/ui/sheet';
+} from "@phosphor-icons/react";
+import { useState } from "react";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -26,9 +16,19 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import type { Annotation } from '@/types/annotations';
-import { formatAnnotationDateRange } from '@/lib/annotation-utils';
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/ui/sheet";
+import { formatAnnotationDateRange } from "@/lib/annotation-utils";
+import type { Annotation } from "@/types/annotations";
 
 // Using shared Annotation type from @/types/annotations
 
@@ -37,7 +37,7 @@ interface AnnotationsPanelProps {
 	onEdit: (annotation: Annotation) => void;
 	onDelete: (id: string) => Promise<void>;
 	isDeleting?: boolean;
-	granularity?: 'hourly' | 'daily' | 'weekly' | 'monthly';
+	granularity?: "hourly" | "daily" | "weekly" | "monthly";
 }
 
 export function AnnotationsPanel({
@@ -45,7 +45,7 @@ export function AnnotationsPanel({
 	onEdit,
 	onDelete,
 	isDeleting = false,
-	granularity = 'daily',
+	granularity = "daily",
 }: AnnotationsPanelProps) {
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [isOpen, setIsOpen] = useState(false);
@@ -57,12 +57,15 @@ export function AnnotationsPanel({
 		}
 	};
 
-
 	return (
 		<>
 			<Sheet open={isOpen} onOpenChange={setIsOpen}>
 				<SheetTrigger asChild>
-					<Button variant="outline" size="sm" className="gap-2 border-sidebar-border hover:bg-sidebar-accent">
+					<Button
+						variant="outline"
+						size="sm"
+						className="gap-2 border-sidebar-border hover:bg-sidebar-accent"
+					>
 						<NoteIcon className="h-4 w-4" weight="duotone" />
 						Annotations ({annotations.length})
 					</Button>
@@ -95,9 +98,14 @@ export function AnnotationsPanel({
 						{annotations.length === 0 ? (
 							<div className="flex flex-col items-center justify-center py-12 text-center">
 								<div className="rounded bg-sidebar-accent p-4 mb-4">
-									<NoteIcon className="h-8 w-8 text-sidebar-foreground/70" weight="duotone" />
+									<NoteIcon
+										className="h-8 w-8 text-sidebar-foreground/70"
+										weight="duotone"
+									/>
 								</div>
-								<p className="font-medium text-sidebar-foreground">No annotations yet</p>
+								<p className="font-medium text-sidebar-foreground">
+									No annotations yet
+								</p>
 								<p className="text-sm text-sidebar-foreground/70 mt-1">
 									Drag on the chart to create your first annotation
 								</p>
@@ -120,12 +128,13 @@ export function AnnotationsPanel({
 													{formatAnnotationDateRange(
 														annotation.xValue,
 														annotation.xEndValue,
-														granularity
+														granularity,
 													)}
 												</span>
-												{annotation.annotationType === 'range' &&
+												{annotation.annotationType === "range" &&
 													annotation.xEndValue &&
-													new Date(annotation.xValue).getTime() !== new Date(annotation.xEndValue).getTime() && (
+													new Date(annotation.xValue).getTime() !==
+														new Date(annotation.xEndValue).getTime() && (
 														<Badge variant="secondary" className="text-xs">
 															Range
 														</Badge>
@@ -190,8 +199,8 @@ export function AnnotationsPanel({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete Annotation</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to delete this annotation? This action cannot
-							be undone.
+							Are you sure you want to delete this annotation? This action
+							cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -207,7 +216,7 @@ export function AnnotationsPanel({
 									Deleting...
 								</>
 							) : (
-								'Delete'
+								"Delete"
 							)}
 						</AlertDialogAction>
 					</AlertDialogFooter>
@@ -216,4 +225,3 @@ export function AnnotationsPanel({
 		</>
 	);
 }
-

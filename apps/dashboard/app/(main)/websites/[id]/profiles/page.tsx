@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { SpinnerIcon } from '@phosphor-icons/react';
-import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { SpinnerIcon } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
 
 const ProfilesList = dynamic(
 	() =>
-		import('./_components/profiles-list').then((mod) => ({
+		import("./_components/profiles-list").then((mod) => ({
 			default: mod.ProfilesList,
 		})),
 	{
@@ -16,7 +16,7 @@ const ProfilesList = dynamic(
 			</div>
 		),
 		ssr: false,
-	}
+	},
 );
 
 export default function ProfilesPage() {

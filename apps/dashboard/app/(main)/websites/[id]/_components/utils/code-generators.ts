@@ -1,20 +1,20 @@
-import { ACTUAL_LIBRARY_DEFAULTS } from './tracking-defaults';
-import type { TrackingOptions } from './types';
+import { ACTUAL_LIBRARY_DEFAULTS } from "./tracking-defaults";
+import type { TrackingOptions } from "./types";
 
 /**
  * Generate HTML script tag for tracking
  */
 export function generateScriptTag(
 	websiteId: string,
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
 ): string {
-	const isLocalhost = process.env.NODE_ENV === 'development';
+	const isLocalhost = process.env.NODE_ENV === "development";
 	const scriptUrl = isLocalhost
-		? 'http://localhost:3000/databuddy.js'
-		: 'https://cdn.databuddy.cc/databuddy.js';
+		? "http://localhost:3000/databuddy.js"
+		: "https://cdn.databuddy.cc/databuddy.js";
 	const _apiUrl = isLocalhost
-		? 'http://localhost:4000'
-		: 'https://basket.databuddy.cc';
+		? "http://localhost:4000"
+		: "https://basket.databuddy.cc";
 
 	const options = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
@@ -23,18 +23,18 @@ export function generateScriptTag(
 			if (value === actualDefault) {
 				return false;
 			}
-			if (typeof value === 'boolean' && !value && !actualDefault) {
+			if (typeof value === "boolean" && !value && !actualDefault) {
 				return false;
 			}
 			return true;
 		})
 		.map(
 			([key, value]) =>
-				`data-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}="${value}"`
+				`data-${key.replace(/([A-Z])/g, "-$1").toLowerCase()}="${value}"`,
 		)
-		.join('\n    ');
+		.join("\n    ");
 
-	const optionsLine = options ? `    ${options}\n` : '';
+	const optionsLine = options ? `    ${options}\n` : "";
 
 	return `<script
     src="${scriptUrl}"
@@ -49,7 +49,7 @@ ${optionsLine}    crossorigin="anonymous"
  */
 export function generateNpmCode(
 	websiteId: string,
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
 ): string {
 	const meaningfulProps = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
@@ -58,23 +58,23 @@ export function generateNpmCode(
 			if (value === actualDefault) {
 				return false;
 			}
-			if (typeof value === 'boolean' && !value && !actualDefault) {
+			if (typeof value === "boolean" && !value && !actualDefault) {
 				return false;
 			}
 			return true;
 		})
 		.map(([key, value]) => {
-			if (typeof value === 'boolean') {
+			if (typeof value === "boolean") {
 				return `        ${key}={${value}}`;
 			}
-			if (typeof value === 'string') {
+			if (typeof value === "string") {
 				return `        ${key}="${value}"`;
 			}
 			return `        ${key}={${value}}`;
 		});
 
 	const propsString =
-		meaningfulProps.length > 0 ? `\n${meaningfulProps.join('\n')}\n      ` : '';
+		meaningfulProps.length > 0 ? `\n${meaningfulProps.join("\n")}\n      ` : "";
 
 	return `import { Databuddy } from '@databuddy/sdk/react';
 
@@ -94,7 +94,7 @@ function AppLayout({ children }) {
  */
 export function generateNpmComponentCode(
 	websiteId: string,
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
 ): string {
 	const meaningfulProps = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
@@ -103,23 +103,23 @@ export function generateNpmComponentCode(
 			if (value === actualDefault) {
 				return false;
 			}
-			if (typeof value === 'boolean' && !value && !actualDefault) {
+			if (typeof value === "boolean" && !value && !actualDefault) {
 				return false;
 			}
 			return true;
 		})
 		.map(([key, value]) => {
-			if (typeof value === 'boolean') {
+			if (typeof value === "boolean") {
 				return `  ${key}={${value}}`;
 			}
-			if (typeof value === 'string') {
+			if (typeof value === "string") {
 				return `  ${key}="${value}"`;
 			}
 			return `  ${key}={${value}}`;
 		});
 
 	const propsString =
-		meaningfulProps.length > 0 ? `\n${meaningfulProps.join('\n')}\n` : '';
+		meaningfulProps.length > 0 ? `\n${meaningfulProps.join("\n")}\n` : "";
 
 	return `<Databuddy
   clientId="${websiteId}"${propsString}/>`;
@@ -129,7 +129,7 @@ export function generateNpmComponentCode(
  * Generate NPM code for Vercel integration (auto-detects clientId)
  */
 export function generateVercelNpmCode(
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
 ): string {
 	const meaningfulProps = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
@@ -138,23 +138,23 @@ export function generateVercelNpmCode(
 			if (value === actualDefault) {
 				return false;
 			}
-			if (typeof value === 'boolean' && !value && !actualDefault) {
+			if (typeof value === "boolean" && !value && !actualDefault) {
 				return false;
 			}
 			return true;
 		})
 		.map(([key, value]) => {
-			if (typeof value === 'boolean') {
+			if (typeof value === "boolean") {
 				return `        ${key}={${value}}`;
 			}
-			if (typeof value === 'string') {
+			if (typeof value === "string") {
 				return `        ${key}="${value}"`;
 			}
 			return `        ${key}={${value}}`;
 		});
 
 	const propsString =
-		meaningfulProps.length > 0 ? `\n${meaningfulProps.join('\n')}\n      ` : '';
+		meaningfulProps.length > 0 ? `\n${meaningfulProps.join("\n")}\n      ` : "";
 
 	return `import { Databuddy } from '@databuddy/sdk/react';
 

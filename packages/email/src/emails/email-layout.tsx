@@ -7,7 +7,7 @@ import {
 	Preview,
 	Tailwind,
 	Text,
-} from '@react-email/components';
+} from "@react-email/components";
 
 interface EmailLayoutProps {
 	preview: string;
@@ -24,14 +24,14 @@ export const EmailLayout = ({ preview, children }: EmailLayoutProps) => {
 					theme: {
 						extend: {
 							colors: {
-								brand: '#7a42ff',
-								background: '#212124',
-								foreground: '#f2f2f2',
-								card: '#2d2d30',
-								'card-foreground': '#f2f2f2',
-								border: '#636369',
-								muted: '#b3b3b3',
-								'muted-foreground': '#b3b3b3',
+								brand: "#7a42ff",
+								background: "#212124",
+								foreground: "#f2f2f2",
+								card: "#2d2d30",
+								"card-foreground": "#f2f2f2",
+								border: "#636369",
+								muted: "#b3b3b3",
+								"muted-foreground": "#b3b3b3",
 							},
 						},
 					},

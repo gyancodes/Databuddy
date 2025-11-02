@@ -1,10 +1,10 @@
-import type { DateRange } from '@databuddy/shared/types/analytics';
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { trpc } from '@/lib/trpc';
+import type { DateRange } from "@databuddy/shared/types/analytics";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 
 export interface FunnelStep {
-	type: 'PAGE_VIEW' | 'EVENT' | 'CUSTOM';
+	type: "PAGE_VIEW" | "EVENT" | "CUSTOM";
 	target: string;
 	name: string;
 	conditions?: Record<string, unknown>;
@@ -12,7 +12,7 @@ export interface FunnelStep {
 
 export interface FunnelFilter {
 	field: string;
-	operator: 'equals' | 'contains' | 'not_equals' | 'in' | 'not_in';
+	operator: "equals" | "contains" | "not_equals" | "in" | "not_in";
 	value: string | string[];
 	label?: string;
 }
@@ -86,7 +86,7 @@ export function useFunnels(websiteId: string, enabled = true) {
 
 	const query = trpc.funnels.list.useQuery(
 		{ websiteId },
-		{ enabled: enabled && !!websiteId }
+		{ enabled: enabled && !!websiteId },
 	);
 
 	const funnelsData = useMemo(
@@ -96,29 +96,29 @@ export function useFunnels(websiteId: string, enabled = true) {
 				steps: f.steps as FunnelStep[],
 				filters: (f.filters as FunnelFilter[]) || [],
 			})),
-		[query.data]
+		[query.data],
 	);
 
 	const createMutation = trpc.funnels.create.useMutation({
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [['funnels', 'list']] });
+			queryClient.invalidateQueries({ queryKey: [["funnels", "list"]] });
 		},
 	});
 
 	const updateMutation = trpc.funnels.update.useMutation({
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [['funnels', 'list']] });
+			queryClient.invalidateQueries({ queryKey: [["funnels", "list"]] });
 			queryClient.invalidateQueries({
-				queryKey: [['funnels', 'getAnalytics']],
+				queryKey: [["funnels", "getAnalytics"]],
 			});
 		},
 	});
 
 	const deleteMutation = trpc.funnels.delete.useMutation({
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: [['funnels', 'list']] });
+			queryClient.invalidateQueries({ queryKey: [["funnels", "list"]] });
 			queryClient.invalidateQueries({
-				queryKey: [['funnels', 'getAnalytics']],
+				queryKey: [["funnels", "getAnalytics"]],
 			});
 		},
 	});
@@ -164,7 +164,7 @@ export function useFunnels(websiteId: string, enabled = true) {
 export function useFunnel(websiteId: string, funnelId: string, enabled = true) {
 	return trpc.funnels.getById.useQuery(
 		{ id: funnelId, websiteId },
-		{ enabled: enabled && !!websiteId && !!funnelId }
+		{ enabled: enabled && !!websiteId && !!funnelId },
 	);
 }
 
@@ -172,7 +172,7 @@ export function useFunnelAnalytics(
 	websiteId: string,
 	funnelId: string,
 	dateRange: DateRange,
-	options: { enabled: boolean } = { enabled: true }
+	options: { enabled: boolean } = { enabled: true },
 ) {
 	return trpc.funnels.getAnalytics.useQuery(
 		{
@@ -181,7 +181,7 @@ export function useFunnelAnalytics(
 			startDate: dateRange?.start_date,
 			endDate: dateRange?.end_date,
 		},
-		{ enabled: options.enabled && !!websiteId && !!funnelId }
+		{ enabled: options.enabled && !!websiteId && !!funnelId },
 	);
 }
 
@@ -189,7 +189,7 @@ export function useFunnelAnalyticsByReferrer(
 	websiteId: string,
 	funnelId: string,
 	dateRange?: DateRange,
-	options: { enabled: boolean } = { enabled: true }
+	options: { enabled: boolean } = { enabled: true },
 ) {
 	return trpc.funnels.getAnalyticsByReferrer.useQuery(
 		{
@@ -198,7 +198,7 @@ export function useFunnelAnalyticsByReferrer(
 			startDate: dateRange?.start_date,
 			endDate: dateRange?.end_date,
 		},
-		{ enabled: options.enabled && !!websiteId && !!funnelId }
+		{ enabled: options.enabled && !!websiteId && !!funnelId },
 	);
 }
 
@@ -206,7 +206,7 @@ export function useEnhancedFunnelAnalytics(
 	websiteId: string,
 	funnelId: string,
 	dateRange: DateRange,
-	enabled = true
+	enabled = true,
 ) {
 	const funnelQuery = useFunnel(websiteId, funnelId, enabled);
 
@@ -259,11 +259,11 @@ export function useFunnelComparison(
 	websiteId: string,
 	funnelIds: string[],
 	dateRange: DateRange,
-	enabled = true
+	enabled = true,
 ) {
 	const funnels = useQueries({
 		queries: funnelIds.map((funnelId) => ({
-			queryKey: ['funnels', 'getAnalytics', { websiteId, funnelId, dateRange }],
+			queryKey: ["funnels", "getAnalytics", { websiteId, funnelId, dateRange }],
 			queryFn: () =>
 				// biome-ignore lint/correctness/useHookAtTopLevel: "trpc works this way"
 				trpc.funnels.getAnalytics.useQuery({
@@ -297,18 +297,18 @@ export function useFunnelComparison(
 export function useFunnelPerformance(
 	websiteId: string,
 	dateRange: DateRange,
-	enabled = true
+	enabled = true,
 ) {
 	const { data: funnels, isLoading: funnelsLoading } = useFunnels(
 		websiteId,
-		enabled
+		enabled,
 	);
 
 	const results = useQueries({
 		queries: (funnels || []).map((funnel) => ({
 			queryKey: [
-				'funnels',
-				'getAnalytics',
+				"funnels",
+				"getAnalytics",
 				{ websiteId, funnelId: funnel.id, dateRange },
 			],
 			queryFn: () =>
@@ -352,6 +352,6 @@ export function useAutocompleteData(websiteId: string, enabled = true) {
 		{
 			enabled: enabled && !!websiteId,
 			staleTime: 1000 * 60 * 5, // 5 minutes
-		}
+		},
 	);
 }

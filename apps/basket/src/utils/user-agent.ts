@@ -5,9 +5,9 @@
  * and platform identification.
  */
 
-import { bots } from '@databuddy/shared/lists/bots';
-import { logger } from '@databuddy/shared/utils/discord-webhook';
-import { UAParser } from 'ua-parser-js';
+import { bots } from "@databuddy/shared/lists/bots";
+import { logger } from "@databuddy/shared/utils/discord-webhook";
+import { UAParser } from "ua-parser-js";
 
 export interface UserAgentInfo {
 	bot: {
@@ -17,7 +17,7 @@ export interface UserAgentInfo {
 	};
 	browser?: string;
 	os?: string;
-	device?: 'desktop' | 'mobile' | 'tablet' | 'unknown';
+	device?: "desktop" | "mobile" | "tablet" | "unknown";
 }
 
 /**
@@ -59,11 +59,11 @@ export function parseUserAgent(userAgent: string): {
 		};
 	} catch (error) {
 		logger.error(
-			'User Agent Parse Error',
+			"User Agent Parse Error",
 			`Failed to parse user agent: ${userAgent}`,
 			{
-				error: error instanceof Error ? error.message : 'Unknown error',
-			}
+				error: error instanceof Error ? error.message : "Unknown error",
+			},
 		);
 		return {
 			browserName: undefined,
@@ -79,21 +79,21 @@ export function parseUserAgent(userAgent: string): {
 
 export function detectBot(
 	userAgent: string,
-	request: Request
+	request: Request,
 ): {
 	isBot: boolean;
 	reason?: string;
 	category?: string;
 	botName?: string;
 } {
-	const ua = userAgent || '';
+	const ua = userAgent || "";
 
-	const detectedBot = bots.find((bot) => new RegExp(bot.regex, 'i').test(ua));
+	const detectedBot = bots.find((bot) => new RegExp(bot.regex, "i").test(ua));
 	if (detectedBot) {
 		return {
 			isBot: true,
-			reason: 'known_bot_user_agent',
-			category: 'Known Bot',
+			reason: "known_bot_user_agent",
+			category: "Known Bot",
 			botName: detectedBot.name,
 		};
 	}
@@ -101,24 +101,24 @@ export function detectBot(
 	if (!userAgent) {
 		return {
 			isBot: true,
-			reason: 'missing_user_agent',
-			category: 'Missing Headers',
+			reason: "missing_user_agent",
+			category: "Missing Headers",
 		};
 	}
 
-	if (!request.headers.get('accept')) {
+	if (!request.headers.get("accept")) {
 		return {
 			isBot: true,
-			reason: 'missing_accept_header',
-			category: 'Missing Headers',
+			reason: "missing_accept_header",
+			category: "Missing Headers",
 		};
 	}
 
 	if (ua.length < 10) {
 		return {
 			isBot: true,
-			reason: 'user_agent_too_short',
-			category: 'Suspicious Pattern',
+			reason: "user_agent_too_short",
+			category: "Suspicious Pattern",
 		};
 	}
 

@@ -1,11 +1,11 @@
-import type { NormalizedPlan } from './types';
+import type { NormalizedPlan } from "./types";
 
 export function selectBestPlan(
 	monthlyEvents: number,
-	plans: NormalizedPlan[]
+	plans: NormalizedPlan[],
 ): NormalizedPlan | null {
 	const sorted = [...plans].sort(
-		(a, b) => a.includedEventsMonthly - b.includedEventsMonthly
+		(a, b) => a.includedEventsMonthly - b.includedEventsMonthly,
 	);
 	const cover = sorted.find((p) => monthlyEvents <= p.includedEventsMonthly);
 	if (cover) {
@@ -16,7 +16,7 @@ export function selectBestPlan(
 
 export function computeEnterpriseThreshold(plans: NormalizedPlan[]): number {
 	const sorted = [...plans].sort(
-		(a, b) => a.includedEventsMonthly - b.includedEventsMonthly
+		(a, b) => a.includedEventsMonthly - b.includedEventsMonthly,
 	);
 	const maxPlan = sorted.at(-1);
 	if (!maxPlan?.eventTiers) {
@@ -24,7 +24,7 @@ export function computeEnterpriseThreshold(plans: NormalizedPlan[]): number {
 	}
 	let highest = 0;
 	for (const tier of maxPlan.eventTiers) {
-		if (tier.to === 'inf') {
+		if (tier.to === "inf") {
 			continue;
 		}
 		const toNum = Number(tier.to);
@@ -38,11 +38,11 @@ export function computeEnterpriseThreshold(plans: NormalizedPlan[]): number {
 export function displayNameForPlan(
 	monthlyEvents: number,
 	plans: NormalizedPlan[],
-	bestPlan: NormalizedPlan | null
+	bestPlan: NormalizedPlan | null,
 ): string {
 	const threshold = computeEnterpriseThreshold(plans);
 	if (monthlyEvents > threshold) {
-		return 'Enterprise';
+		return "Enterprise";
 	}
-	return bestPlan ? bestPlan.name : 'Free';
+	return bestPlan ? bestPlan.name : "Free";
 }

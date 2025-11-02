@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { type Icon } from '@phosphor-icons/react';
-import { type ReactNode } from 'react';
+import type { Icon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 
 interface EmptyStateProps {
 	icon: Icon;
@@ -11,7 +11,7 @@ interface EmptyStateProps {
 		label: string;
 	}>;
 	action?: ReactNode;
-	variant?: 'default' | 'success' | 'warning' | 'destructive';
+	variant?: "default" | "success" | "warning" | "destructive";
 }
 
 export function EmptyState({
@@ -20,18 +20,20 @@ export function EmptyState({
 	description,
 	features,
 	action,
-	variant = 'default',
+	variant = "default",
 }: EmptyStateProps) {
 	const variantStyles = {
-		default: 'border-primary/20 bg-primary/10 text-primary',
-		success: 'border-green-200 bg-green-100 text-green-600',
-		warning: 'border-orange-200 bg-orange-100 text-orange-600',
-		destructive: 'border-destructive/20 bg-destructive/10 text-destructive',
+		default: "border-primary/20 bg-primary/10 text-primary",
+		success: "border-green-200 bg-green-100 text-green-600",
+		warning: "border-orange-200 bg-orange-100 text-orange-600",
+		destructive: "border-destructive/20 bg-destructive/10 text-destructive",
 	};
 
 	return (
 		<div className="flex h-full flex-col items-center justify-center p-4 text-center sm:p-8">
-			<div className={`mx-auto mb-6 w-fit rounded-2xl border p-6 sm:mb-8 sm:p-8 ${variantStyles[variant]}`}>
+			<div
+				className={`mx-auto mb-6 w-fit rounded-2xl border p-6 sm:mb-8 sm:p-8 ${variantStyles[variant]}`}
+			>
 				<Icon
 					className="h-12 w-12 sm:h-16 sm:w-16"
 					size={48}

@@ -1,6 +1,6 @@
-import { redis } from '@databuddy/redis';
-import { logger } from '@databuddy/shared/utils/discord-webhook';
-import { parseDurationToSeconds } from '@databuddy/validation';
+import { redis } from "@databuddy/redis";
+import { logger } from "@databuddy/shared/utils/discord-webhook";
+import { parseDurationToSeconds } from "@databuddy/validation";
 
 export interface RateLimitConfig {
 	namespace: string;
@@ -45,7 +45,7 @@ export class RateLimiter {
 			const results = await pipeline.exec();
 
 			if (!results || results.length < 4) {
-				throw new Error('Redis pipeline failed');
+				throw new Error("Redis pipeline failed");
 			}
 
 			const prevWindowCount = results[0]?.[1]
@@ -53,8 +53,8 @@ export class RateLimiter {
 				: 0;
 			const newCurrentWindowCount = results[2]?.[1] as number;
 
-			if (typeof newCurrentWindowCount !== 'number') {
-				throw new Error('Invalid Redis response');
+			if (typeof newCurrentWindowCount !== "number") {
+				throw new Error("Invalid Redis response");
 			}
 
 			const weightedPrevCount = Math.floor(prevWindowCount * prevWindowWeight);
@@ -79,8 +79,8 @@ export class RateLimiter {
 			};
 		} catch (error) {
 			logger.error(
-				'[Rate Limiter] Redis error:',
-				error instanceof Error ? error.message : String(error)
+				"[Rate Limiter] Redis error:",
+				error instanceof Error ? error.message : String(error),
 			);
 			return {
 				success: true,
@@ -112,7 +112,7 @@ export class RateLimiter {
 			const results = await pipeline.exec();
 
 			if (!results || results.length < 2) {
-				throw new Error('Redis pipeline failed');
+				throw new Error("Redis pipeline failed");
 			}
 
 			const prevWindowCount = results[0]?.[1]
@@ -133,8 +133,8 @@ export class RateLimiter {
 			};
 		} catch (error) {
 			logger.error(
-				'[Rate Limiter] Redis error:',
-				error instanceof Error ? error.message : String(error)
+				"[Rate Limiter] Redis error:",
+				error instanceof Error ? error.message : String(error),
 			);
 			return {
 				success: true,
@@ -161,8 +161,8 @@ export class RateLimiter {
 			await pipeline.exec();
 		} catch (error) {
 			logger.error(
-				'[Rate Limiter] Reset error:',
-				error instanceof Error ? error.message : String(error)
+				"[Rate Limiter] Reset error:",
+				error instanceof Error ? error.message : String(error),
 			);
 		}
 	}
@@ -170,54 +170,54 @@ export class RateLimiter {
 
 export const rateLimiters = {
 	api: new RateLimiter({
-		namespace: 'api',
+		namespace: "api",
 		limit: 600,
-		duration: '1m',
+		duration: "1m",
 	}),
 	auth: new RateLimiter({
-		namespace: 'auth',
+		namespace: "auth",
 		limit: 30,
-		duration: '1m',
+		duration: "1m",
 	}),
 	expensive: new RateLimiter({
-		namespace: 'expensive',
+		namespace: "expensive",
 		limit: 100,
-		duration: '1m',
+		duration: "1m",
 	}),
 	admin: new RateLimiter({
-		namespace: 'admin',
+		namespace: "admin",
 		limit: 1200,
-		duration: '1m',
+		duration: "1m",
 	}),
 	public: new RateLimiter({
-		namespace: 'public',
+		namespace: "public",
 		limit: 120,
-		duration: '1m',
+		duration: "1m",
 	}),
 };
 
 export function getRateLimitIdentifier(
 	userId?: string,
-	headers?: Headers
+	headers?: Headers,
 ): string {
 	if (userId) {
 		return userId;
 	}
 
-	const cfConnectingIp = headers?.get('cf-connecting-ip');
+	const cfConnectingIp = headers?.get("cf-connecting-ip");
 	if (cfConnectingIp) {
 		return cfConnectingIp;
 	}
 
-	const realIp = headers?.get('x-real-ip');
+	const realIp = headers?.get("x-real-ip");
 	if (realIp) {
 		return realIp;
 	}
 
-	const forwardedFor = headers?.get('x-forwarded-for');
+	const forwardedFor = headers?.get("x-forwarded-for");
 	if (forwardedFor) {
-		return forwardedFor.split(',')[0].trim();
+		return forwardedFor.split(",")[0].trim();
 	}
 
-	return 'anonymous';
+	return "anonymous";
 }

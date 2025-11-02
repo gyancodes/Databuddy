@@ -1,6 +1,6 @@
-import { chQueryWithMeta, TABLE_NAMES } from '@databuddy/db';
-import { Elysia, t } from 'elysia';
-import { getApiKeyFromHeader, hasWebsiteScope } from '../lib/api-key';
+import { chQueryWithMeta, TABLE_NAMES } from "@databuddy/db";
+import { Elysia, t } from "elysia";
+import { getApiKeyFromHeader, hasWebsiteScope } from "../lib/api-key";
 
 //
 
@@ -8,7 +8,7 @@ const CustomSQLRequestSchema = t.Object({
 	query: t.String({ minLength: 1, maxLength: 5000 }),
 	clientId: t.String({ minLength: 1 }),
 	parameters: t.Optional(
-		t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean()]))
+		t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean()])),
 	),
 });
 
@@ -19,115 +19,115 @@ type CustomSQLRequestType = {
 };
 
 const ALLOWED_OPERATIONS = [
-	'SELECT',
-	'WITH',
-	'FROM',
-	'WHERE',
-	'GROUP BY',
-	'ORDER BY',
-	'HAVING',
-	'LIMIT',
-	'OFFSET',
-	'JOIN',
-	'LEFT JOIN',
-	'RIGHT JOIN',
-	'INNER JOIN',
-	'UNION',
-	'UNION ALL',
-	'JSONExtract',
-	'JSONExtractString',
-	'JSONExtractInt',
-	'JSONExtractFloat',
-	'JSONExtractBool',
-	'JSONExtractRaw',
-	'CASE',
-	'WHEN',
-	'THEN',
-	'ELSE',
-	'END',
-	'AS',
-	'AND',
-	'OR',
-	'NOT',
-	'IN',
-	'EXISTS',
-	'BETWEEN',
-	'LIKE',
-	'ILIKE',
-	'COUNT',
-	'SUM',
-	'AVG',
-	'MIN',
-	'MAX',
-	'UNIQ',
-	'DISTINCT',
-	'NOW',
-	'TODAY',
-	'INTERVAL',
-	'TODATE',
-	'TOSTARTOFMONTH',
-	'TOSTARTOFWEEK',
-	'TOSTARTOFDAY',
+	"SELECT",
+	"WITH",
+	"FROM",
+	"WHERE",
+	"GROUP BY",
+	"ORDER BY",
+	"HAVING",
+	"LIMIT",
+	"OFFSET",
+	"JOIN",
+	"LEFT JOIN",
+	"RIGHT JOIN",
+	"INNER JOIN",
+	"UNION",
+	"UNION ALL",
+	"JSONExtract",
+	"JSONExtractString",
+	"JSONExtractInt",
+	"JSONExtractFloat",
+	"JSONExtractBool",
+	"JSONExtractRaw",
+	"CASE",
+	"WHEN",
+	"THEN",
+	"ELSE",
+	"END",
+	"AS",
+	"AND",
+	"OR",
+	"NOT",
+	"IN",
+	"EXISTS",
+	"BETWEEN",
+	"LIKE",
+	"ILIKE",
+	"COUNT",
+	"SUM",
+	"AVG",
+	"MIN",
+	"MAX",
+	"UNIQ",
+	"DISTINCT",
+	"NOW",
+	"TODAY",
+	"INTERVAL",
+	"TODATE",
+	"TOSTARTOFMONTH",
+	"TOSTARTOFWEEK",
+	"TOSTARTOFDAY",
 ];
 
 const FORBIDDEN_OPERATIONS = [
-	'INSERT',
-	'UPDATE',
-	'DELETE',
-	'DROP',
-	'CREATE',
-	'ALTER',
-	'TRUNCATE',
-	'REPLACE',
-	'MERGE',
-	'CALL',
-	'EXEC',
-	'EXECUTE',
-	'DECLARE',
-	'SET',
-	'USE',
-	'SHOW',
-	'DESCRIBE',
-	'OPTIMIZE',
-	'REPAIR',
-	'LOCK',
-	'UNLOCK',
-	'GRANT',
-	'REVOKE',
-	'COMMIT',
-	'ROLLBACK',
-	'SAVEPOINT',
-	'RELEASE',
-	'START TRANSACTION',
-	'BEGIN',
-	'INFORMATION_SCHEMA',
-	'SYSTEM',
-	'ADMIN',
-	'SUPER',
-	'FILE',
-	'PROCESS',
-	'RELOAD',
-	'SHUTDOWN',
-	'REFERENCES',
-	'INDEX',
-	'TRIGGER',
-	'EVENT',
-	'ROUTINE',
-	'HOSTNAME',
-	'FQDN',
-	'VERSION',
-	'UPTIME',
-	'GETOSKERNEL',
-	'GETCPUCOUNT',
-	'GETMEMORYSIZE',
-	'READFILE',
-	'WRITEFILE',
-	'FILESYSTEM',
-	'DICTGET',
-	'REMOTE',
-	'CLUSTER',
-	'SHARD',
-	'REPLICA',
+	"INSERT",
+	"UPDATE",
+	"DELETE",
+	"DROP",
+	"CREATE",
+	"ALTER",
+	"TRUNCATE",
+	"REPLACE",
+	"MERGE",
+	"CALL",
+	"EXEC",
+	"EXECUTE",
+	"DECLARE",
+	"SET",
+	"USE",
+	"SHOW",
+	"DESCRIBE",
+	"OPTIMIZE",
+	"REPAIR",
+	"LOCK",
+	"UNLOCK",
+	"GRANT",
+	"REVOKE",
+	"COMMIT",
+	"ROLLBACK",
+	"SAVEPOINT",
+	"RELEASE",
+	"START TRANSACTION",
+	"BEGIN",
+	"INFORMATION_SCHEMA",
+	"SYSTEM",
+	"ADMIN",
+	"SUPER",
+	"FILE",
+	"PROCESS",
+	"RELOAD",
+	"SHUTDOWN",
+	"REFERENCES",
+	"INDEX",
+	"TRIGGER",
+	"EVENT",
+	"ROUTINE",
+	"HOSTNAME",
+	"FQDN",
+	"VERSION",
+	"UPTIME",
+	"GETOSKERNEL",
+	"GETCPUCOUNT",
+	"GETMEMORYSIZE",
+	"READFILE",
+	"WRITEFILE",
+	"FILESYSTEM",
+	"DICTGET",
+	"REMOTE",
+	"CLUSTER",
+	"SHARD",
+	"REPLICA",
 ];
 
 const FORBIDDEN_PATTERNS = [
@@ -169,9 +169,9 @@ const CLIENT_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 class SQLValidationError extends Error {
 	readonly code: string;
 
-	constructor(message: string, code = 'INVALID_SQL') {
+	constructor(message: string, code = "INVALID_SQL") {
 		super(message);
-		this.name = 'SQLValidationError';
+		this.name = "SQLValidationError";
 		this.code = code;
 	}
 }
@@ -196,14 +196,14 @@ const QuerySecurityValidator = {
 			/'?\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}'?/gi,
 			(_match, paramName) => {
 				return `{${paramName}:String}`;
-			}
+			},
 		);
 
 		transformedQuery = transformedQuery.replace(
 			/\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}/gi,
 			(_match, paramName) => {
 				return `{${paramName}:String}`;
-			}
+			},
 		);
 
 		return transformedQuery;
@@ -225,20 +225,20 @@ const QuerySecurityValidator = {
 
 	normalizeSQL(query: string): string {
 		return query
-			.replace(/\/\*[\s\S]*?\*\//g, '')
-			.replace(/--.*$/gm, '')
-			.replace(/\s+/g, ' ')
+			.replace(/\/\*[\s\S]*?\*\//g, "")
+			.replace(/--.*$/gm, "")
+			.replace(/\s+/g, " ")
 			.trim()
 			.toUpperCase();
 	},
 
 	validateForbiddenOperations(normalizedQuery: string): void {
 		for (const operation of FORBIDDEN_OPERATIONS) {
-			const regex = new RegExp(`\\b${operation}\\b`, 'i');
+			const regex = new RegExp(`\\b${operation}\\b`, "i");
 			if (regex.test(normalizedQuery)) {
 				throw new SQLValidationError(
 					`Forbidden operation detected: ${operation}`,
-					'FORBIDDEN_OPERATION'
+					"FORBIDDEN_OPERATION",
 				);
 			}
 		}
@@ -246,8 +246,8 @@ const QuerySecurityValidator = {
 		for (const pattern of FORBIDDEN_PATTERNS) {
 			if (pattern.test(normalizedQuery)) {
 				throw new SQLValidationError(
-					'Query contains forbidden pattern or potential injection attempt',
-					'FORBIDDEN_PATTERN'
+					"Query contains forbidden pattern or potential injection attempt",
+					"FORBIDDEN_PATTERN",
 				);
 			}
 		}
@@ -266,7 +266,7 @@ const QuerySecurityValidator = {
 				const allowedLower = allowedTable.toLowerCase();
 				return (
 					tableName === allowedLower ||
-					tableName === allowedLower.split('.').pop() ||
+					tableName === allowedLower.split(".").pop() ||
 					allowedLower.endsWith(`.${tableName}`)
 				);
 			});
@@ -274,20 +274,20 @@ const QuerySecurityValidator = {
 			if (!isAllowed) {
 				throw new SQLValidationError(
 					`Access to table '${tableName}' is not allowed`,
-					'FORBIDDEN_TABLE'
+					"FORBIDDEN_TABLE",
 				);
 			}
 		}
 	},
 
 	validateQueryStart(normalizedQuery: string): void {
-		const startsWithSelect = normalizedQuery.startsWith('SELECT');
-		const startsWithWith = normalizedQuery.startsWith('WITH');
+		const startsWithSelect = normalizedQuery.startsWith("SELECT");
+		const startsWithWith = normalizedQuery.startsWith("WITH");
 		const hasValidStart = startsWithSelect || startsWithWith;
 		if (!hasValidStart) {
 			throw new SQLValidationError(
-				'Query must start with SELECT or WITH',
-				'INVALID_QUERY_START'
+				"Query must start with SELECT or WITH",
+				"INVALID_QUERY_START",
 			);
 		}
 	},
@@ -297,8 +297,8 @@ const QuerySecurityValidator = {
 		const selectCount = selectMatches ? selectMatches.length : 0;
 		if (selectCount > 5) {
 			throw new SQLValidationError(
-				'Query complexity too high (max 5 SELECT statements allowed)',
-				'QUERY_TOO_COMPLEX'
+				"Query complexity too high (max 5 SELECT statements allowed)",
+				"QUERY_TOO_COMPLEX",
 			);
 		}
 
@@ -306,31 +306,31 @@ const QuerySecurityValidator = {
 		const unionCount = unionMatches ? unionMatches.length : 0;
 		if (unionCount > 2) {
 			throw new SQLValidationError(
-				'Too many UNION operations (max 2 allowed)',
-				'UNION_LIMIT_EXCEEDED'
+				"Too many UNION operations (max 2 allowed)",
+				"UNION_LIMIT_EXCEEDED",
 			);
 		}
 	},
 
 	validateQuerySyntax(normalizedQuery: string): void {
-		if (normalizedQuery.includes('/*') || normalizedQuery.includes('--')) {
+		if (normalizedQuery.includes("/*") || normalizedQuery.includes("--")) {
 			throw new SQLValidationError(
-				'Comments are not allowed in queries',
-				'COMMENTS_NOT_ALLOWED'
+				"Comments are not allowed in queries",
+				"COMMENTS_NOT_ALLOWED",
 			);
 		}
 
-		if (normalizedQuery.includes(';')) {
+		if (normalizedQuery.includes(";")) {
 			throw new SQLValidationError(
-				'Multiple statements not allowed',
-				'MULTIPLE_STATEMENTS_NOT_ALLOWED'
+				"Multiple statements not allowed",
+				"MULTIPLE_STATEMENTS_NOT_ALLOWED",
 			);
 		}
 
-		if (normalizedQuery.includes('\\') || normalizedQuery.includes('%')) {
+		if (normalizedQuery.includes("\\") || normalizedQuery.includes("%")) {
 			throw new SQLValidationError(
-				'Escape sequences and URL encoding not allowed',
-				'ENCODING_NOT_ALLOWED'
+				"Escape sequences and URL encoding not allowed",
+				"ENCODING_NOT_ALLOWED",
 			);
 		}
 	},
@@ -338,23 +338,23 @@ const QuerySecurityValidator = {
 	validateParenthesesBalance(normalizedQuery: string): void {
 		let parenCount = 0;
 		for (const char of normalizedQuery) {
-			if (char === '(') {
+			if (char === "(") {
 				parenCount++;
 			}
-			if (char === ')') {
+			if (char === ")") {
 				parenCount--;
 			}
 			if (parenCount < 0) {
 				throw new SQLValidationError(
-					'Unbalanced parentheses in query',
-					'INVALID_SYNTAX'
+					"Unbalanced parentheses in query",
+					"INVALID_SYNTAX",
 				);
 			}
 		}
 		if (parenCount !== 0) {
 			throw new SQLValidationError(
-				'Unbalanced parentheses in query',
-				'INVALID_SYNTAX'
+				"Unbalanced parentheses in query",
+				"INVALID_SYNTAX",
 			);
 		}
 	},
@@ -367,14 +367,14 @@ const QuerySecurityValidator = {
 	},
 
 	validateClientId(clientId: string): void {
-		if (!clientId || typeof clientId !== 'string') {
-			throw new SQLValidationError('Invalid client ID', 'INVALID_CLIENT_ID');
+		if (!clientId || typeof clientId !== "string") {
+			throw new SQLValidationError("Invalid client ID", "INVALID_CLIENT_ID");
 		}
 
 		if (!CLIENT_ID_PATTERN.test(clientId)) {
 			throw new SQLValidationError(
-				'Invalid client ID format',
-				'INVALID_CLIENT_ID'
+				"Invalid client ID format",
+				"INVALID_CLIENT_ID",
 			);
 		}
 	},
@@ -382,12 +382,12 @@ const QuerySecurityValidator = {
 	validateNoDirectClientIdReference(query: string): void {
 		const normalizedQuery = query.trim().toUpperCase();
 		if (
-			normalizedQuery.includes('CLIENT_ID') &&
-			!normalizedQuery.includes('{CLIENTID:STRING}')
+			normalizedQuery.includes("CLIENT_ID") &&
+			!normalizedQuery.includes("{CLIENTID:STRING}")
 		) {
 			throw new SQLValidationError(
-				'Query cannot reference client_id directly - use parameterized queries',
-				'CLIENT_REFERENCE_FORBIDDEN'
+				"Query cannot reference client_id directly - use parameterized queries",
+				"CLIENT_REFERENCE_FORBIDDEN",
 			);
 		}
 	},
@@ -395,17 +395,17 @@ const QuerySecurityValidator = {
 	injectClientIdFilter(query: string): string {
 		const normalizedQuery = query.trim().toUpperCase();
 
-		if (normalizedQuery.startsWith('SELECT')) {
+		if (normalizedQuery.startsWith("SELECT")) {
 			return this.injectClientIdIntoSelect(query);
 		}
 
-		if (normalizedQuery.startsWith('WITH')) {
+		if (normalizedQuery.startsWith("WITH")) {
 			return this.handleWithQuery(query);
 		}
 
 		throw new SQLValidationError(
-			'Unsupported query structure',
-			'UNSUPPORTED_QUERY'
+			"Unsupported query structure",
+			"UNSUPPORTED_QUERY",
 		);
 	},
 
@@ -451,10 +451,10 @@ const QuerySecurityValidator = {
 
 	handleWithQuery(query: string): string {
 		const normalizedQuery = query.trim().toUpperCase();
-		if (!normalizedQuery.includes('CLIENT_ID = {CLIENTID:STRING}')) {
+		if (!normalizedQuery.includes("CLIENT_ID = {CLIENTID:STRING}")) {
 			throw new SQLValidationError(
-				'WITH queries must include client filtering using WHERE client_id = {clientId:String}',
-				'WITH_QUERY_REQUIRES_CLIENT_FILTER'
+				"WITH queries must include client filtering using WHERE client_id = {clientId:String}",
+				"WITH_QUERY_REQUIRES_CLIENT_FILTER",
 			);
 		}
 		return query;
@@ -488,8 +488,8 @@ const QuerySecurityValidator = {
 		for (const vector of attackVectors) {
 			if (vector.test(query)) {
 				throw new SQLValidationError(
-					'Query matches known attack pattern',
-					'ATTACK_PATTERN_DETECTED'
+					"Query matches known attack pattern",
+					"ATTACK_PATTERN_DETECTED",
 				);
 			}
 		}
@@ -497,17 +497,17 @@ const QuerySecurityValidator = {
 
 	validateAndSecureQuery(query: string, clientId: string): string {
 		try {
-			if (!query || typeof query !== 'string') {
+			if (!query || typeof query !== "string") {
 				throw new SQLValidationError(
-					'Query must be a non-empty string',
-					'INVALID_INPUT'
+					"Query must be a non-empty string",
+					"INVALID_INPUT",
 				);
 			}
 
 			if (query.length > 5000) {
 				throw new SQLValidationError(
-					'Query too long (max 5,000 characters)',
-					'QUERY_TOO_LONG'
+					"Query too long (max 5,000 characters)",
+					"QUERY_TOO_LONG",
 				);
 			}
 
@@ -530,11 +530,11 @@ const QuerySecurityValidator = {
 
 			return QuerySecurityValidator.validateClientAccess(
 				transformedQuery,
-				clientId
+				clientId,
 			);
 		} catch (error) {
 			if (error instanceof SQLValidationError) {
-				console.error('SQL Query Validation Failed:', {
+				console.error("SQL Query Validation Failed:", {
 					code: error.code,
 					message: error.message,
 					clientId,
@@ -544,8 +544,8 @@ const QuerySecurityValidator = {
 				});
 				throw error;
 			}
-			console.error('Unexpected validation error:', {
-				error: error instanceof Error ? error.message : 'Unknown error',
+			console.error("Unexpected validation error:", {
+				error: error instanceof Error ? error.message : "Unknown error",
 				stack: error instanceof Error ? error.stack : undefined,
 				clientId,
 				timestamp: new Date().toISOString(),
@@ -564,7 +564,7 @@ interface ClickHouseQueryResult {
 
 async function executeClickHouseQuery(
 	query: string,
-	parameters: Record<string, unknown> = {}
+	parameters: Record<string, unknown> = {},
 ): Promise<ClickHouseQueryResult> {
 	try {
 		const result = await chQueryWithMeta(query, parameters);
@@ -576,15 +576,15 @@ async function executeClickHouseQuery(
 			rows_read: result.statistics?.rows_read || undefined,
 		};
 	} catch (error) {
-		console.error('ClickHouse Query Execution Error:', {
-			error: error instanceof Error ? error.message : 'Unknown error',
+		console.error("ClickHouse Query Execution Error:", {
+			error: error instanceof Error ? error.message : "Unknown error",
 			stack: error instanceof Error ? error.stack : undefined,
 			query: query.length > 1000 ? `${query.substring(0, 1000)}...` : query,
 			parameters: JSON.stringify(parameters),
 			timestamp: new Date().toISOString(),
 		});
 		throw new Error(
-			`ClickHouse query failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+			`ClickHouse query failed: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
 	}
 }
@@ -593,66 +593,66 @@ async function executeClickHouseQuery(
 async function validateAPIKeyAndPermissions(
 	apiKey: unknown,
 	clientId: string,
-	request: Request
+	request: Request,
 ) {
 	if (!apiKey) {
-		console.error('Custom SQL Auth Error:', {
-			code: 'AUTH_REQUIRED',
-			error: 'API key required for custom SQL access',
+		console.error("Custom SQL Auth Error:", {
+			code: "AUTH_REQUIRED",
+			error: "API key required for custom SQL access",
 			clientId,
 			ip:
-				request.headers.get('x-forwarded-for') ||
-				request.headers.get('x-real-ip') ||
-				'unknown',
-			userAgent: request.headers.get('user-agent'),
+				request.headers.get("x-forwarded-for") ||
+				request.headers.get("x-real-ip") ||
+				"unknown",
+			userAgent: request.headers.get("user-agent"),
 			timestamp: new Date().toISOString(),
 		});
 		return {
 			status: 401,
 			response: {
 				success: false,
-				error: 'API key required for custom SQL access',
-				code: 'AUTH_REQUIRED',
+				error: "API key required for custom SQL access",
+				code: "AUTH_REQUIRED",
 			},
 		};
 	}
 
 	// Type guard for apiKey
 	if (
-		typeof apiKey !== 'object' ||
+		typeof apiKey !== "object" ||
 		!apiKey ||
-		!('scopes' in apiKey) ||
-		!('id' in apiKey)
+		!("scopes" in apiKey) ||
+		!("id" in apiKey)
 	) {
-		console.error('Invalid API key structure');
+		console.error("Invalid API key structure");
 		return {
 			status: 401,
 			response: {
 				success: false,
-				error: 'Invalid API key',
-				code: 'INVALID_API_KEY',
+				error: "Invalid API key",
+				code: "INVALID_API_KEY",
 			},
 		};
 	}
 
 	const apiKeyObj = apiKey as { scopes: string[]; id: string };
-	const hasCustomSQLScope = apiKeyObj.scopes.includes('write:custom-sql');
+	const hasCustomSQLScope = apiKeyObj.scopes.includes("write:custom-sql");
 	const hasGlobalScope =
-		apiKeyObj.scopes.includes('read:data') ||
-		apiKeyObj.scopes.includes('read:analytics');
+		apiKeyObj.scopes.includes("read:data") ||
+		apiKeyObj.scopes.includes("read:analytics");
 
 	if (!(hasCustomSQLScope || hasGlobalScope)) {
-		console.error('Custom SQL Authorization Error:', {
-			code: 'INSUFFICIENT_SCOPE',
+		console.error("Custom SQL Authorization Error:", {
+			code: "INSUFFICIENT_SCOPE",
 			error:
-				'API key must have write:custom-sql or read:analytics scope for custom SQL access',
+				"API key must have write:custom-sql or read:analytics scope for custom SQL access",
 			clientId,
 			apiKeyId: apiKeyObj.id,
 			scopes: apiKeyObj.scopes,
 			ip:
-				request.headers.get('x-forwarded-for') ||
-				request.headers.get('x-real-ip') ||
-				'unknown',
+				request.headers.get("x-forwarded-for") ||
+				request.headers.get("x-real-ip") ||
+				"unknown",
 			timestamp: new Date().toISOString(),
 		});
 		return {
@@ -660,8 +660,8 @@ async function validateAPIKeyAndPermissions(
 			response: {
 				success: false,
 				error:
-					'API key must have write:custom-sql or read:analytics scope for custom SQL access',
-				code: 'INSUFFICIENT_SCOPE',
+					"API key must have write:custom-sql or read:analytics scope for custom SQL access",
+				code: "INSUFFICIENT_SCOPE",
 			},
 		};
 	}
@@ -670,19 +670,19 @@ async function validateAPIKeyAndPermissions(
 		const hasAccess = await hasWebsiteScope(
 			apiKey as never,
 			clientId,
-			'read:data'
+			"read:data",
 		);
 		if (!hasAccess) {
-			console.error('Custom SQL Client Access Error:', {
-				code: 'CLIENT_ACCESS_DENIED',
+			console.error("Custom SQL Client Access Error:", {
+				code: "CLIENT_ACCESS_DENIED",
 				error: `API key does not have access to client ID: ${clientId}`,
 				clientId,
 				apiKeyId: apiKeyObj.id,
 				scopes: apiKeyObj.scopes,
 				ip:
-					request.headers.get('x-forwarded-for') ||
-					request.headers.get('x-real-ip') ||
-					'unknown',
+					request.headers.get("x-forwarded-for") ||
+					request.headers.get("x-real-ip") ||
+					"unknown",
 				timestamp: new Date().toISOString(),
 			});
 			return {
@@ -690,7 +690,7 @@ async function validateAPIKeyAndPermissions(
 				response: {
 					success: false,
 					error: `API key does not have access to client ID: ${clientId}`,
-					code: 'CLIENT_ACCESS_DENIED',
+					code: "CLIENT_ACCESS_DENIED",
 				},
 			};
 		}
@@ -710,25 +710,25 @@ function parseClickHouseError(errorMessage: string): {
 	code: string;
 } {
 	// Column not found errors
-	if (errorMessage.includes('Unknown expression or function identifier')) {
+	if (errorMessage.includes("Unknown expression or function identifier")) {
 		const columnMatch = errorMessage.match(UNKNOWN_COLUMN_REGEX);
 		if (columnMatch) {
 			const column = columnMatch[1];
-			let suggestion = '';
+			let suggestion = "";
 
-			if (column === 'name') {
+			if (column === "name") {
 				suggestion =
 					"Did you mean 'event_name'? Custom events use 'event_name' as the column name.";
-			} else if (column === 'event') {
+			} else if (column === "event") {
 				suggestion =
 					"Did you mean 'event_name'? Use 'event_name' to filter by event type.";
-			} else if (column === 'user_id') {
+			} else if (column === "user_id") {
 				suggestion =
 					"Did you mean 'anonymous_id'? Use 'anonymous_id' for user identification.";
 			} else if (
-				column === 'created_at' ||
-				column === 'created' ||
-				column === 'date'
+				column === "created_at" ||
+				column === "created" ||
+				column === "date"
 			) {
 				suggestion =
 					"Did you mean 'timestamp'? Use 'timestamp' for date/time filtering.";
@@ -739,15 +739,15 @@ function parseClickHouseError(errorMessage: string): {
 			return {
 				error: `Unknown column: ${column}`,
 				suggestion,
-				code: 'UNKNOWN_COLUMN',
+				code: "UNKNOWN_COLUMN",
 			};
 		}
 	}
 
 	// Table not found errors
 	if (
-		errorMessage.includes('Table') &&
-		errorMessage.includes('does not exist')
+		errorMessage.includes("Table") &&
+		errorMessage.includes("does not exist")
 	) {
 		const tableMatch = errorMessage.match(TABLE_NOT_FOUND_REGEX);
 		if (tableMatch) {
@@ -755,39 +755,39 @@ function parseClickHouseError(errorMessage: string): {
 			return {
 				error: `Table '${table}' not found`,
 				suggestion:
-					'Available tables: analytics.custom_events, analytics.events, analytics.errors, analytics.sessions',
-				code: 'UNKNOWN_TABLE',
+					"Available tables: analytics.custom_events, analytics.events, analytics.errors, analytics.sessions",
+				code: "UNKNOWN_TABLE",
 			};
 		}
 	}
 
 	// Syntax errors
-	if (errorMessage.includes('Syntax error')) {
+	if (errorMessage.includes("Syntax error")) {
 		return {
-			error: 'SQL syntax error',
+			error: "SQL syntax error",
 			suggestion:
-				'Check your SQL syntax. Make sure all parentheses, quotes, and keywords are correct.',
-			code: 'SYNTAX_ERROR',
+				"Check your SQL syntax. Make sure all parentheses, quotes, and keywords are correct.",
+			code: "SYNTAX_ERROR",
 		};
 	}
 
 	// Property extraction errors
 	if (
-		errorMessage.includes('properties.') &&
-		errorMessage.includes('JSONExtractString')
+		errorMessage.includes("properties.") &&
+		errorMessage.includes("JSONExtractString")
 	) {
 		return {
-			error: 'Property extraction error',
+			error: "Property extraction error",
 			suggestion:
-				'Use properties.propertyName syntax for JSON properties. All properties are extracted as strings.',
-			code: 'PROPERTY_ERROR',
+				"Use properties.propertyName syntax for JSON properties. All properties are extracted as strings.",
+			code: "PROPERTY_ERROR",
 		};
 	}
 
 	// Parameter errors
 	if (
-		errorMessage.includes('Substitution') &&
-		errorMessage.includes('is not set')
+		errorMessage.includes("Substitution") &&
+		errorMessage.includes("is not set")
 	) {
 		const paramMatch = errorMessage.match(SUBSTITUTION_NOT_SET_REGEX);
 		if (paramMatch) {
@@ -795,32 +795,32 @@ function parseClickHouseError(errorMessage: string): {
 			return {
 				error: `Missing parameter: ${param}`,
 				suggestion: `Make sure to include '${param}' in your parameters JSON object.`,
-				code: 'MISSING_PARAMETER',
+				code: "MISSING_PARAMETER",
 			};
 		}
 	}
 
 	// Default case - return the original error but cleaned up
-	const cleanError = errorMessage.replace(/\s+/g, ' ').substring(0, 200);
+	const cleanError = errorMessage.replace(/\s+/g, " ").substring(0, 200);
 	return {
 		error: cleanError,
-		code: 'QUERY_ERROR',
+		code: "QUERY_ERROR",
 	};
 }
 
 function handleQueryExecutionError(
 	error: unknown,
 	body: { clientId: string; query: string },
-	apiKey: unknown
+	apiKey: unknown,
 ) {
 	if (error instanceof SQLValidationError) {
-		console.error('SQL Validation Error:', {
+		console.error("SQL Validation Error:", {
 			code: error.code,
 			message: error.message,
 			clientId: body.clientId,
 			originalQuery: body.query,
 			apiKeyId:
-				apiKey && typeof apiKey === 'object' && 'id' in apiKey
+				apiKey && typeof apiKey === "object" && "id" in apiKey
 					? (apiKey as { id: string }).id
 					: null,
 			timestamp: new Date().toISOString(),
@@ -835,13 +835,13 @@ function handleQueryExecutionError(
 		};
 	}
 
-	console.error('Custom SQL Execution Error:', {
-		error: error instanceof Error ? error.message : 'Unknown error',
+	console.error("Custom SQL Execution Error:", {
+		error: error instanceof Error ? error.message : "Unknown error",
 		stack: error instanceof Error ? error.stack : undefined,
 		clientId: body.clientId,
 		originalQuery: body.query,
 		apiKeyId:
-			apiKey && typeof apiKey === 'object' && 'id' in apiKey
+			apiKey && typeof apiKey === "object" && "id" in apiKey
 				? (apiKey as { id: string }).id
 				: null,
 		timestamp: new Date().toISOString(),
@@ -865,13 +865,13 @@ function handleQueryExecutionError(
 		status: 500,
 		response: {
 			success: false,
-			error: 'Unknown query execution error occurred.',
-			code: 'EXECUTION_ERROR',
+			error: "Unknown query execution error occurred.",
+			code: "EXECUTION_ERROR",
 		},
 	};
 }
 
-export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
+export const customSQL = new Elysia({ prefix: "/v1/custom-sql" })
 	// .use(
 	// 	createCustomRateLimitMiddleware(30, '1 m', 'expensive', {
 	// 		skipAuth: true,
@@ -886,16 +886,16 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 			logContext: {
 				url: request.url,
 				method: request.method,
-				userAgent: request.headers.get('user-agent'),
+				userAgent: request.headers.get("user-agent"),
 				ip:
-					request.headers.get('x-forwarded-for') ||
-					request.headers.get('x-real-ip') ||
-					'unknown',
+					request.headers.get("x-forwarded-for") ||
+					request.headers.get("x-real-ip") ||
+					"unknown",
 			},
 		};
 	})
 	.post(
-		'/execute',
+		"/execute",
 		async ({
 			body,
 			request,
@@ -919,7 +919,7 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 				const authResult = await validateAPIKeyAndPermissions(
 					apiKey,
 					body.clientId,
-					request
+					request,
 				);
 				if (authResult.status !== 200) {
 					set.status = authResult.status;
@@ -928,7 +928,7 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 
 				const secureQuery = QuerySecurityValidator.validateAndSecureQuery(
 					body.query,
-					body.clientId
+					body.clientId,
 				);
 
 				const queryParameters = {
@@ -938,7 +938,7 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 
 				const result = await executeClickHouseQuery(
 					secureQuery,
-					queryParameters
+					queryParameters,
 				);
 
 				return {
@@ -960,9 +960,9 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 		},
 		{
 			body: CustomSQLRequestSchema,
-		}
+		},
 	)
-	.get('/schema', () => {
+	.get("/schema", () => {
 		return {
 			success: true,
 			schema: {
@@ -972,27 +972,27 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 				maxQueryLength: 5000,
 				maxNestedSelects: 3,
 				parameterization: {
-					clientIdParameter: '{clientId:String}',
-					required: 'All queries must use parameterized client filtering',
+					clientIdParameter: "{clientId:String}",
+					required: "All queries must use parameterized client filtering",
 					supportedSyntax: [
-						'Template literals: $[paramName] converted to {paramName:String}',
-						'Simple parameters: {paramName} converted to {paramName:String}',
-						'Typed parameters: {paramName:Type} (unchanged)',
+						"Template literals: $[paramName] converted to {paramName:String}",
+						"Simple parameters: {paramName} converted to {paramName:String}",
+						"Typed parameters: {paramName:Type} (unchanged)",
 					],
 					examples: [
-						'$[workspaceId] becomes {workspaceId:String}',
-						'{cutoffTimestamp} becomes {cutoffTimestamp:String}',
-						'{userId:Int32} remains {userId:Int32} (unchanged)',
+						"$[workspaceId] becomes {workspaceId:String}",
+						"{cutoffTimestamp} becomes {cutoffTimestamp:String}",
+						"{userId:Int32} remains {userId:Int32} (unchanged)",
 					],
 				},
 				propertiesSyntax: {
 					description:
-						'Automatic JSONExtract transformation from properties.X syntax - all properties extracted as strings',
-					syntax: 'properties.property_name',
-					note: 'All JSON properties are extracted as strings since JSON stores values as strings',
+						"Automatic JSONExtract transformation from properties.X syntax - all properties extracted as strings",
+					syntax: "properties.property_name",
+					note: "All JSON properties are extracted as strings since JSON stores values as strings",
 					examples: [
-						'properties.browser_name',
-						'properties.user_id',
+						"properties.browser_name",
+						"properties.user_id",
 						"properties.is_active = 'true'",
 						"properties.count = '42'",
 					],
@@ -1001,13 +1001,13 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 			},
 		};
 	})
-	.get('/examples', () => {
+	.get("/examples", () => {
 		return {
 			success: true,
 			examples: [
 				{
-					name: 'Monthly Events Count',
-					description: 'Get monthly event counts for your client',
+					name: "Monthly Events Count",
+					description: "Get monthly event counts for your client",
 					query: `
 						SELECT
 							toStartOfMonth(time) as month_start,
@@ -1020,9 +1020,9 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 					`.trim(),
 				},
 				{
-					name: 'Monthly API Requests with Simplified Syntax',
+					name: "Monthly API Requests with Simplified Syntax",
 					description:
-						'Example using simplified parameter syntax - {paramName} auto-converts to {paramName:String}. Also supports $[paramName] template literals.',
+						"Example using simplified parameter syntax - {paramName} auto-converts to {paramName:String}. Also supports $[paramName] template literals.",
 					query: `
 						SELECT 
 							toStartOfMonth(timestamp) as month_start,
@@ -1039,8 +1039,8 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 					`.trim(),
 				},
 				{
-					name: 'Top Pages by Views',
-					description: 'Get most popular pages',
+					name: "Top Pages by Views",
+					description: "Get most popular pages",
 					query: `
 						SELECT
 							path,
@@ -1056,9 +1056,9 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 					`.trim(),
 				},
 				{
-					name: 'Browser Analytics (simplified properties syntax)',
+					name: "Browser Analytics (simplified properties syntax)",
 					description:
-						'Analyze browser usage using simplified properties.X syntax',
+						"Analyze browser usage using simplified properties.X syntax",
 					query: `
 						SELECT
 							properties.browser_name,
@@ -1073,9 +1073,9 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 					`.trim(),
 				},
 				{
-					name: 'User Analytics (simplified properties)',
+					name: "User Analytics (simplified properties)",
 					description:
-						'Analyze user behavior using simplified properties - all extracted as strings',
+						"Analyze user behavior using simplified properties - all extracted as strings",
 					query: `
 						SELECT
 							properties.user_id as user_id,
@@ -1096,8 +1096,8 @@ export const customSQL = new Elysia({ prefix: '/v1/custom-sql' })
 					`.trim(),
 				},
 				{
-					name: 'Error Events Analysis',
-					description: 'Analyze error events',
+					name: "Error Events Analysis",
+					description: "Analyze error events",
 					query: `
 						SELECT
 							path,

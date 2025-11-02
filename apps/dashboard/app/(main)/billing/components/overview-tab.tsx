@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
 	ArrowSquareOutIcon,
@@ -14,23 +14,23 @@ import {
 	TrendUpIcon,
 	UsersIcon,
 	WarningIcon,
-} from '@phosphor-icons/react';
-import type { Product } from 'autumn-js';
-import dayjs from 'dayjs';
-import React, { memo, useMemo } from 'react';
-import { useBilling } from '@/app/(main)/billing/hooks/use-billing';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { type FeatureUsage, useBillingData } from '../hooks/use-billing';
-import { CancelSubscriptionDialog } from './cancel-subscription-dialog';
-import { NoPaymentMethodDialog } from './no-payment-method-dialog';
+} from "@phosphor-icons/react";
+import type { Product } from "autumn-js";
+import dayjs from "dayjs";
+import React, { memo, useMemo } from "react";
+import { useBilling } from "@/app/(main)/billing/hooks/use-billing";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { type FeatureUsage, useBillingData } from "../hooks/use-billing";
+import { CancelSubscriptionDialog } from "./cancel-subscription-dialog";
+import { NoPaymentMethodDialog } from "./no-payment-method-dialog";
 
-	interface UsageCardProps {
+interface UsageCardProps {
 	feature: FeatureUsage;
 	onUpgrade: () => void;
 }
@@ -45,19 +45,22 @@ const UsageCard = memo(function UsageCardComponent({
 			? Math.min((feature.used / feature.limit) * 100, 100)
 			: 0;
 
-	const isNearLimit = !feature.unlimited && (percentage > 80 || feature.balance < feature.limit * 0.2);
-	const isOverLimit = !feature.unlimited && (percentage >= 100 || feature.balance <= 0);
+	const isNearLimit =
+		!feature.unlimited &&
+		(percentage > 80 || feature.balance < feature.limit * 0.2);
+	const isOverLimit =
+		!feature.unlimited && (percentage >= 100 || feature.balance <= 0);
 
 	const getIcon = () => {
-		if (feature.name.toLowerCase().includes('event')) {
+		if (feature.name.toLowerCase().includes("event")) {
 			return ChartBarIcon;
 		}
-		if (feature.name.toLowerCase().includes('storage')) {
+		if (feature.name.toLowerCase().includes("storage")) {
 			return DatabaseIcon;
 		}
 		if (
-			feature.name.toLowerCase().includes('user') ||
-			feature.name.toLowerCase().includes('member')
+			feature.name.toLowerCase().includes("user") ||
+			feature.name.toLowerCase().includes("member")
 		) {
 			return UsersIcon;
 		}
@@ -66,26 +69,28 @@ const UsageCard = memo(function UsageCardComponent({
 
 	const getIntervalText = () => {
 		const intervals: Record<string, string> = {
-			day: 'Resets daily',
-			month: 'Resets monthly',
-			year: 'Resets yearly',
+			day: "Resets daily",
+			month: "Resets monthly",
+			year: "Resets yearly",
 		};
 
 		if (feature.interval && intervals[feature.interval]) {
 			return intervals[feature.interval];
 		}
 
-		return feature.nextReset ? `Resets ${feature.nextReset}` : 'No reset scheduled';
+		return feature.nextReset
+			? `Resets ${feature.nextReset}`
+			: "No reset scheduled";
 	};
 
 	const getUsageTextColor = () => {
 		if (isOverLimit) {
-			return 'text-destructive';
+			return "text-destructive";
 		}
 		if (isNearLimit) {
-			return 'text-orange-500';
+			return "text-orange-500";
 		}
-		return 'text-foreground';
+		return "text-foreground";
 	};
 
 	return (
@@ -96,9 +101,9 @@ const UsageCard = memo(function UsageCardComponent({
 						<div className="flex h-12 w-12 items-center justify-center rounded border bg-muted">
 							{React.createElement(getIcon(), {
 								className:
-									'h-5 w-5 not-dark:text-primary text-muted-foreground',
+									"h-5 w-5 not-dark:text-primary text-muted-foreground",
 								size: 32,
-								weight: 'duotone',
+								weight: "duotone",
 							})}
 						</div>
 						<div className="min-w-0 flex-1">
@@ -122,8 +127,8 @@ const UsageCard = memo(function UsageCardComponent({
 						) : (
 							<div
 								className={cn(
-									'font-bold text-xl sm:text-2xl',
-									getUsageTextColor()
+									"font-bold text-xl sm:text-2xl",
+									getUsageTextColor(),
 								)}
 							>
 								{feature.used.toLocaleString()}
@@ -172,7 +177,7 @@ interface PlanStatusCardProps {
 	onCancelClick: (
 		planId: string,
 		planName: string,
-		currentPeriodEnd?: number
+		currentPeriodEnd?: number,
 	) => void;
 	onManageBilling: () => void;
 }
@@ -184,9 +189,9 @@ const PlanStatusCard = memo(function PlanStatusCardComponent({
 	onCancelClick,
 	onManageBilling,
 }: PlanStatusCardProps) {
-	const isCanceled = plan?.scenario === 'cancel';
-	const isScheduled = plan?.scenario === 'scheduled';
-	const isFree = plan?.id === 'free' || plan?.properties?.is_free;
+	const isCanceled = plan?.scenario === "cancel";
+	const isScheduled = plan?.scenario === "scheduled";
+	const isFree = plan?.id === "free" || plan?.properties?.is_free;
 
 	const getStatusBadge = () => {
 		if (isCanceled) {
@@ -213,19 +218,19 @@ const PlanStatusCard = memo(function PlanStatusCardComponent({
 		);
 	};
 
-	const getFeatureText = (item: Product['items'][0]) => {
-		let text = item.display?.primary_text ?? '';
+	const getFeatureText = (item: Product["items"][0]) => {
+		let text = item.display?.primary_text ?? "";
 		const intervals: Record<string, string> = {
-			day: ' per day',
-			month: ' per month',
-			year: ' per year',
+			day: " per day",
+			month: " per month",
+			year: " per year",
 		};
 
 		if (
 			item.interval &&
 			intervals[item.interval] &&
-			!text.toLowerCase().includes('per ') &&
-			!text.toLowerCase().includes('/')
+			!text.toLowerCase().includes("per ") &&
+			!text.toLowerCase().includes("/")
 		) {
 			text += intervals[item.interval];
 		}
@@ -248,7 +253,7 @@ const PlanStatusCard = memo(function PlanStatusCardComponent({
 							</div>
 							<div className="min-w-0 flex-1">
 								<CardTitle className="truncate font-semibold text-lg">
-									{plan?.display?.name || plan?.name || 'Free Plan'}
+									{plan?.display?.name || plan?.name || "Free Plan"}
 								</CardTitle>
 								<p className="text-muted-foreground text-sm">
 									Current subscription
@@ -266,16 +271,16 @@ const PlanStatusCard = memo(function PlanStatusCardComponent({
 						</div>
 					</div>
 
-						<div className="flex-shrink-0 text-right">
-							<div className="font-bold text-2xl sm:text-3xl">
-								{isFree
-									? 'Free'
-									: plan?.items[0]?.display?.primary_text || 'Free'}
-							</div>
-							<div className="text-muted-foreground text-sm">
-								{!isFree && plan?.items[0]?.display?.secondary_text}
-							</div>
+					<div className="flex-shrink-0 text-right">
+						<div className="font-bold text-2xl sm:text-3xl">
+							{isFree
+								? "Free"
+								: plan?.items[0]?.display?.primary_text || "Free"}
 						</div>
+						<div className="text-muted-foreground text-sm">
+							{!isFree && plan?.items[0]?.display?.secondary_text}
+						</div>
+					</div>
 				</div>
 			</CardHeader>
 
@@ -340,7 +345,7 @@ const PlanStatusCard = memo(function PlanStatusCardComponent({
 										onCancelClick(
 											plan.id,
 											plan.display?.name || plan.name,
-											undefined
+											undefined,
 										)
 									}
 									size="sm"
@@ -378,7 +383,8 @@ interface OverviewTabProps {
 export const OverviewTab = memo(function OverviewTabComponent({
 	onNavigateToPlans,
 }: OverviewTabProps) {
-	const { products, usage, customer, isLoading, error, refetch } = useBillingData();
+	const { products, usage, customer, isLoading, error, refetch } =
+		useBillingData();
 	const {
 		onCancelClick,
 		onCancelConfirm,
@@ -396,27 +402,36 @@ export const OverviewTab = memo(function OverviewTabComponent({
 			if (p.canceled_at && p.current_period_end) {
 				return dayjs(p.current_period_end).isAfter(dayjs());
 			}
-			return !p.canceled_at || p.status === 'scheduled';
+			return !p.canceled_at || p.status === "scheduled";
 		});
 
 		const activePlan = activeCustomerProduct
 			? products?.find((p: Product) => p.id === activeCustomerProduct.id)
-			: products?.find((p: Product) => !p.scenario || (p.scenario !== 'upgrade' && p.scenario !== 'downgrade'));
+			: products?.find(
+					(p: Product) =>
+						!p.scenario ||
+						(p.scenario !== "upgrade" && p.scenario !== "downgrade"),
+				);
 
 		const planStatusDetails = activeCustomerProduct
 			? getSubscriptionStatusDetails(
 					activeCustomerProduct as unknown as Parameters<
 						typeof getSubscriptionStatusDetails
-					>[0]
+					>[0],
 				)
-			: '';
+			: "";
 
 		return {
 			currentPlan: activePlan,
 			usageStats: usage?.features ?? [],
 			statusDetails: planStatusDetails,
 		};
-	}, [products, usage?.features, customer?.products, getSubscriptionStatusDetails]);
+	}, [
+		products,
+		usage?.features,
+		customer?.products,
+		getSubscriptionStatusDetails,
+	]);
 
 	if (isLoading) {
 		return (
@@ -464,9 +479,13 @@ export const OverviewTab = memo(function OverviewTabComponent({
 							weight="duotone"
 						/>
 					</div>
-					<h3 className="mb-2 font-semibold text-xl">Error Loading Billing Data</h3>
+					<h3 className="mb-2 font-semibold text-xl">
+						Error Loading Billing Data
+					</h3>
 					<p className="mb-4 max-w-sm text-center text-muted-foreground">
-						{error instanceof Error ? error.message : 'Failed to load customer data. Please try again.'}
+						{error instanceof Error
+							? error.message
+							: "Failed to load customer data. Please try again."}
 					</p>
 					<Button onClick={() => refetch()} size="lg" type="button">
 						Retry
@@ -490,7 +509,7 @@ export const OverviewTab = memo(function OverviewTabComponent({
 				onCancel={onCancelConfirm}
 				onOpenChange={setShowCancelDialog}
 				open={showCancelDialog}
-				planName={cancellingPlan?.name || ''}
+				planName={cancellingPlan?.name || ""}
 			/>
 
 			<div className="space-y-8">

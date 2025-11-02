@@ -3,17 +3,15 @@ import {
 	TrendUpIcon,
 	UsersIcon,
 	WarningCircleIcon,
-} from '@phosphor-icons/react';
-import { StatCard } from '@/components/analytics/stat-card';
-import type { ErrorSummary } from './types';
+} from "@phosphor-icons/react";
+import { StatCard } from "@/components/analytics/stat-card";
+import type { ErrorSummary } from "./types";
 
 interface ErrorSummaryStatsProps {
 	errorSummary: ErrorSummary;
 }
 
-export const ErrorSummaryStats = ({
-	errorSummary,
-}: ErrorSummaryStatsProps) => {
+export const ErrorSummaryStats = ({ errorSummary }: ErrorSummaryStatsProps) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
 			<StatCard

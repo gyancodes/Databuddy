@@ -1,40 +1,40 @@
-'use client';
+"use client";
 
-import { signIn } from '@databuddy/auth/client';
-import { ChevronLeft, Loader2, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { signIn } from "@databuddy/auth/client";
+import { ChevronLeft, Loader2, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function MagicLinkPage() {
 	const router = useRouter();
-	const [email, setEmail] = useState('');
+	const [email, setEmail] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleMagicLinkLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!email) {
-			toast.error('Please enter your email address');
+			toast.error("Please enter your email address");
 			return;
 		}
 		setIsLoading(true);
 
 		await signIn.magicLink({
 			email,
-			callbackURL: '/home',
+			callbackURL: "/home",
 			fetchOptions: {
 				onSuccess: () => {
 					setIsLoading(false);
-					toast.success('Magic link sent! Please check your email.');
+					toast.success("Magic link sent! Please check your email.");
 					router.push(`/login/magic-sent?email=${encodeURIComponent(email)}`);
 				},
 				onError: () => {
 					setIsLoading(false);
-					toast.error('Failed to send magic link. Please try again.');
+					toast.error("Failed to send magic link. Please try again.");
 				},
 			},
 		});

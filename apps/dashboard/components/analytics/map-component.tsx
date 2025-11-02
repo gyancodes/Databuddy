@@ -1,23 +1,26 @@
-'use client';
+"use client";
 
-import type { CountryData, LocationData } from '@databuddy/shared/types/website';
-import { scalePow } from 'd3-scale';
-import type { Feature, GeoJsonObject } from 'geojson';
-import type { Layer, Map as LeafletMap } from 'leaflet';
-import dynamic from 'next/dynamic';
-import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getCountryPopulation } from '@/lib/data';
-import { type Country, useCountries } from '@/lib/geo';
-import { CountryFlag } from './icons/CountryFlag';
+import type {
+	CountryData,
+	LocationData,
+} from "@databuddy/shared/types/website";
+import { scalePow } from "d3-scale";
+import type { Feature, GeoJsonObject } from "geojson";
+import type { Layer, Map as LeafletMap } from "leaflet";
+import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getCountryPopulation } from "@/lib/data";
+import { type Country, useCountries } from "@/lib/geo";
+import { CountryFlag } from "./icons/CountryFlag";
 
 const MapContainer = dynamic(
-	() => import('react-leaflet').then((mod) => mod.MapContainer),
-	{ ssr: false }
-)
+	() => import("react-leaflet").then((mod) => mod.MapContainer),
+	{ ssr: false },
+);
 const GeoJSON = dynamic(
-	() => import('react-leaflet').then((mod) => mod.GeoJSON),
-	{ ssr: false }
+	() => import("react-leaflet").then((mod) => mod.GeoJSON),
+	{ ssr: false },
 );
 
 interface TooltipContent {
@@ -37,22 +40,23 @@ const roundToTwo = (num: number): number => {
 	return Math.round((num + Number.EPSILON) * 100) / 100;
 };
 
-const mapApiToGeoJson = (code: string): string => (code === 'TW' ? 'CN-TW' : code);
+const mapApiToGeoJson = (code: string): string =>
+	code === "TW" ? "CN-TW" : code;
 const mapGeoJsonToApi = (code: string): string => {
 	if (!code) return code;
 	const upperCode = code.toUpperCase();
-	return upperCode === 'CN-TW' ? 'TW' : code;
+	return upperCode === "CN-TW" ? "TW" : code;
 };
 
 export function MapComponent({
 	height,
-	mode = 'total',
+	mode = "total",
 	locationData,
 	isLoading: passedIsLoading = false,
 	selectedCountry,
 }: {
 	height: string;
-	mode?: 'total' | 'perCapita';
+	mode?: "total" | "perCapita";
 	locationData?: LocationData;
 	isLoading?: boolean;
 	selectedCountry?: string | null;
@@ -62,12 +66,12 @@ export function MapComponent({
 	const { resolvedTheme } = useTheme();
 
 	useEffect(() => {
-		if (typeof window !== 'undefined') {
-			const link = document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-			link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-			link.crossOrigin = 'anonymous';
+		if (typeof window !== "undefined") {
+			const link = document.createElement("link");
+			link.rel = "stylesheet";
+			link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+			link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+			link.crossOrigin = "anonymous";
 			document.head.appendChild(link);
 
 			return () => {
@@ -82,13 +86,14 @@ export function MapComponent({
 		}
 
 		const validCountries = locationsData.countries.filter(
-			(country: CountryData) => country.country && country.country.trim() !== ''
+			(country: CountryData) =>
+				country.country && country.country.trim() !== "",
 		);
 
 		const totalVisitors =
 			validCountries.reduce(
 				(sum: number, c: CountryData) => sum + c.visitors,
-				0
+				0,
 			) || 1;
 
 		return {
@@ -102,13 +107,13 @@ export function MapComponent({
 	}, [locationsData?.countries]);
 
 	const [tooltipContent, setTooltipContent] = useState<TooltipContent | null>(
-		null
+		null,
 	);
 	const [tooltipPosition, setTooltipPosition] = useState<TooltipPosition>({
 		x: 0,
 		y: 0,
 	});
-	const [mapView] = useState<'countries' | 'subdivisions'>('countries');
+	const [mapView] = useState<"countries" | "subdivisions">("countries");
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
 
 	const processedCountryData = useMemo(() => {
@@ -124,27 +129,27 @@ export function MapComponent({
 					...item,
 					perCapita: perCapitaValue,
 				};
-			}
+			},
 		);
 	}, [countryData?.data]);
 
 	const colorScale = useMemo(() => {
 		if (!processedCountryData) {
 			return () =>
-				resolvedTheme === 'dark' ? 'hsl(240 3.7% 15.9%)' : 'hsl(210 40% 92%)';
+				resolvedTheme === "dark" ? "hsl(240 3.7% 15.9%)" : "hsl(210 40% 92%)";
 		}
 
-		const metricToUse = mode === 'perCapita' ? 'perCapita' : 'count';
+		const metricToUse = mode === "perCapita" ? "perCapita" : "count";
 		const values = processedCountryData?.map(
-			(d: { count: number; perCapita: number }) => d[metricToUse]
+			(d: { count: number; perCapita: number }) => d[metricToUse],
 		) || [0];
 		const maxValue = Math.max(...values);
 		const nonZeroValues = values.filter((v: number) => v > 0);
 		const minValue = nonZeroValues.length > 0 ? Math.min(...nonZeroValues) : 0;
 
-		const isDark = resolvedTheme === 'dark';
-		const baseBlue = isDark ? '59, 130, 246' : '37, 99, 235'; // blue-500 / blue-600 (more saturated)
-		const lightBlue = isDark ? '96, 165, 250' : '59, 130, 246'; // blue-400 / blue-500
+		const isDark = resolvedTheme === "dark";
+		const baseBlue = isDark ? "59, 130, 246" : "37, 99, 235"; // blue-500 / blue-600 (more saturated)
+		const lightBlue = isDark ? "96, 165, 250" : "59, 130, 246"; // blue-400 / blue-500
 
 		const scale = scalePow<number>()
 			.exponent(0.5)
@@ -153,7 +158,7 @@ export function MapComponent({
 
 		return (value: number) => {
 			if (value === 0) {
-				return isDark ? 'rgba(75, 85, 99, 0.6)' : 'rgba(229, 231, 235, 0.6)';
+				return isDark ? "rgba(75, 85, 99, 0.6)" : "rgba(229, 231, 235, 0.6)";
 			}
 
 			const intensity = scale(value);
@@ -171,10 +176,10 @@ export function MapComponent({
 	const { data: countriesGeoData } = useCountries();
 
 	const getThemeColors = useCallback(() => {
-		const isDark = resolvedTheme === 'dark';
+		const isDark = resolvedTheme === "dark";
 		return {
-			primary: isDark ? 'rgb(59, 130, 246)' : 'rgb(37, 99, 235)', // blue-500 / blue-600
-			muted: isDark ? 'rgb(75, 85, 99)' : 'rgb(156, 163, 175)', // gray-600 / gray-400
+			primary: isDark ? "rgb(59, 130, 246)" : "rgb(37, 99, 235)", // blue-500 / blue-600
+			muted: isDark ? "rgb(75, 85, 99)" : "rgb(156, 163, 175)", // gray-600 / gray-400
 			isDark,
 		};
 	}, [resolvedTheme]);
@@ -183,16 +188,16 @@ export function MapComponent({
 		(
 			hasData: boolean,
 			isHovered: boolean,
-			colors: ReturnType<typeof getThemeColors>
+			colors: ReturnType<typeof getThemeColors>,
 		) => {
 			if (!hasData) {
-				return `${colors.muted.replace(')', ', 0.5)')}`;
+				return `${colors.muted.replace(")", ", 0.5)")}`;
 			}
 			return isHovered
 				? colors.primary
-				: `${colors.primary.replace(')', ', 0.6)')}`;
+				: `${colors.primary.replace(")", ", 0.6)")}`;
 		},
-		[]
+		[],
 	);
 
 	const getFeatureData = useCallback(
@@ -203,13 +208,13 @@ export function MapComponent({
 
 			const dataKey = feature?.properties?.ISO_A2;
 			// Convert GeoJSON code to API code for data lookup
-			const apiCode = mapGeoJsonToApi(dataKey ?? '');
+			const apiCode = mapGeoJsonToApi(dataKey ?? "");
 			const foundData = processedCountryData?.find(
-				({ value }: { value: string }) => value === apiCode
+				({ value }: { value: string }) => value === apiCode,
 			);
 
 			const metricValue =
-				mode === 'perCapita'
+				mode === "perCapita"
 					? foundData?.perCapita || 0
 					: foundData?.count || 0;
 			const isHovered = hoveredId === dataKey?.toString();
@@ -217,7 +222,7 @@ export function MapComponent({
 
 			return { dataKey, foundData, metricValue, isHovered, hasData };
 		},
-		[processedCountryData, mode, hoveredId]
+		[processedCountryData, mode, hoveredId],
 	);
 
 	const getStyleWeights = useCallback(
@@ -225,7 +230,7 @@ export function MapComponent({
 			borderWeight: hasData ? (isHovered ? 2.5 : 1.5) : 1.0,
 			fillOpacity: hasData ? (isHovered ? 0.95 : 0.85) : 0.4,
 		}),
-		[]
+		[],
 	);
 
 	const handleStyle = useCallback(
@@ -252,17 +257,17 @@ export function MapComponent({
 				fillColor,
 				fillOpacity: weights.fillOpacity,
 				opacity: 1,
-				transition: 'all 0.2s ease-in-out',
+				transition: "all 0.2s ease-in-out",
 			};
 
 			if (isHovered && hasData) {
 				return {
 					...baseStyle,
 					filter: colors.isDark
-						? 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
-						: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
-					transform: 'scale(1.02)',
-					transformOrigin: 'center',
+						? "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))"
+						: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+					transform: "scale(1.02)",
+					transformOrigin: "center",
 				};
 			}
 
@@ -274,7 +279,7 @@ export function MapComponent({
 			getBorderColor,
 			getStyleWeights,
 			getFeatureData,
-		]
+		],
 	);
 
 	const handleEachFeature = useCallback(
@@ -286,9 +291,9 @@ export function MapComponent({
 
 					const name = feature.properties?.ADMIN;
 					// Convert GeoJSON code to API code for data lookup
-					const apiCode = mapGeoJsonToApi(code ?? '');
+					const apiCode = mapGeoJsonToApi(code ?? "");
 					const foundData = processedCountryData?.find(
-						({ value }) => value === apiCode
+						({ value }) => value === apiCode,
 					);
 					const count = foundData?.count || 0;
 					const percentage = foundData?.percentage || 0;
@@ -315,13 +320,13 @@ export function MapComponent({
 								animate: true,
 								duration: 1.2,
 								easeLinearity: 0.5,
-							}
+							},
 						);
 					}
 				},
 			});
 		},
-		[processedCountryData]
+		[processedCountryData],
 	);
 
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -335,8 +340,8 @@ export function MapComponent({
 		};
 
 		updateHeight();
-		window.addEventListener('resize', updateHeight);
-		return () => window.removeEventListener('resize', updateHeight);
+		window.addEventListener("resize", updateHeight);
+		return () => window.removeEventListener("resize", updateHeight);
 	}, []);
 
 	const zoom = 1.5;
@@ -345,10 +350,10 @@ export function MapComponent({
 		if (mapRef.current) {
 			const mapContainer = mapRef.current.getContainer();
 			if (mapContainer) {
-				const bgColor = 'hsl(var(--background))';
+				const bgColor = "hsl(var(--background))";
 				mapContainer.style.backgroundColor = bgColor;
 				const leafletContainer =
-					mapContainer.querySelector('.leaflet-container');
+					mapContainer.querySelector(".leaflet-container");
 				if (leafletContainer) {
 					(leafletContainer as HTMLElement).style.backgroundColor = bgColor;
 				}
@@ -357,15 +362,15 @@ export function MapComponent({
 	}, []);
 
 	const calculateCountryCentroid = useCallback(
-		(geometry: Country['features'][number]['geometry']) => {
+		(geometry: Country["features"][number]["geometry"]) => {
 			let centroidLat = 0;
 			let centroidLng = 0;
 			let pointCount = 0;
 
 			const processCoordinates = (
-				coords: number[] | number[][] | number[][][]
+				coords: number[] | number[][] | number[][][],
 			) => {
-				if (typeof coords[0] === 'number') {
+				if (typeof coords[0] === "number") {
 					centroidLng += coords[0] as number;
 					centroidLat += coords[1] as number;
 					pointCount += 1;
@@ -376,9 +381,9 @@ export function MapComponent({
 				}
 			};
 
-			if (geometry.type === 'Polygon') {
+			if (geometry.type === "Polygon") {
 				processCoordinates(geometry.coordinates[0]);
-			} else if (geometry.type === 'MultiPolygon') {
+			} else if (geometry.type === "MultiPolygon") {
 				for (const polygon of geometry.coordinates) {
 					processCoordinates(polygon[0]);
 				}
@@ -391,7 +396,7 @@ export function MapComponent({
 					}
 				: null;
 		},
-		[]
+		[],
 	);
 
 	useEffect(() => {
@@ -401,7 +406,7 @@ export function MapComponent({
 
 		const geoJsonCode = mapApiToGeoJson(selectedCountry);
 		const countryFeature = countriesGeoData.features?.find(
-			(feature) => feature.properties?.ISO_A2 === geoJsonCode
+			(feature) => feature.properties?.ISO_A2 === geoJsonCode,
 		);
 
 		if (!countryFeature?.geometry) {
@@ -448,7 +453,7 @@ export function MapComponent({
 				<MapContainer
 					attributionControl={false}
 					center={[40, 3]}
-					className={resolvedTheme === 'dark' ? 'map-dark' : 'map-light'}
+					className={resolvedTheme === "dark" ? "map-dark" : "map-light"}
 					maxBounds={[
 						[-90, -200],
 						[90, 200],
@@ -459,11 +464,11 @@ export function MapComponent({
 					preferCanvas
 					ref={mapRef}
 					style={{
-						height: '100%',
-						backgroundColor: 'hsl(var(--background))',
-						cursor: 'default',
-						outline: 'none',
-						zIndex: '1',
+						height: "100%",
+						backgroundColor: "hsl(var(--background))",
+						cursor: "default",
+						outline: "none",
+						zIndex: "1",
 					}}
 					zoom={zoom}
 					zoomControl={false}
@@ -471,7 +476,7 @@ export function MapComponent({
 					zoomDelta={0.5}
 					wheelPxPerZoomLevel={60}
 				>
-					{mapView === 'countries' && countriesGeoData && (
+					{mapView === "countries" && countriesGeoData && (
 						<GeoJSON
 							data={countriesGeoData as GeoJsonObject}
 							key={`countries-${mode}-${locationData?.countries?.length || 0}`}
@@ -488,11 +493,11 @@ export function MapComponent({
 					style={{
 						left: tooltipPosition.x,
 						top: tooltipPosition.y - 10,
-						transform: 'translate(-50%, -100%)',
+						transform: "translate(-50%, -100%)",
 						boxShadow:
-							resolvedTheme === 'dark'
-								? '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)'
-								: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+							resolvedTheme === "dark"
+								? "0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)"
+								: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
 					}}
 				>
 					<div className="mb-1 flex items-center gap-2 font-medium">
@@ -505,16 +510,16 @@ export function MapComponent({
 						<div>
 							<span className="font-bold text-foreground">
 								{tooltipContent.count.toLocaleString()}
-							</span>{' '}
+							</span>{" "}
 							<span className="text-muted-foreground">
 								({tooltipContent.percentage.toFixed(1)}%) visitors
 							</span>
 						</div>
-						{mode === 'perCapita' && (
+						{mode === "perCapita" && (
 							<div className="text-muted-foreground text-sm">
 								<span className="font-bold text-foreground">
 									{roundToTwo(tooltipContent.perCapita ?? 0)}
-								</span>{' '}
+								</span>{" "}
 								per million people
 							</div>
 						)}

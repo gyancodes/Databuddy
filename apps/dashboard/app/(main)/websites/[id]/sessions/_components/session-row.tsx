@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
 	ArrowSquareOutIcon,
@@ -6,20 +6,20 @@ import {
 	CaretRightIcon,
 	EyeIcon,
 	SparkleIcon,
-} from '@phosphor-icons/react';
-import lazy from 'next/dynamic';
-import React, { useCallback } from 'react';
-import { FaviconImage } from '@/components/analytics/favicon-image';
-import { Badge } from '@/components/ui/badge';
+} from "@phosphor-icons/react";
+import lazy from "next/dynamic";
+import React, { useCallback } from "react";
+import { FaviconImage } from "@/components/analytics/favicon-image";
+import { Badge } from "@/components/ui/badge";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from "@/components/ui/collapsible";
 
 const SessionEventTimeline = lazy(
 	() =>
-		import('./session-event-timeline').then((mod) => ({
+		import("./session-event-timeline").then((mod) => ({
 			default: mod.SessionEventTimeline,
 		})),
 	{
@@ -28,7 +28,7 @@ const SessionEventTimeline = lazy(
 				<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
 			</div>
 		),
-	}
+	},
 );
 
 import type {
@@ -37,12 +37,12 @@ import type {
 	SessionEvent,
 	SessionReferrer,
 	SessionRowProps,
-} from '@databuddy/shared/types/sessions';
-import { BrowserIcon, CountryFlag, OSIcon } from '@/components/icon';
-import { getDeviceIcon } from '@/lib/utils';
+} from "@databuddy/shared/types/sessions";
+import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
+import { getDeviceIcon } from "@/lib/utils";
 
 function transformSessionEvents(
-	events: RawSessionEventTuple[]
+	events: RawSessionEventTuple[],
 ): SessionEvent[] {
 	return events
 		.map((tuple) => {
@@ -78,7 +78,7 @@ function getReferrerInfo(session: Session): SessionReferrer {
 			name:
 				session.referrer_parsed.name ||
 				session.referrer_parsed.domain ||
-				'Unknown',
+				"Unknown",
 			domain: session.referrer_parsed.domain || null,
 		};
 	}
@@ -92,14 +92,14 @@ function getReferrerInfo(session: Session): SessionReferrer {
 			};
 		} catch {
 			return {
-				name: 'Direct',
+				name: "Direct",
 				domain: null,
 			};
 		}
 	}
 
 	return {
-		name: 'Direct',
+		name: "Direct",
 		domain: null,
 	};
 }
@@ -120,9 +120,9 @@ function SessionRowInternal({
 	const customEventCount =
 		events?.filter(
 			(event) =>
-				!['screen_view', 'page_exit', 'web_vitals', 'link_out'].includes(
-					event.event_name
-				)
+				!["screen_view", "page_exit", "web_vitals", "link_out"].includes(
+					event.event_name,
+				),
 		).length || 0;
 	const referrerInfo = getReferrerInfo(session);
 
@@ -160,10 +160,10 @@ function SessionRowInternal({
 									`Session ${session.session_id.slice(-8)}`}
 							</div>
 							<div className="flex items-center gap-2 text-muted-foreground text-sm">
-								<span>{session.browser_name || 'Unknown'}</span>
+								<span>{session.browser_name || "Unknown"}</span>
 								<span className="text-muted-foreground/60">•</span>
 								<span>
-									{session.country_name || session.country || 'Unknown'}
+									{session.country_name || session.country || "Unknown"}
 								</span>
 								{session.is_returning_visitor && (
 									<>

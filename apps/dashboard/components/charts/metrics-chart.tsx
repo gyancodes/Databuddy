@@ -1,7 +1,12 @@
-import { ChartLineIcon, EyeIcon, EyeSlashIcon, XIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import dayjs from 'dayjs';
-import { useMemo, useState } from 'react';
+import {
+	ChartLineIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	XIcon,
+} from "@phosphor-icons/react";
+import dayjs from "dayjs";
+import { useAtom } from "jotai";
+import { useMemo, useState } from "react";
 import {
 	Area,
 	CartesianGrid,
@@ -13,27 +18,32 @@ import {
 	Tooltip,
 	XAxis,
 	YAxis,
-} from 'recharts';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { usePersistentState } from '@/hooks/use-persistent-state';
-import { ANNOTATION_STORAGE_KEYS } from '@/lib/annotation-constants';
+} from "recharts";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { usePersistentState } from "@/hooks/use-persistent-state";
+import {
+	ANNOTATION_STORAGE_KEYS,
+	CHART_ANNOTATION_STYLES,
+} from "@/lib/annotation-constants";
+import {
+	getChartDisplayDate,
+	isSingleDayAnnotation,
+} from "@/lib/annotation-utils";
+import { cn } from "@/lib/utils";
+import {
+	metricVisibilityAtom,
+	toggleMetricAtom,
+} from "@/stores/jotai/chartAtoms";
+import type { Annotation } from "@/types/annotations";
+import { AnnotationsPanel } from "./annotations-panel";
 import {
 	type ChartDataRow,
 	METRICS,
 	type MetricConfig,
-} from './metrics-constants';
-import { SkeletonChart } from './skeleton-chart';
-import {
-	metricVisibilityAtom,
-	toggleMetricAtom,
-} from '@/stores/jotai/chartAtoms';
-import { RangeSelectionPopup } from './range-selection-popup';
-import { AnnotationsPanel } from './annotations-panel';
-import type { Annotation } from '@/types/annotations';
-import { getChartDisplayDate, isSingleDayAnnotation } from '@/lib/annotation-utils';
-import { CHART_ANNOTATION_STYLES } from '@/lib/annotation-constants';
+} from "./metrics-constants";
+import { RangeSelectionPopup } from "./range-selection-popup";
+import { SkeletonChart } from "./skeleton-chart";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
 	if (!(active && payload?.length)) {
@@ -50,13 +60,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 				{Object.entries(
 					payload.reduce((groups: any, entry: any) => {
 						const key = entry.dataKey
-							.replace('_historical', '')
-							.replace('_future', '');
-						if (!groups[key] || entry.dataKey.includes('_future')) {
+							.replace("_historical", "")
+							.replace("_future", "");
+						if (!groups[key] || entry.dataKey.includes("_future")) {
 							groups[key] = entry;
 						}
 						return groups;
-					}, {})
+					}, {}),
 				).map(([key, entry]: [string, any]) => {
 					const metric = METRICS.find((m) => m.key === key);
 					if (!metric) {
@@ -78,7 +88,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 									{metric.label}
 								</span>
 							</div>
-							<span className="font-bold text-sidebar-foreground text-sm">{value}</span>
+							<span className="font-bold text-sidebar-foreground text-sm">
+								{value}
+							</span>
 						</div>
 					);
 				})}
@@ -103,7 +115,7 @@ interface MetricsChartProps {
 	showLegend?: boolean;
 	onRangeSelect?: (dateRange: DateRangeState) => void;
 	onCreateAnnotation?: (annotation: {
-		annotationType: 'range';
+		annotationType: "range";
 		xValue: string;
 		xEndValue: string;
 		text: string;
@@ -117,7 +129,7 @@ interface MetricsChartProps {
 	showAnnotations?: boolean;
 	onToggleAnnotations?: (show: boolean) => void;
 	websiteId?: string;
-	granularity?: 'hourly' | 'daily' | 'weekly' | 'monthly';
+	granularity?: "hourly" | "daily" | "weekly" | "monthly";
 }
 
 export function MetricsChart({
@@ -137,32 +149,42 @@ export function MetricsChart({
 	showAnnotations = true,
 	onToggleAnnotations,
 	websiteId,
-	granularity = 'daily',
+	granularity = "daily",
 }: MetricsChartProps) {
 	const rawData = data || [];
 	const [refAreaLeft, setRefAreaLeft] = useState<string | null>(null);
 	const [refAreaRight, setRefAreaRight] = useState<string | null>(null);
 	const [showRangePopup, setShowRangePopup] = useState(false);
 	const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-	const [selectedDateRange, setSelectedDateRange] = useState<DateRangeState | null>(null);
+	const [selectedDateRange, setSelectedDateRange] =
+		useState<DateRangeState | null>(null);
 
 	const [tipDismissed, setTipDismissed] = usePersistentState(
-		websiteId ? ANNOTATION_STORAGE_KEYS.tipDismissed(websiteId) : 'chart-tip-dismissed',
-		false
+		websiteId
+			? ANNOTATION_STORAGE_KEYS.tipDismissed(websiteId)
+			: "chart-tip-dismissed",
+		false,
 	);
 
 	const [visibleMetrics] = useAtom(metricVisibilityAtom);
 	const [, toggleMetric] = useAtom(toggleMetricAtom);
 
 	const hiddenMetrics = useMemo(
-		() => Object.fromEntries(
-			Object.entries(visibleMetrics).map(([key, visible]) => [key, !visible])
-		),
-		[visibleMetrics]
+		() =>
+			Object.fromEntries(
+				Object.entries(visibleMetrics).map(([key, visible]) => [key, !visible]),
+			),
+		[visibleMetrics],
 	);
 
-	const DEFAULT_METRICS = ['pageviews', 'visitors', 'sessions', 'bounce_rate', 'avg_session_duration'];
-	
+	const DEFAULT_METRICS = [
+		"pageviews",
+		"visitors",
+		"sessions",
+		"bounce_rate",
+		"avg_session_duration",
+	];
+
 	const metrics = metricsFilter
 		? METRICS.filter(metricsFilter)
 		: METRICS.filter((metric) => DEFAULT_METRICS.includes(metric.key));
@@ -173,7 +195,9 @@ export function MetricsChart({
 
 		const result = { ...item };
 		for (const metric of metrics) {
-			result[`${metric.key}_historical`] = isLastPoint ? null : item[metric.key];
+			result[`${metric.key}_historical`] = isLastPoint
+				? null
+				: item[metric.key];
 			if (isLastPoint || isSecondToLast) {
 				result[`${metric.key}_future`] = item[metric.key];
 			}
@@ -200,7 +224,7 @@ export function MetricsChart({
 		}
 
 		const rightBoundary = refAreaRight || refAreaLeft;
-		
+
 		const leftIndex = chartData.findIndex((d) => d.date === refAreaLeft);
 		const rightIndex = chartData.findIndex((d) => d.date === rightBoundary);
 
@@ -210,19 +234,22 @@ export function MetricsChart({
 			return;
 		}
 
-		const [startIndex, endIndex] = leftIndex < rightIndex 
-			? [leftIndex, rightIndex] 
-			: [rightIndex, leftIndex];
-		
-		const startDateStr = (chartData[startIndex] as any).rawDate || chartData[startIndex].date;
-		const endDateStr = (chartData[endIndex] as any).rawDate || chartData[endIndex].date;
-		
+		const [startIndex, endIndex] =
+			leftIndex < rightIndex
+				? [leftIndex, rightIndex]
+				: [rightIndex, leftIndex];
+
+		const startDateStr =
+			(chartData[startIndex] as any).rawDate || chartData[startIndex].date;
+		const endDateStr =
+			(chartData[endIndex] as any).rawDate || chartData[endIndex].date;
+
 		const startDate = dayjs(startDateStr).toDate();
 		const endDate = dayjs(endDateStr).toDate();
-		
-		const dateRange = { 
+
+		const dateRange = {
 			startDate,
-			endDate
+			endDate,
 		};
 
 		setSelectedDateRange(dateRange);
@@ -239,7 +266,7 @@ export function MetricsChart({
 	};
 
 	const handleCreateAnnotation = (annotation: {
-		annotationType: 'range';
+		annotationType: "range";
 		xValue: string;
 		xEndValue: string;
 		text: string;
@@ -260,17 +287,22 @@ export function MetricsChart({
 		return (
 			<div
 				className={cn(
-					'w-full rounded border border-sidebar-border bg-sidebar',
-					className
+					"w-full rounded border border-sidebar-border bg-sidebar",
+					className,
 				)}
 			>
 				<div className="px-6 py-6 border-sidebar-border border-b">
 					<h2 className="flex items-center gap-2 font-semibold text-lg text-sidebar-foreground tracking-tight">
-						<ChartLineIcon className="h-5 w-5 text-sidebar-ring" weight="duotone" />
+						<ChartLineIcon
+							className="h-5 w-5 text-sidebar-ring"
+							weight="duotone"
+						/>
 						{title}
 					</h2>
 					{description && (
-						<p className="text-sidebar-foreground/70 text-sm mt-1">{description}</p>
+						<p className="text-sidebar-foreground/70 text-sm mt-1">
+							{description}
+						</p>
 					)}
 				</div>
 				<div className="flex items-center justify-center p-8">
@@ -297,17 +329,21 @@ export function MetricsChart({
 	}
 
 	return (
-		<div className={cn('w-full overflow-hidden rounded', className)}>
+		<div className={cn("w-full overflow-hidden rounded", className)}>
 			{/* Annotations Panel */}
 			{annotations.length > 0 && (
 				<div className="border-b border-sidebar-border bg-sidebar px-4 py-2 flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<span className="text-sm text-sidebar-foreground/70">
-							{annotations.length} annotation{annotations.length !== 1 ? 's' : ''} on this chart
+							{annotations.length} annotation
+							{annotations.length !== 1 ? "s" : ""} on this chart
 						</span>
 						{onToggleAnnotations && (
 							<div className="flex items-center gap-2">
-								<Label htmlFor="show-annotations" className="text-xs text-sidebar-foreground/70">
+								<Label
+									htmlFor="show-annotations"
+									className="text-xs text-sidebar-foreground/70"
+								>
 									Show annotations
 								</Label>
 								<Switch
@@ -326,15 +362,15 @@ export function MetricsChart({
 					/>
 				</div>
 			)}
-			
+
 			<div className="p-0">
 				<div
 					className="relative select-none"
-					style={{ 
-						width: '100%', 
+					style={{
+						width: "100%",
 						height: height + 20,
-						userSelect: refAreaLeft ? 'none' : 'auto',
-						WebkitUserSelect: refAreaLeft ? 'none' : 'auto',
+						userSelect: refAreaLeft ? "none" : "auto",
+						WebkitUserSelect: refAreaLeft ? "none" : "auto",
 					}}
 				>
 					{/* Range Selection Instructions */}
@@ -345,7 +381,7 @@ export function MetricsChart({
 							</div>
 						</div>
 					)}
-					
+
 					{!refAreaLeft && annotations.length === 0 && !tipDismissed && (
 						<div className="absolute top-4 right-4 z-10">
 							<div className="bg-sidebar border border-sidebar-border px-3 py-2 rounded text-xs text-sidebar-foreground/70 shadow-sm flex items-center gap-2">
@@ -405,18 +441,21 @@ export function MetricsChart({
 							<XAxis
 								axisLine={false}
 								dataKey="date"
-								tick={{ fontSize: 11, fill: 'oklch(0.4 0.01 240)' }}
+								tick={{ fontSize: 11, fill: "oklch(0.4 0.01 240)" }}
 								tickLine={false}
 							/>
 							<YAxis
 								axisLine={false}
-								tick={{ fontSize: 11, fill: 'oklch(0.4 0.01 240)' }}
+								tick={{ fontSize: 11, fill: "oklch(0.4 0.01 240)" }}
 								tickLine={false}
 								width={45}
 							/>
 							<Tooltip
 								content={<CustomTooltip />}
-								cursor={{ stroke: 'var(--sidebar-ring)', strokeDasharray: '4 4' }}
+								cursor={{
+									stroke: "var(--sidebar-ring)",
+									strokeDasharray: "4 4",
+								}}
 							/>
 							{refAreaLeft && refAreaRight && (
 								<ReferenceArea
@@ -427,26 +466,61 @@ export function MetricsChart({
 									fillOpacity={0.15}
 								/>
 							)}
-							
-							{showAnnotations && annotations.map((annotation, index) => {
-								const startDate = getChartDisplayDate(annotation.xValue, granularity);
-								
-								if (annotation.annotationType === 'range' && annotation.xEndValue) {
-									const endDate = getChartDisplayDate(annotation.xEndValue, granularity);
-									
-									const isSingleDay = isSingleDayAnnotation(annotation);
-									
-									if (isSingleDay) {
+
+							{showAnnotations &&
+								annotations.map((annotation, index) => {
+									const startDate = getChartDisplayDate(
+										annotation.xValue,
+										granularity,
+									);
+
+									if (
+										annotation.annotationType === "range" &&
+										annotation.xEndValue
+									) {
+										const endDate = getChartDisplayDate(
+											annotation.xEndValue,
+											granularity,
+										);
+
+										const isSingleDay = isSingleDayAnnotation(annotation);
+
+										if (isSingleDay) {
+											return (
+												<ReferenceLine
+													key={annotation.id}
+													x={startDate}
+													stroke={annotation.color}
+													strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
+													strokeDasharray={
+														CHART_ANNOTATION_STYLES.strokeDasharray
+													}
+													label={{
+														value: annotation.text,
+														position: index % 2 === 0 ? "top" : "insideTopLeft",
+														fill: annotation.color,
+														fontSize: CHART_ANNOTATION_STYLES.fontSize,
+														fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
+														offset: CHART_ANNOTATION_STYLES.offset,
+													}}
+												/>
+											);
+										}
+
 										return (
-											<ReferenceLine
+											<ReferenceArea
 												key={annotation.id}
-												x={startDate}
+												x1={startDate}
+												x2={endDate}
+												fill={annotation.color}
+												fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
 												stroke={annotation.color}
-												strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-												strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
+												strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
+												strokeWidth={2}
+												strokeDasharray="3 3"
 												label={{
 													value: annotation.text,
-													position: index % 2 === 0 ? 'top' : 'insideTopLeft',
+													position: index % 2 === 0 ? "top" : "insideTop",
 													fill: annotation.color,
 													fontSize: CHART_ANNOTATION_STYLES.fontSize,
 													fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
@@ -455,21 +529,18 @@ export function MetricsChart({
 											/>
 										);
 									}
-									
+
+									// Point or line annotations
 									return (
-										<ReferenceArea
+										<ReferenceLine
 											key={annotation.id}
-											x1={startDate}
-											x2={endDate}
-											fill={annotation.color}
-											fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
+											x={startDate}
 											stroke={annotation.color}
-											strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
-											strokeWidth={2}
-											strokeDasharray="3 3"
+											strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
+											strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
 											label={{
 												value: annotation.text,
-												position: index % 2 === 0 ? 'top' : 'insideTop',
+												position: index % 2 === 0 ? "top" : "insideTopLeft",
 												fill: annotation.color,
 												fontSize: CHART_ANNOTATION_STYLES.fontSize,
 												fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
@@ -477,28 +548,8 @@ export function MetricsChart({
 											}}
 										/>
 									);
-								}
-								
-								// Point or line annotations
-								return (
-									<ReferenceLine
-										key={annotation.id}
-										x={startDate}
-										stroke={annotation.color}
-										strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-										strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
-										label={{
-											value: annotation.text,
-											position: index % 2 === 0 ? 'top' : 'insideTopLeft',
-											fill: annotation.color,
-											fontSize: CHART_ANNOTATION_STYLES.fontSize,
-											fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-											offset: CHART_ANNOTATION_STYLES.offset,
-										}}
-									/>
-								);
-							})}
-							
+								})}
+
 							{showLegend && (
 								<Legend
 									align="center"
@@ -509,8 +560,8 @@ export function MetricsChart({
 											<span
 												className={`cursor-pointer text-xs ${
 													isHidden
-														? 'text-muted-foreground/50 line-through'
-														: 'text-muted-foreground hover:text-foreground'
+														? "text-muted-foreground/50 line-through"
+														: "text-muted-foreground hover:text-foreground"
 												}`}
 											>
 												{label}
@@ -519,14 +570,14 @@ export function MetricsChart({
 									}}
 									onClick={(payload: any) => {
 										const metric = metrics.find(
-											(m) => m.label === payload.value
+											(m) => m.label === payload.value,
 										);
 										if (metric) {
 											toggleMetric(metric.key as keyof typeof visibleMetrics);
 										}
 									}}
 									verticalAlign="bottom"
-									wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}
+									wrapperStyle={{ paddingTop: "20px", fontSize: "12px" }}
 								/>
 							)}
 							{metrics.map((metric) => (

@@ -1,6 +1,6 @@
-import type { RedisOptions } from 'ioredis';
-import Redis from 'ioredis';
-import { SuperJSON } from 'superjson';
+import type { RedisOptions } from "ioredis";
+import Redis from "ioredis";
+import { SuperJSON } from "superjson";
 
 // Initialize logger
 const logger = console;
@@ -19,32 +19,32 @@ interface ExtendedRedis extends Redis {
 	setJson: <T = any>(
 		key: string,
 		value: T,
-		expireInSec: number
+		expireInSec: number,
 	) => Promise<void>;
 }
 
 const createRedisClient = (
 	url: string,
-	overrides: RedisOptions = {}
+	overrides: RedisOptions = {},
 ): ExtendedRedis => {
 	const client = new Redis(url, {
 		...options,
 		...overrides,
 	}) as ExtendedRedis;
 
-	client.on('error', (error) => {
-		logger.error('Redis Client Error:', error);
+	client.on("error", (error) => {
+		logger.error("Redis Client Error:", error);
 	});
 
-	client.on('connect', () => {
+	client.on("connect", () => {
 		// logger.debug('Redis client connected');
 	});
 
-	client.on('ready', () => {
+	client.on("ready", () => {
 		// logger.debug('Redis client ready');
 	});
 
-	client.on('reconnecting', () => {
+	client.on("reconnecting", () => {
 		// logger.debug('Redis client reconnecting');
 	});
 
@@ -60,7 +60,7 @@ const createRedisClient = (
 			// Check for empty collections
 			if (
 				(Array.isArray(res) && res.length === 0) ||
-				(res && typeof res === 'object' && Object.keys(res).length === 0)
+				(res && typeof res === "object" && Object.keys(res).length === 0)
 			) {
 				return null;
 			}
@@ -75,7 +75,7 @@ const createRedisClient = (
 	client.setJson = async <T = any>(
 		key: string,
 		value: T,
-		expireInSec: number
+		expireInSec: number,
 	): Promise<void> => {
 		await client.setex(key, expireInSec, SuperJSON.stringify(value));
 	};
@@ -91,19 +91,19 @@ export function getRedisCache(): ExtendedRedis {
 	if (!redisInstance) {
 		const redisUrl = process.env.REDIS_URL;
 		if (!redisUrl) {
-			logger.error('REDIS_URL environment variable is not set');
-			throw new Error('REDIS_URL environment variable is required');
+			logger.error("REDIS_URL environment variable is not set");
+			throw new Error("REDIS_URL environment variable is required");
 		}
 
 		redisInstance = createRedisClient(redisUrl, options);
 
 		// Handle graceful shutdown - but allow reconnection
-		process.on('SIGINT', () => {
+		process.on("SIGINT", () => {
 			// Don't disconnect Redis on SIGINT as it may be used for hot reloads
 			// Only disconnect on actual process termination
 		});
 
-		process.on('SIGTERM', () => {
+		process.on("SIGTERM", () => {
 			if (redisInstance) {
 				redisInstance.disconnect();
 				redisInstance = null;
@@ -127,16 +127,16 @@ export const getRawRedis = () => {
 export async function getLock(
 	key: string,
 	value: string,
-	timeout: number
+	timeout: number,
 ): Promise<boolean> {
-	const lock = await redis.set(key, value, 'PX', timeout, 'NX');
-	return lock === 'OK';
+	const lock = await redis.set(key, value, "PX", timeout, "NX");
+	return lock === "OK";
 }
 
 // Helper to release lock
 export async function releaseLock(
 	key: string,
-	value: string
+	value: string,
 ): Promise<boolean> {
 	const script = `
     if redis.call("get", KEYS[1]) == ARGV[1] then
@@ -151,7 +151,7 @@ export async function releaseLock(
 
 // Helper to get connection status
 export function isRedisConnected(): boolean {
-	return redisInstance?.status === 'ready';
+	return redisInstance?.status === "ready";
 }
 
 // Helper to manually disconnect (for testing)

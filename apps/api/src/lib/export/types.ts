@@ -1,6 +1,6 @@
 // Export-related type definitions
 
-export type ExportFormat = 'csv' | 'json' | 'txt' | 'proto';
+export type ExportFormat = "csv" | "json" | "txt" | "proto";
 
 export interface ExportRequest {
 	website_id: string;

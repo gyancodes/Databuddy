@@ -1,24 +1,36 @@
-import { getCountryCode, getCountryName } from '@databuddy/shared/country-codes';
-import type { BatchQueryResponse, DynamicQueryFilter, DynamicQueryRequest, DynamicQueryResponse } from '@databuddy/shared/types/api';
-import type { DateRange, ProfileData } from '@databuddy/shared/types/analytics';
-import type { ExtractDataTypes, ParameterDataMap, QueryOptionsResponse } from '@databuddy/shared/types/parameters';
+import {
+	getCountryCode,
+	getCountryName,
+} from "@databuddy/shared/country-codes";
+import type { DateRange, ProfileData } from "@databuddy/shared/types/analytics";
+import type {
+	BatchQueryResponse,
+	DynamicQueryFilter,
+	DynamicQueryRequest,
+	DynamicQueryResponse,
+} from "@databuddy/shared/types/api";
+import type {
+	ExtractDataTypes,
+	ParameterDataMap,
+	QueryOptionsResponse,
+} from "@databuddy/shared/types/parameters";
 import {
 	type UseInfiniteQueryOptions,
 	type UseQueryOptions,
 	useInfiniteQuery,
 	useQuery,
-} from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
-import { formatDuration } from '@/lib/utils';
-import { getUserTimezone } from '@/lib/timezone';
+} from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
+import { getUserTimezone } from "@/lib/timezone";
+import { formatDuration } from "@/lib/utils";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 // Base params builder - following use-analytics.ts pattern
 function buildParams(
 	websiteId: string,
 	dateRange?: DateRange,
-	additionalParams?: Record<string, string | number>
+	additionalParams?: Record<string, string | number>,
 ): URLSearchParams {
 	const params = new URLSearchParams({
 		website_id: websiteId,
@@ -26,19 +38,19 @@ function buildParams(
 	});
 
 	if (dateRange?.start_date) {
-		params.append('start_date', dateRange.start_date);
+		params.append("start_date", dateRange.start_date);
 	}
 
 	if (dateRange?.end_date) {
-		params.append('end_date', dateRange.end_date);
+		params.append("end_date", dateRange.end_date);
 	}
 
 	if (dateRange?.granularity) {
-		params.append('granularity', dateRange.granularity);
+		params.append("granularity", dateRange.granularity);
 	}
 
 	// Add cache busting
-	params.append('_t', Date.now().toString());
+	params.append("_t", Date.now().toString());
 
 	return params;
 }
@@ -51,18 +63,18 @@ const defaultQueryOptions = {
 	refetchOnMount: true, // Always refetch on mount to show loading state
 	refetchInterval: 10 * 60 * 1000, // Background refetch every 10 minutes
 	retry: (failureCount: number, error: Error) => {
-		if (error instanceof DOMException && error.name === 'AbortError') {
+		if (error instanceof DOMException && error.name === "AbortError") {
 			return false;
 		}
 		return failureCount < 2;
 	},
-	networkMode: 'online' as const,
+	networkMode: "online" as const,
 	refetchIntervalInBackground: false,
 	// Force loading state to show for at least a brief moment
 	placeholderData: undefined, // Don't use placeholder data to ensure loading states show
 };
 
-function transformFilters(filters?: DynamicQueryRequest['filters']) {
+function transformFilters(filters?: DynamicQueryRequest["filters"]) {
 	return filters?.map(({ field, operator, value }) => ({
 		field,
 		op: operator,
@@ -75,7 +87,7 @@ async function fetchDynamicQuery(
 	websiteId: string,
 	dateRange: DateRange,
 	queryData: DynamicQueryRequest | DynamicQueryRequest[],
-	signal?: AbortSignal
+	signal?: AbortSignal,
 ): Promise<DynamicQueryResponse | BatchQueryResponse> {
 	const timezone = getUserTimezone();
 	const params = buildParams(websiteId, dateRange, { timezone });
@@ -91,7 +103,7 @@ async function fetchDynamicQuery(
 				limit: query.limit || 100,
 				page: query.page || 1,
 				filters: transformFilters(query.filters),
-				granularity: query.granularity || dateRange.granularity || 'daily',
+				granularity: query.granularity || dateRange.granularity || "daily",
 				groupBy: query.groupBy,
 			}))
 		: {
@@ -102,30 +114,30 @@ async function fetchDynamicQuery(
 				limit: queryData.limit || 100,
 				page: queryData.page || 1,
 				filters: transformFilters(queryData.filters),
-				granularity: queryData.granularity || dateRange.granularity || 'daily',
+				granularity: queryData.granularity || dateRange.granularity || "daily",
 				groupBy: queryData.groupBy,
 			};
 
 	const response = await fetch(url, {
-		method: 'POST',
+		method: "POST",
 		headers: {
-			'Content-Type': 'application/json',
+			"Content-Type": "application/json",
 		},
-		credentials: 'include',
+		credentials: "include",
 		signal,
 		body: JSON.stringify(requestBody),
 	});
 
 	if (!response.ok) {
 		throw new Error(
-			`Failed to fetch dynamic query data: ${response.statusText}`
+			`Failed to fetch dynamic query data: ${response.statusText}`,
 		);
 	}
 
 	const data = await response.json();
 
 	if (!data.success) {
-		throw new Error(data.error || 'Failed to fetch dynamic query data');
+		throw new Error(data.error || "Failed to fetch dynamic query data");
 	}
 
 	return data;
@@ -138,7 +150,7 @@ export function useDynamicQuery<T extends (keyof ParameterDataMap)[]>(
 	websiteId: string,
 	dateRange: DateRange,
 	queryData: DynamicQueryRequest,
-	options?: Partial<UseQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseQueryOptions<DynamicQueryResponse>>,
 ) {
 	const fetchData = useCallback(
 		async ({ signal }: { signal?: AbortSignal }) => {
@@ -146,15 +158,15 @@ export function useDynamicQuery<T extends (keyof ParameterDataMap)[]>(
 				websiteId,
 				dateRange,
 				queryData,
-				signal
+				signal,
 			);
 			return result as DynamicQueryResponse;
 		},
-		[websiteId, dateRange, queryData]
+		[websiteId, dateRange, queryData],
 	);
 
 	const query = useQuery({
-		queryKey: ['dynamic-query', websiteId, dateRange, queryData],
+		queryKey: ["dynamic-query", websiteId, dateRange, queryData],
 		queryFn: fetchData,
 		...defaultQueryOptions,
 		...options,
@@ -174,7 +186,7 @@ export function useDynamicQuery<T extends (keyof ParameterDataMap)[]>(
 					}
 					return acc;
 				},
-				{} as Record<string, any>
+				{} as Record<string, any>,
 			) || {}
 		);
 	}, [query.data]);
@@ -211,7 +223,7 @@ export function useBatchDynamicQuery(
 	websiteId: string,
 	dateRange: DateRange,
 	queries: DynamicQueryRequest[],
-	options?: Partial<UseQueryOptions<BatchQueryResponse>>
+	options?: Partial<UseQueryOptions<BatchQueryResponse>>,
 ) {
 	const fetchData = useCallback(
 		async ({ signal }: { signal?: AbortSignal }) => {
@@ -219,17 +231,17 @@ export function useBatchDynamicQuery(
 				websiteId,
 				dateRange,
 				queries,
-				signal
+				signal,
 			);
 			// Ensure we return a batch query response
 			return result as BatchQueryResponse;
 		},
-		[websiteId, dateRange, queries]
+		[websiteId, dateRange, queries],
 	);
 
 	const query = useQuery({
 		queryKey: [
-			'batch-dynamic-query',
+			"batch-dynamic-query",
 			websiteId,
 			dateRange.start_date,
 			dateRange.end_date,
@@ -274,8 +286,8 @@ export function useBatchDynamicQuery(
 				}
 			} else {
 				processedResult.errors.push({
-					parameter: 'query',
-					error: 'No data array found in response',
+					parameter: "query",
+					error: "No data array found in response",
 				});
 			}
 
@@ -296,7 +308,7 @@ export function useBatchDynamicQuery(
 			}
 			return data;
 		},
-		[processedResults]
+		[processedResults],
 	);
 
 	const hasDataForQuery = useCallback(
@@ -309,7 +321,7 @@ export function useBatchDynamicQuery(
 				result.data[parameter].length > 0
 			);
 		},
-		[processedResults]
+		[processedResults],
 	);
 
 	const getErrorsForQuery = useCallback(
@@ -317,7 +329,7 @@ export function useBatchDynamicQuery(
 			const result = processedResults.find((r) => r.queryId === queryId);
 			return result?.errors || [];
 		},
-		[processedResults]
+		[processedResults],
 	);
 
 	return {
@@ -340,21 +352,21 @@ export function useBatchDynamicQuery(
 			failedQueries: processedResults.filter((r) => !r.success).length,
 			totalParameters: processedResults.reduce(
 				(sum, r) => sum + Object.keys(r.data).length,
-				0
+				0,
 			),
 		},
 	};
 }
 
 export function useQueryOptions(
-	options?: Partial<UseQueryOptions<QueryOptionsResponse>>
+	options?: Partial<UseQueryOptions<QueryOptionsResponse>>,
 ) {
 	return useQuery({
-		queryKey: ['query-options'],
+		queryKey: ["query-options"],
 		queryFn: async () => {
-			const res = await fetch('/api/query/types');
+			const res = await fetch("/api/query/types");
 			if (!res.ok) {
-				throw new Error('Failed to fetch query options');
+				throw new Error("Failed to fetch query options");
 			}
 			return res.json();
 		},
@@ -370,79 +382,79 @@ export function useEnhancedPerformanceData(
 	websiteId: string,
 	dateRange: DateRange,
 	filters: DynamicQueryFilter[],
-	options?: Partial<UseQueryOptions<BatchQueryResponse>>
+	options?: Partial<UseQueryOptions<BatchQueryResponse>>,
 ) {
 	const queries: DynamicQueryRequest[] = [
 		{
-			id: 'pages',
-			parameters: ['slow_pages'],
+			id: "pages",
+			parameters: ["slow_pages"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'countries',
-			parameters: ['performance_by_country'],
+			id: "countries",
+			parameters: ["performance_by_country"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'devices',
-			parameters: ['performance_by_device'],
+			id: "devices",
+			parameters: ["performance_by_device"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'browsers',
-			parameters: ['performance_by_browser'],
+			id: "browsers",
+			parameters: ["performance_by_browser"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'operating_systems',
-			parameters: ['performance_by_os'],
+			id: "operating_systems",
+			parameters: ["performance_by_os"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'regions',
-			parameters: ['performance_by_region'],
+			id: "regions",
+			parameters: ["performance_by_region"],
 			limit: 100,
 			filters,
 		},
 		// Core Web Vitals queries
 		{
-			id: 'web_vitals_time_series',
-			parameters: ['web_vitals_time_series'],
+			id: "web_vitals_time_series",
+			parameters: ["web_vitals_time_series"],
 			limit: 365, // More data points for time series
 			filters,
 		},
 		{
-			id: 'web_vitals_by_page',
-			parameters: ['web_vitals_by_page'],
+			id: "web_vitals_by_page",
+			parameters: ["web_vitals_by_page"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'web_vitals_by_browser',
-			parameters: ['web_vitals_by_browser'],
+			id: "web_vitals_by_browser",
+			parameters: ["web_vitals_by_browser"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'web_vitals_by_country',
-			parameters: ['web_vitals_by_country'],
+			id: "web_vitals_by_country",
+			parameters: ["web_vitals_by_country"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'web_vitals_by_os',
-			parameters: ['web_vitals_by_os'],
+			id: "web_vitals_by_os",
+			parameters: ["web_vitals_by_os"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'web_vitals_by_region',
-			parameters: ['web_vitals_by_region'],
+			id: "web_vitals_by_region",
+			parameters: ["web_vitals_by_region"],
 			limit: 100,
 			filters,
 		},
@@ -457,27 +469,27 @@ export function useEnhancedPerformanceData(
 export function useEnhancedGeographicData(
 	websiteId: string,
 	dateRange: DateRange,
-	options?: Partial<UseQueryOptions<BatchQueryResponse>>
+	options?: Partial<UseQueryOptions<BatchQueryResponse>>,
 ) {
 	const queries: DynamicQueryRequest[] = [
 		{
-			id: 'countries',
-			parameters: ['country'],
+			id: "countries",
+			parameters: ["country"],
 			limit: 100,
 		},
 		{
-			id: 'regions',
-			parameters: ['region'],
+			id: "regions",
+			parameters: ["region"],
 			limit: 100,
 		},
 		{
-			id: 'timezones',
-			parameters: ['timezone'],
+			id: "timezones",
+			parameters: ["timezone"],
 			limit: 100,
 		},
 		{
-			id: 'languages',
-			parameters: ['language'],
+			id: "languages",
+			parameters: ["language"],
 			limit: 100,
 		},
 	];
@@ -492,18 +504,18 @@ export function useMapLocationData(
 	websiteId: string,
 	dateRange: DateRange,
 	filters?: DynamicQueryFilter[],
-	options?: Partial<UseQueryOptions<BatchQueryResponse>>
+	options?: Partial<UseQueryOptions<BatchQueryResponse>>,
 ) {
 	const queries: DynamicQueryRequest[] = [
 		{
-			id: 'map-countries',
-			parameters: ['country'],
+			id: "map-countries",
+			parameters: ["country"],
 			limit: 100,
 			filters,
 		},
 		{
-			id: 'map-regions',
-			parameters: ['region'],
+			id: "map-regions",
+			parameters: ["region"],
 			limit: 100,
 			filters,
 		},
@@ -517,7 +529,7 @@ export function useEnhancedErrorData(
 	dateRange: DateRange,
 	options?: Partial<UseQueryOptions<BatchQueryResponse>> & {
 		filters?: DynamicQueryFilter[];
-	}
+	},
 ) {
 	const filters = options?.filters || [];
 
@@ -526,22 +538,22 @@ export function useEnhancedErrorData(
 		dateRange,
 		[
 			{
-				id: 'recent_errors',
-				parameters: ['recent_errors'],
+				id: "recent_errors",
+				parameters: ["recent_errors"],
 				filters,
 			},
-			{ id: 'error_types', parameters: ['error_types'], filters },
+			{ id: "error_types", parameters: ["error_types"], filters },
 			{
-				id: 'errors_by_page',
-				parameters: ['errors_by_page'],
+				id: "errors_by_page",
+				parameters: ["errors_by_page"],
 				filters,
 			},
-			{ id: 'error_summary', parameters: ['error_summary'], filters },
-			{ id: 'error_chart_data', parameters: ['error_chart_data'], filters },
+			{ id: "error_summary", parameters: ["error_summary"], filters },
+			{ id: "error_chart_data", parameters: ["error_chart_data"], filters },
 		],
 		{
 			...options,
-		}
+		},
 	);
 }
 
@@ -552,25 +564,25 @@ export function useInfiniteSessionsData(
 	websiteId: string,
 	dateRange: DateRange,
 	limit = 25,
-	options?: Partial<UseInfiniteQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseInfiniteQueryOptions<DynamicQueryResponse>>,
 ) {
 	return useInfiniteQuery({
-		queryKey: ['sessions-infinite', websiteId, dateRange, limit],
+		queryKey: ["sessions-infinite", websiteId, dateRange, limit],
 		queryFn: async ({ pageParam = 1, signal }) => {
 			const result = await fetchDynamicQuery(
 				websiteId,
 				dateRange,
 				{
-					id: 'sessions-list',
-					parameters: ['session_list'],
+					id: "sessions-list",
+					parameters: ["session_list"],
 					limit,
 					page: pageParam as number,
 				},
-				signal
+				signal,
 			);
 			// Ensure we return DynamicQueryResponse
-			if ('batch' in result) {
-				throw new Error('Batch queries not supported for infinite sessions');
+			if ("batch" in result) {
+				throw new Error("Batch queries not supported for infinite sessions");
 			}
 			return result;
 		},
@@ -642,7 +654,7 @@ function transformSessionsData(sessions: any[]): any[] {
 		// Generate session name
 		const sessionName = session.session_id
 			? `Session ${session.session_id.slice(-8)}`
-			: 'Unknown Session';
+			: "Unknown Session";
 
 		// Format duration
 		const durationFormatted = formatDuration(session.duration || 0);
@@ -654,22 +666,22 @@ function transformSessionsData(sessions: any[]): any[] {
 				const url = new URL(session.referrer);
 				referrerParsed = {
 					type:
-						url.hostname === window.location.hostname ? 'internal' : 'external',
+						url.hostname === window.location.hostname ? "internal" : "external",
 					name: url.hostname,
 					domain: url.hostname,
 				};
 			} catch {
 				referrerParsed = {
-					type: 'direct',
-					name: 'Direct',
+					type: "direct",
+					name: "Direct",
 					domain: null,
 				};
 			}
 		}
 
 		// Map country code and preserve original name
-		const countryCode = getCountryCode(session.country || '');
-		const countryName = session.country || 'Unknown';
+		const countryCode = getCountryCode(session.country || "");
+		const countryName = session.country || "Unknown";
 
 		return {
 			session_id: session.session_id,
@@ -712,14 +724,14 @@ export function useSessionsData(
 	dateRange: DateRange,
 	limit = 50,
 	page = 1,
-	options?: Partial<UseQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseQueryOptions<DynamicQueryResponse>>,
 ) {
 	const queryResult = useDynamicQuery(
 		websiteId,
 		dateRange,
 		{
-			id: 'sessions-list',
-			parameters: ['session_list'],
+			id: "sessions-list",
+			parameters: ["session_list"],
 			limit,
 			page,
 		},
@@ -727,7 +739,7 @@ export function useSessionsData(
 			...options,
 			staleTime: 5 * 60 * 1000, // 5 minutes
 			gcTime: 10 * 60 * 1000, // 10 minutes
-		}
+		},
 	);
 
 	const sessions = useMemo(() => {
@@ -771,12 +783,12 @@ function transformProfilesData(profiles: any[]): ProfileData[] {
 				total_sessions: profile.session_count,
 				total_pageviews: profile.total_events,
 				total_duration: 0,
-				total_duration_formatted: '0s',
+				total_duration_formatted: "0s",
 				device: profile.device_type,
 				browser: profile.browser_name,
 				os: profile.os_name,
-				country: getCountryCode(profile.country || ''),
-				country_name: getCountryName(profile.country || ''),
+				country: getCountryCode(profile.country || ""),
+				country_name: getCountryName(profile.country || ""),
 				region: profile.region,
 				sessions: [],
 			});
@@ -797,10 +809,10 @@ function transformProfilesData(profiles: any[]): ProfileData[] {
 				browser: profile.session_browser_name || profile.browser_name,
 				os: profile.session_os_name || profile.os_name,
 				country: getCountryCode(
-					profile.session_country || profile.country || ''
+					profile.session_country || profile.country || "",
 				),
 				country_name: getCountryName(
-					profile.session_country || profile.country || ''
+					profile.session_country || profile.country || "",
 				),
 				region: profile.session_region || profile.region,
 				referrer: profile.session_referrer || profile.referrer,
@@ -855,7 +867,7 @@ function transformProfilesData(profiles: any[]): ProfileData[] {
 		...profile,
 		sessions: profile.sessions.sort(
 			(a: any, b: any) =>
-				new Date(b.first_visit).getTime() - new Date(a.first_visit).getTime()
+				new Date(b.first_visit).getTime() - new Date(a.first_visit).getTime(),
 		),
 	}));
 }
@@ -869,14 +881,14 @@ export function useProfilesData(
 	limit = 50,
 	page = 1,
 	filters?: DynamicQueryFilter[],
-	options?: Partial<UseQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseQueryOptions<DynamicQueryResponse>>,
 ) {
 	const queryResult = useDynamicQuery(
 		websiteId,
 		dateRange,
 		{
-			id: 'profiles-list',
-			parameters: ['profile_list'],
+			id: "profiles-list",
+			parameters: ["profile_list"],
 			limit,
 			page,
 			filters,
@@ -885,7 +897,7 @@ export function useProfilesData(
 			...options,
 			staleTime: 5 * 60 * 1000, // 5 minutes
 			gcTime: 10 * 60 * 1000, // 10 minutes
-		}
+		},
 	);
 
 	const profiles = useMemo(() => {
@@ -921,18 +933,18 @@ export function useUserProfile(
 	websiteId: string,
 	userId: string,
 	dateRange: DateRange,
-	options?: Partial<UseQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseQueryOptions<DynamicQueryResponse>>,
 ) {
 	const profileQuery = useDynamicQuery(
 		websiteId,
 		dateRange,
 		{
 			id: `user-profile-${userId}`,
-			parameters: ['profile_detail'],
+			parameters: ["profile_detail"],
 			filters: [
 				{
-					field: 'anonymous_id',
-					operator: 'eq',
+					field: "anonymous_id",
+					operator: "eq",
 					value: userId,
 				},
 			],
@@ -942,7 +954,7 @@ export function useUserProfile(
 			staleTime: 5 * 60 * 1000,
 			gcTime: 10 * 60 * 1000,
 			enabled: Boolean(userId && websiteId),
-		}
+		},
 	);
 
 	const sessionsQuery = useDynamicQuery(
@@ -950,11 +962,11 @@ export function useUserProfile(
 		dateRange,
 		{
 			id: `user-sessions-${userId}`,
-			parameters: ['profile_sessions'],
+			parameters: ["profile_sessions"],
 			filters: [
 				{
-					field: 'anonymous_id',
-					operator: 'eq',
+					field: "anonymous_id",
+					operator: "eq",
 					value: userId,
 				},
 			],
@@ -965,7 +977,7 @@ export function useUserProfile(
 			staleTime: 5 * 60 * 1000,
 			gcTime: 10 * 60 * 1000,
 			enabled: Boolean(userId && websiteId),
-		}
+		},
 	);
 
 	const userProfile = useMemo(() => {
@@ -979,19 +991,19 @@ export function useUserProfile(
 		const sessions = Array.isArray(rawSessions)
 			? rawSessions.map((session: any) => ({
 					session_id: session.session_id,
-					session_name: session.session_name || 'Session',
+					session_name: session.session_name || "Session",
 					first_visit: session.first_visit,
 					last_visit: session.last_visit,
 					duration: session.duration || 0,
-					duration_formatted: session.duration_formatted || '0s',
+					duration_formatted: session.duration_formatted || "0s",
 					page_views: session.page_views || 0,
 					unique_pages: session.unique_pages || 0,
-					device: session.device || '',
-					browser: session.browser || '',
-					os: session.os || '',
-					country: session.country || '',
-					region: session.region || '',
-					referrer: session.referrer || 'direct',
+					device: session.device || "",
+					browser: session.browser || "",
+					os: session.os || "",
+					country: session.country || "",
+					region: session.region || "",
+					referrer: session.referrer || "direct",
 					events:
 						Array.isArray(session.events) && session.events.length > 0
 							? session.events.map((eventTuple: any[]) => ({
@@ -1035,7 +1047,7 @@ export function useUserProfile(
  */
 export function useRealTimeStats(
 	websiteId: string,
-	options?: Partial<UseQueryOptions<DynamicQueryResponse>>
+	options?: Partial<UseQueryOptions<DynamicQueryResponse>>,
 ) {
 	const dateRange = useMemo(() => {
 		const now = new Date();
@@ -1050,8 +1062,8 @@ export function useRealTimeStats(
 		websiteId,
 		dateRange,
 		{
-			id: 'realtime-active-stats',
-			parameters: ['active_stats'],
+			id: "realtime-active-stats",
+			parameters: ["active_stats"],
 		},
 		{
 			...options,
@@ -1060,7 +1072,7 @@ export function useRealTimeStats(
 			gcTime: 10_000,
 			refetchOnWindowFocus: true,
 			refetchOnMount: true,
-		}
+		},
 	);
 
 	const activeUsers = useMemo(() => {

@@ -1,11 +1,11 @@
-import { Geist_Mono } from 'next/font/google';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Geist_Mono } from "next/font/google";
+import Image from "next/image";
+import Link from "next/link";
 
 const geistMono = Geist_Mono({
-	subsets: ['latin'],
-	weight: ['400', '500', '600', '700'],
-	variable: '--font-geist-mono',
+	subsets: ["latin"],
+	weight: ["400", "500", "600", "700"],
+	variable: "--font-geist-mono",
 });
 
 export function LogoContent() {

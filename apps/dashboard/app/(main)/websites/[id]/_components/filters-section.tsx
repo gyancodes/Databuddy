@@ -1,41 +1,41 @@
-'use client';
+"use client";
 
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import { filterOptions } from '@databuddy/shared/lists/filters';
-import { FloppyDiskIcon, PencilIcon, XIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import { useParams } from 'next/navigation';
-import { useCallback, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { filterOptions } from "@databuddy/shared/lists/filters";
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { FloppyDiskIcon, PencilIcon, XIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import { useParams } from "next/navigation";
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
 
-import { useSavedFilters } from '@/hooks/use-saved-filters';
+import { useSavedFilters } from "@/hooks/use-saved-filters";
 import {
 	dynamicQueryFiltersAtom,
 	removeDynamicFilterAtom,
-} from '@/stores/jotai/filterAtoms';
-import { DeleteAllDialog } from './delete-all-dialog';
-import { DeleteFilterDialog } from './delete-filter-dialog';
-import { SaveFilterDialog } from './save-filter-dialog';
-import { SavedFiltersMenu } from './saved-filters-menu';
+} from "@/stores/jotai/filterAtoms";
+import { DeleteAllDialog } from "./delete-all-dialog";
+import { DeleteFilterDialog } from "./delete-filter-dialog";
+import { SaveFilterDialog } from "./save-filter-dialog";
+import { SavedFiltersMenu } from "./saved-filters-menu";
 
 function getOperatorSymbol(operator: string): string {
 	const operatorToSymbolMap: Record<string, string> = {
-		eq: '=',
-		like: '∈',
-		ne: '≠',
-		in: '∈',
-		notIn: '∉',
-		gt: '>',
-		gte: '≥',
-		lt: '<',
-		lte: '≤',
+		eq: "=",
+		like: "∈",
+		ne: "≠",
+		in: "∈",
+		notIn: "∉",
+		gt: ">",
+		gte: "≥",
+		lt: "<",
+		lte: "≤",
 	};
 	return operatorToSymbolMap[operator] || operator;
 }
 
 export function FiltersSection() {
 	const [selectedFilters, setSelectedFilters] = useAtom(
-		dynamicQueryFiltersAtom
+		dynamicQueryFiltersAtom,
 	);
 	const [, removeFilter] = useAtom(removeDynamicFilterAtom);
 
@@ -50,7 +50,7 @@ export function FiltersSection() {
 				});
 			}
 		},
-		[selectedFilters, removeFilter]
+		[selectedFilters, removeFilter],
 	);
 
 	const { id } = useParams();
@@ -82,8 +82,8 @@ export function FiltersSection() {
 		filterName: string;
 	}>({
 		isOpen: false,
-		filterId: '',
-		filterName: '',
+		filterId: "",
+		filterName: "",
 	});
 	const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
 
@@ -117,14 +117,14 @@ export function FiltersSection() {
 			// Error is handled by toast in the hook
 			setIsSaving(false);
 		},
-		[selectedFilters, saveFilter, updateFilter, editingFilter]
+		[selectedFilters, saveFilter, updateFilter, editingFilter],
 	);
 
 	const handleApplyFilter = useCallback(
 		(filters: DynamicQueryFilter[]) => {
 			setSelectedFilters(filters);
 		},
-		[setSelectedFilters]
+		[setSelectedFilters],
 	);
 
 	const handleDeleteSavedFilter = useCallback(
@@ -140,7 +140,7 @@ export function FiltersSection() {
 				filterName: filterToDelete.name,
 			});
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const handleConfirmDelete = useCallback(() => {
@@ -159,7 +159,7 @@ export function FiltersSection() {
 			duplicateFilter(savedFilterId);
 			// Success/error feedback is handled by toast in the hook
 		},
-		[duplicateFilter]
+		[duplicateFilter],
 	);
 
 	const handleEditSavedFilter = useCallback(
@@ -179,7 +179,7 @@ export function FiltersSection() {
 				originalFilters: [...filterToEdit.filters], // Store original state
 			});
 		},
-		[savedFilters, setSelectedFilters]
+		[savedFilters, setSelectedFilters],
 	);
 
 	const handleCancelEdit = useCallback(() => {
@@ -200,7 +200,7 @@ export function FiltersSection() {
 		const result = updateFilter(
 			editingFilter.id,
 			editingFilter.name,
-			selectedFilters
+			selectedFilters,
 		);
 
 		if (result.success) {
@@ -254,7 +254,7 @@ export function FiltersSection() {
 								size="sm"
 								variant="default"
 							>
-								{isSaving ? 'Saving...' : 'Save Changes'}
+								{isSaving ? "Saving..." : "Save Changes"}
 							</Button>
 							<Button
 								className="h-8 text-xs sm:text-sm"
@@ -284,17 +284,17 @@ export function FiltersSection() {
 				<div className="flex flex-wrap items-center gap-2">
 					{selectedFilters.map((filter, index) => {
 						const fieldLabel = filterOptions.find(
-							(o) => o.value === filter.field
+							(o) => o.value === filter.field,
 						)?.label;
 						const operatorSymbol = getOperatorSymbol(filter.operator);
 						const valueLabel = Array.isArray(filter.value)
-							? filter.value.join(', ')
+							? filter.value.join(", ")
 							: filter.value;
 
 						return (
 							<div
 								className="group inline-flex min-h-[44px] items-center gap-1.5 rounded-md border bg-muted/30 px-2 py-1.5 text-xs transition-all hover:bg-muted/50 hover:shadow-sm sm:gap-2 sm:px-3 sm:text-sm"
-								key={`filter-${filter.field}-${filter.operator}-${Array.isArray(filter.value) ? filter.value.join('-') : filter.value}-${index}`}
+								key={`filter-${filter.field}-${filter.operator}-${Array.isArray(filter.value) ? filter.value.join("-") : filter.value}-${index}`}
 							>
 								<div className="flex items-center gap-1.5 sm:gap-2">
 									<span className="font-medium text-foreground">
@@ -343,7 +343,10 @@ export function FiltersSection() {
 								size="sm"
 								variant="outline"
 							>
-								<FloppyDiskIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" weight="duotone" />
+								<FloppyDiskIcon
+									className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+									weight="duotone"
+								/>
 								<span className="hidden sm:inline">Save as New</span>
 								<span className="sm:hidden">Save</span>
 							</Button>
@@ -362,7 +365,7 @@ export function FiltersSection() {
 						<div className="rounded-md bg-muted/30 px-3 py-1.5">
 							<span className="text-muted-foreground text-xs">
 								{selectedFilters.length} filter
-								{selectedFilters.length === 1 ? '' : 's'} configured
+								{selectedFilters.length === 1 ? "" : "s"} configured
 							</span>
 						</div>
 					)}

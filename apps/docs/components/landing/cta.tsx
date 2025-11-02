@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { ArrowRight, Plus } from 'lucide-react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { getTrackingParams } from '@databuddy/sdk';
-import { cn } from '@/lib/utils';
-import LiquidChrome from '../bits/liquid';
+import { getTrackingParams } from "@databuddy/sdk";
+import { ArrowRight, Plus } from "lucide-react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { cn } from "@/lib/utils";
+import LiquidChrome from "../bits/liquid";
 
 const ctaItems = [
 	{
-		title: 'Get started',
+		title: "Get started",
 		description:
-			'Drop your site in and see what your users are doing in seconds',
-		href: 'https://app.databuddy.cc/login',
+			"Drop your site in and see what your users are doing in seconds",
+		href: "https://app.databuddy.cc/login",
 		primary: true,
 	},
 	{
-		title: 'Read Documentation',
-		description: 'Learn how to integrate Databuddy with your tech stack.',
-		href: '/docs',
+		title: "Read Documentation",
+		description: "Learn how to integrate Databuddy with your tech stack.",
+		href: "/docs",
 		primary: false,
 	},
 ];
@@ -39,55 +39,57 @@ export default function CTA() {
 
 					{ctaItems.map((item) => {
 						const href =
-							item.href.startsWith('http') && trackingParams
-								? `${item.href}${item.href.includes('?') ? '&' : '?'}${trackingParams}`
+							item.href.startsWith("http") && trackingParams
+								? `${item.href}${item.href.includes("?") ? "&" : "?"}${trackingParams}`
 								: item.href;
 
 						return (
 							<Link
 								className={cn(
-									'group flex transform-gpu flex-col justify-center border-border border-t-[1.2px] border-l-[1.2px] p-10 transition-colors hover:bg-muted/50 md:min-h-[240px] md:border-t-0'
+									"group flex transform-gpu flex-col justify-center border-border border-t-[1.2px] border-l-[1.2px] p-10 transition-colors hover:bg-muted/50 md:min-h-[240px] md:border-t-0",
 								)}
 								href={href}
 								key={item.title}
 								rel={
-									item.href.startsWith('http') ? 'noopener noreferrer' : undefined
+									item.href.startsWith("http")
+										? "noopener noreferrer"
+										: undefined
 								}
-								target={item.href.startsWith('http') ? '_blank' : undefined}
+								target={item.href.startsWith("http") ? "_blank" : undefined}
 							>
-							<div className="my-1 flex items-center gap-2">
-								{item.primary ? (
-									<div className="flex h-4 w-4 items-center justify-center rounded-sm bg-primary">
-										<ArrowRight className="h-2 w-2 text-primary-foreground" />
-									</div>
-								) : (
-									<div className="flex h-4 w-4 items-center justify-center rounded-sm border border-border">
-										<ArrowRight className="h-2 w-2 text-muted-foreground" />
-									</div>
-								)}
-								<p className="text-muted-foreground text-xs">
-									{item.primary ? 'Try Now' : 'Learn More'}
-								</p>
-							</div>
-							<div className="mt-2">
-								<div className="max-w-full">
-									<div className="flex items-center gap-3">
-										<p
-											className={cn(
-												'max-w-lg font-medium text-foreground text-lg tracking-tight transition-colors group-hover:text-primary',
-												item.primary && 'text-primary'
-											)}
-										>
-											{item.title}
-										</p>
-										<ArrowRight className="h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-primary" />
-									</div>
+								<div className="my-1 flex items-center gap-2">
+									{item.primary ? (
+										<div className="flex h-4 w-4 items-center justify-center rounded-sm bg-primary">
+											<ArrowRight className="h-2 w-2 text-primary-foreground" />
+										</div>
+									) : (
+										<div className="flex h-4 w-4 items-center justify-center rounded-sm border border-border">
+											<ArrowRight className="h-2 w-2 text-muted-foreground" />
+										</div>
+									)}
+									<p className="text-muted-foreground text-xs">
+										{item.primary ? "Try Now" : "Learn More"}
+									</p>
 								</div>
-								<p className="mt-2 text-left text-muted-foreground text-sm">
-									{item.description}
-								</p>
-							</div>
-						</Link>
+								<div className="mt-2">
+									<div className="max-w-full">
+										<div className="flex items-center gap-3">
+											<p
+												className={cn(
+													"max-w-lg font-medium text-foreground text-lg tracking-tight transition-colors group-hover:text-primary",
+													item.primary && "text-primary",
+												)}
+											>
+												{item.title}
+											</p>
+											<ArrowRight className="h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-primary" />
+										</div>
+									</div>
+									<p className="mt-2 text-left text-muted-foreground text-sm">
+										{item.description}
+									</p>
+								</div>
+							</Link>
 						);
 					})}
 				</div>
@@ -133,7 +135,7 @@ export default function CTA() {
 									href={
 										trackingParams
 											? `https://app.databuddy.cc/login?${trackingParams}`
-											: 'https://app.databuddy.cc/login'
+											: "https://app.databuddy.cc/login"
 									}
 								>
 									Get started

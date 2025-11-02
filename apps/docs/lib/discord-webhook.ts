@@ -29,29 +29,29 @@ class DiscordWebhook {
 
 	private async sendMessage(message: DiscordWebhookMessage): Promise<boolean> {
 		if (!this.webhookUrl) {
-			console.warn('Discord webhook URL not configured');
+			console.warn("Discord webhook URL not configured");
 			return false;
 		}
 
 		try {
 			const response = await fetch(this.webhookUrl, {
-				method: 'POST',
+				method: "POST",
 				headers: {
-					'Content-Type': 'application/json',
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(message),
 			});
 
 			if (!response.ok) {
 				console.error(
-					`Discord webhook failed: ${response.status} ${response.statusText}`
+					`Discord webhook failed: ${response.status} ${response.statusText}`,
 				);
 				return false;
 			}
 
 			return true;
 		} catch (error) {
-			console.error('Failed to send Discord webhook:', error);
+			console.error("Failed to send Discord webhook:", error);
 			return false;
 		}
 	}
@@ -59,7 +59,7 @@ class DiscordWebhook {
 	async logSuccess(
 		title: string,
 		message: string,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	): Promise<boolean> {
 		return await this.sendMessage({
 			embeds: [
@@ -70,7 +70,7 @@ class DiscordWebhook {
 					fields: metadata ? this.formatMetadata(metadata) : undefined,
 					timestamp: new Date().toISOString(),
 					footer: {
-						text: 'Databuddy Docs',
+						text: "Databuddy Docs",
 					},
 				},
 			],
@@ -80,7 +80,7 @@ class DiscordWebhook {
 	async logWarning(
 		title: string,
 		message: string,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	): Promise<boolean> {
 		return await this.sendMessage({
 			embeds: [
@@ -91,7 +91,7 @@ class DiscordWebhook {
 					fields: metadata ? this.formatMetadata(metadata) : undefined,
 					timestamp: new Date().toISOString(),
 					footer: {
-						text: 'Databuddy Docs',
+						text: "Databuddy Docs",
 					},
 				},
 			],
@@ -101,7 +101,7 @@ class DiscordWebhook {
 	async logError(
 		title: string,
 		message: string,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	): Promise<boolean> {
 		return await this.sendMessage({
 			embeds: [
@@ -112,7 +112,7 @@ class DiscordWebhook {
 					fields: metadata ? this.formatMetadata(metadata) : undefined,
 					timestamp: new Date().toISOString(),
 					footer: {
-						text: 'Databuddy Docs',
+						text: "Databuddy Docs",
 					},
 				},
 			],
@@ -121,18 +121,18 @@ class DiscordWebhook {
 
 	async logException(
 		error: Error,
-		context?: Record<string, unknown>
+		context?: Record<string, unknown>,
 	): Promise<boolean> {
 		const errorMetadata = {
 			error: error.message,
-			stack: error.stack ? `${error.stack.slice(0, 500)}...` : 'No stack trace',
+			stack: error.stack ? `${error.stack.slice(0, 500)}...` : "No stack trace",
 			...context,
 		};
 
 		return await this.logError(
-			'Exception Occurred',
+			"Exception Occurred",
 			error.message,
-			errorMetadata
+			errorMetadata,
 		);
 	}
 
@@ -149,19 +149,19 @@ class DiscordWebhook {
 }
 
 // Create webhook instance
-const webhookUrl = process.env.DISCORD_WEBHOOK_URL || '';
+const webhookUrl = process.env.DISCORD_WEBHOOK_URL || "";
 const discordWebhook = new DiscordWebhook(webhookUrl);
 
 export const logger = {
 	success: (
 		title: string,
 		message: string,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	) => discordWebhook.logSuccess(title, message, metadata),
 	warning: (
 		title: string,
 		message: string,
-		metadata?: Record<string, unknown>
+		metadata?: Record<string, unknown>,
 	) => discordWebhook.logWarning(title, message, metadata),
 	error: (title: string, message: string, metadata?: Record<string, unknown>) =>
 		discordWebhook.logError(title, message, metadata),

@@ -1,9 +1,9 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { PlusIcon, TrashIcon } from '@phosphor-icons/react';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { trpc } from '@/lib/trpc';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon, TrashIcon } from "@phosphor-icons/react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { trpc } from "@/lib/trpc";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -13,9 +13,9 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '../ui/alert-dialog';
-import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
+} from "../ui/alert-dialog";
+import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import {
 	Form,
 	FormControl,
@@ -23,29 +23,29 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from '../ui/form';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+} from "../ui/form";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '../ui/select';
-import { Separator } from '../ui/separator';
+} from "../ui/select";
+import { Separator } from "../ui/separator";
 import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
 	SheetTitle,
-} from '../ui/sheet';
+} from "../ui/sheet";
 import type {
 	ApiKeyAccessEntry,
 	ApiResourceType,
 	ApiScope,
-} from './api-key-types';
+} from "./api-key-types";
 
 interface ApiKeyCreateDialogProps {
 	open: boolean;
@@ -62,49 +62,49 @@ interface ApiKeyCreateDialogProps {
 
 const ALL_SCOPES: { value: ApiScope; label: string; description: string }[] = [
 	{
-		value: 'read:data',
-		label: 'Read Data',
-		description: 'View analytics data and reports',
+		value: "read:data",
+		label: "Read Data",
+		description: "View analytics data and reports",
 	},
 	{
-		value: 'write:data',
-		label: 'Write Data',
-		description: 'Send events and modify data',
+		value: "write:data",
+		label: "Write Data",
+		description: "Send events and modify data",
 	},
 	{
-		value: 'read:analytics',
-		label: 'Read Analytics',
-		description: 'Access analytics data and custom SQL queries',
+		value: "read:analytics",
+		label: "Read Analytics",
+		description: "Access analytics data and custom SQL queries",
 	},
 	{
-		value: 'write:custom-sql',
-		label: 'Custom SQL Queries',
-		description: 'Execute custom SQL queries against analytics database',
+		value: "write:custom-sql",
+		label: "Custom SQL Queries",
+		description: "Execute custom SQL queries against analytics database",
 	},
 	{
-		value: 'read:experiments',
-		label: 'Read Experiments',
-		description: 'View A/B tests and feature flags',
+		value: "read:experiments",
+		label: "Read Experiments",
+		description: "View A/B tests and feature flags",
 	},
 	{
-		value: 'track:events',
-		label: 'Track Events',
-		description: 'Send tracking events to analytics',
+		value: "track:events",
+		label: "Track Events",
+		description: "Send tracking events to analytics",
 	},
 	{
-		value: 'read:export',
-		label: 'Export Data',
-		description: 'Export analytics data in various formats',
+		value: "read:export",
+		label: "Export Data",
+		description: "Export analytics data in various formats",
 	},
 	{
-		value: 'write:otel',
-		label: 'OpenTelemetry',
-		description: 'Send OpenTelemetry data and traces',
+		value: "write:otel",
+		label: "OpenTelemetry",
+		description: "Send OpenTelemetry data and traces",
 	},
 	{
-		value: 'admin:apikeys',
-		label: 'Manage API Keys',
-		description: 'Create and manage API keys',
+		value: "admin:apikeys",
+		label: "Manage API Keys",
+		description: "Create and manage API keys",
 	},
 ];
 
@@ -137,7 +137,7 @@ export function ApiKeyCreateDialog({
 							scopes: [],
 						},
 					]
-				: []
+				: [],
 		);
 		setWebsiteToAdd(undefined);
 		setCreatedInfo(null);
@@ -160,13 +160,13 @@ export function ApiKeyCreateDialog({
 
 	// Form schema
 	const formSchema = z.object({
-		name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+		name: z.string().min(1, "Name is required").max(100, "Name too long"),
 	});
 	type FormData = z.infer<typeof formSchema>;
 
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
-		defaultValues: { name: '' },
+		defaultValues: { name: "" },
 	});
 
 	const [globalScopes, setGlobalScopes] = useState<ApiScope[]>([]);
@@ -179,16 +179,16 @@ export function ApiKeyCreateDialog({
 						scopes: [],
 					},
 				]
-			: []
+			: [],
 	);
 	const { data: websites } = trpc.websites.list.useQuery({ organizationId });
 	const [websiteToAdd, setWebsiteToAdd] = useState<string | undefined>(
-		undefined
+		undefined,
 	);
 
 	const toggleGlobalScope = (scope: ApiScope) => {
 		setGlobalScopes((prev) =>
-			prev.includes(scope) ? prev.filter((x) => x !== scope) : [...prev, scope]
+			prev.includes(scope) ? prev.filter((x) => x !== scope) : [...prev, scope],
 		);
 	};
 
@@ -197,14 +197,14 @@ export function ApiKeyCreateDialog({
 			return;
 		}
 		const exists = scopedAccess.some(
-			(e) => e.resourceType === 'website' && e.resourceId === websiteToAdd
+			(e) => e.resourceType === "website" && e.resourceId === websiteToAdd,
 		);
 		if (exists) {
 			return;
 		}
 		setScopedAccess((prev) => [
 			...prev,
-			{ resourceType: 'website', resourceId: websiteToAdd, scopes: [] },
+			{ resourceType: "website", resourceId: websiteToAdd, scopes: [] },
 		]);
 		setWebsiteToAdd(undefined);
 	};
@@ -223,7 +223,7 @@ export function ApiKeyCreateDialog({
 					? entry.scopes.filter((s) => s !== scope)
 					: [...entry.scopes, scope];
 				return { ...entry, scopes };
-			})
+			}),
 		);
 	};
 
@@ -364,12 +364,12 @@ export function ApiKeyCreateDialog({
 												<div className="space-y-2">
 													{scopedAccess.map((entry, idx) => {
 														const website = websites.find(
-															(w) => w.id === entry.resourceId
+															(w) => w.id === entry.resourceId,
 														);
 														return (
 															<div
 																className="space-y-2 rounded border bg-muted/30 p-3"
-																key={`${entry.resourceType}-${entry.resourceId ?? 'none'}`}
+																key={`${entry.resourceType}-${entry.resourceId ?? "none"}`}
 															>
 																<div className="flex items-center justify-between">
 																	<span className="font-medium text-sm">
@@ -396,7 +396,7 @@ export function ApiKeyCreateDialog({
 																		>
 																			<Checkbox
 																				checked={entry.scopes.includes(
-																					scope.value
+																					scope.value,
 																				)}
 																				id={`resource-${idx}-${scope.value}`}
 																				onCheckedChange={() =>
@@ -429,8 +429,8 @@ export function ApiKeyCreateDialog({
 									</Button>
 									<Button disabled={createMutation.isPending} type="submit">
 										{createMutation.isPending
-											? 'Creating...'
-											: 'Create API Key'}
+											? "Creating..."
+											: "Create API Key"}
 									</Button>
 								</div>
 							</form>
@@ -458,7 +458,7 @@ export function ApiKeyCreateDialog({
 					</AlertDialogHeader>
 					{createdInfo ? (
 						<code className="block max-h-40 overflow-auto break-all rounded bg-muted p-3 font-mono text-xs">
-							{createdInfo?.secret ?? ''}
+							{createdInfo?.secret ?? ""}
 						</code>
 					) : null}
 					<AlertDialogFooter>
@@ -466,7 +466,7 @@ export function ApiKeyCreateDialog({
 						{createdInfo ? (
 							<AlertDialogAction
 								onClick={() =>
-									navigator.clipboard.writeText(createdInfo?.secret ?? '')
+									navigator.clipboard.writeText(createdInfo?.secret ?? "")
 								}
 							>
 								Copy

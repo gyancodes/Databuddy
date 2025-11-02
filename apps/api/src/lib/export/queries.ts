@@ -6,7 +6,7 @@
  */
 export function buildDateFilter(
 	startDate?: string,
-	endDate?: string
+	endDate?: string,
 ): {
 	filter: string;
 	params: Record<string, string>;
@@ -16,15 +16,15 @@ export function buildDateFilter(
 
 	if (startDate) {
 		params.startDate = startDate;
-		conditions.push('time >= {startDate:String}');
+		conditions.push("time >= {startDate:String}");
 	}
 
 	if (endDate) {
 		params.endDate = endDate;
-		conditions.push('time <= {endDate:String}');
+		conditions.push("time <= {endDate:String}");
 	}
 
-	const filter = conditions.length > 0 ? `AND ${conditions.join(' AND ')}` : '';
+	const filter = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
 	return { filter, params };
 }
 
@@ -89,7 +89,7 @@ export function getEventsQuery(dateFilter: string): string {
 
 export function getErrorsQuery(dateFilter: string): string {
 	// Replace 'time' with 'timestamp' for errors table
-	const errorDateFilter = dateFilter.replace(/time/g, 'timestamp');
+	const errorDateFilter = dateFilter.replace(/time/g, "timestamp");
 	return `
 		SELECT 
 			id,
@@ -122,7 +122,7 @@ export function getErrorsQuery(dateFilter: string): string {
 
 export function getWebVitalsQuery(dateFilter: string): string {
 	// Replace 'time' with 'timestamp' for web_vitals table
-	const vitalsDateFilter = dateFilter.replace(/time/g, 'timestamp');
+	const vitalsDateFilter = dateFilter.replace(/time/g, "timestamp");
 	return `
 		SELECT 
 			id,

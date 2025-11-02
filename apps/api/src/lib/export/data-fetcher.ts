@@ -1,18 +1,18 @@
 // Data fetching logic for exports
 
-import { chQuery } from '@databuddy/db';
+import { chQuery } from "@databuddy/db";
 import {
 	buildDateFilter,
 	getErrorsQuery,
 	getEventsQuery,
 	getWebVitalsQuery,
-} from './queries';
+} from "./queries";
 import type {
 	ExportRequest,
 	SanitizedError,
 	SanitizedEvent,
 	SanitizedWebVitals,
-} from './types';
+} from "./types";
 
 export interface ExportData {
 	events: SanitizedEvent[];
@@ -21,7 +21,7 @@ export interface ExportData {
 }
 
 export async function fetchExportData(
-	request: ExportRequest
+	request: ExportRequest,
 ): Promise<ExportData> {
 	const {
 		website_id: websiteId,
@@ -32,7 +32,7 @@ export async function fetchExportData(
 	// Build secure date filter with parameters
 	const { filter: dateFilter, params: dateParams } = buildDateFilter(
 		startDate,
-		endDate
+		endDate,
 	);
 
 	// Prepare queries

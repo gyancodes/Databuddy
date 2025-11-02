@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import { filterOptions } from '@databuddy/shared/lists/filters';
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'sonner';
+import { filterOptions } from "@databuddy/shared/lists/filters";
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export interface SavedFilter {
 	id: string;
@@ -15,14 +15,14 @@ export interface SavedFilter {
 
 export interface SavedFilterError {
 	type:
-		| 'storage_quota'
-		| 'invalid_data'
-		| 'duplicate_name'
-		| 'validation_error';
+		| "storage_quota"
+		| "invalid_data"
+		| "duplicate_name"
+		| "validation_error";
 	message: string;
 }
 
-const STORAGE_KEY = 'databuddy-saved-filters';
+const STORAGE_KEY = "databuddy-saved-filters";
 const MAX_FILTERS_PER_WEBSITE = 50;
 const MAX_FILTER_NAME_LENGTH = 100;
 
@@ -31,7 +31,7 @@ function getStorageKey(websiteId: string): string {
 }
 
 function loadSavedFilters(websiteId: string): SavedFilter[] {
-	if (typeof window === 'undefined') {
+	if (typeof window === "undefined") {
 		return [];
 	}
 
@@ -49,34 +49,34 @@ function loadSavedFilters(websiteId: string): SavedFilter[] {
 		// Validate and filter valid saved filters
 		return parsed.filter((filter: unknown): filter is SavedFilter => {
 			return (
-				typeof filter === 'object' &&
+				typeof filter === "object" &&
 				filter !== null &&
-				'id' in filter &&
-				'name' in filter &&
-				'filters' in filter &&
-				'createdAt' in filter &&
-				'updatedAt' in filter &&
-				typeof filter.id === 'string' &&
-				typeof filter.name === 'string' &&
+				"id" in filter &&
+				"name" in filter &&
+				"filters" in filter &&
+				"createdAt" in filter &&
+				"updatedAt" in filter &&
+				typeof filter.id === "string" &&
+				typeof filter.name === "string" &&
 				Array.isArray(filter.filters) &&
-				typeof filter.createdAt === 'string' &&
-				typeof filter.updatedAt === 'string'
+				typeof filter.createdAt === "string" &&
+				typeof filter.updatedAt === "string"
 			);
 		});
 	} catch (error) {
-		console.error('Failed to load saved filters:', error);
+		console.error("Failed to load saved filters:", error);
 		return [];
 	}
 }
 
 function saveSavedFilters(
 	websiteId: string,
-	savedFilters: SavedFilter[]
+	savedFilters: SavedFilter[],
 ): { success: boolean; error?: SavedFilterError } {
-	if (typeof window === 'undefined') {
+	if (typeof window === "undefined") {
 		return {
 			success: false,
-			error: { type: 'storage_quota', message: 'Not available server-side' },
+			error: { type: "storage_quota", message: "Not available server-side" },
 		};
 	}
 
@@ -86,20 +86,20 @@ function saveSavedFilters(
 		return { success: true };
 	} catch (error) {
 		const message =
-			error instanceof Error ? error.message : 'Unknown storage error';
-		if (message.includes('quota') || message.includes('QuotaExceededError')) {
+			error instanceof Error ? error.message : "Unknown storage error";
+		if (message.includes("quota") || message.includes("QuotaExceededError")) {
 			return {
 				success: false,
 				error: {
-					type: 'storage_quota',
-					message: 'Storage quota exceeded. Try deleting some saved filters.',
+					type: "storage_quota",
+					message: "Storage quota exceeded. Try deleting some saved filters.",
 				},
 			};
 		}
 		return {
 			success: false,
 			error: {
-				type: 'storage_quota',
+				type: "storage_quota",
 				message: `Failed to save: ${message}`,
 			},
 		};
@@ -131,7 +131,7 @@ export function useSavedFilters(websiteId: string) {
 	useEffect(() => {
 		if (!isLoading && savedFilters.length > 0) {
 			const validFieldValues = new Set(
-				filterOptions.map((option) => option.value as string)
+				filterOptions.map((option) => option.value as string),
 			);
 
 			const cleanedFilters = savedFilters
@@ -157,12 +157,12 @@ export function useSavedFilters(websiteId: string) {
 				cleanedFilters.length !== savedFilters.length ||
 				cleanedFilters.some(
 					(cleaned, index) =>
-						cleaned.filters.length !== savedFilters[index]?.filters.length
+						cleaned.filters.length !== savedFilters[index]?.filters.length,
 				)
 			) {
 				setSavedFilters(cleanedFilters);
 				if (cleanedFilters.length < savedFilters.length) {
-					toast.info('Some saved filters were removed due to invalid fields');
+					toast.info("Some saved filters were removed due to invalid fields");
 				}
 			}
 		}
@@ -174,19 +174,19 @@ export function useSavedFilters(websiteId: string) {
 			const trimmedName = name.trim();
 
 			if (!trimmedName) {
-				return { type: 'validation_error', message: 'Filter name is required' };
+				return { type: "validation_error", message: "Filter name is required" };
 			}
 
 			if (trimmedName.length < 2) {
 				return {
-					type: 'validation_error',
-					message: 'Filter name must be at least 2 characters',
+					type: "validation_error",
+					message: "Filter name must be at least 2 characters",
 				};
 			}
 
 			if (trimmedName.length > MAX_FILTER_NAME_LENGTH) {
 				return {
-					type: 'validation_error',
+					type: "validation_error",
 					message: `Filter name must be less than ${MAX_FILTER_NAME_LENGTH} characters`,
 				};
 			}
@@ -195,60 +195,60 @@ export function useSavedFilters(websiteId: string) {
 			const isDuplicate = savedFilters.some(
 				(filter) =>
 					filter.id !== excludeId &&
-					filter.name.toLowerCase() === trimmedName.toLowerCase()
+					filter.name.toLowerCase() === trimmedName.toLowerCase(),
 			);
 
 			if (isDuplicate) {
 				return {
-					type: 'duplicate_name',
-					message: 'A filter with this name already exists',
+					type: "duplicate_name",
+					message: "A filter with this name already exists",
 				};
 			}
 
 			return null;
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const validateFilters = useCallback(
 		(filters: DynamicQueryFilter[]): SavedFilterError | null => {
 			if (!filters.length) {
 				return {
-					type: 'validation_error',
-					message: 'At least one filter is required',
+					type: "validation_error",
+					message: "At least one filter is required",
 				};
 			}
 
 			// Validate each filter against current filter options
 			const validFieldValues = new Set(
-				filterOptions.map((option) => option.value as string)
+				filterOptions.map((option) => option.value as string),
 			);
 
 			for (const filter of filters) {
 				if (!validFieldValues.has(filter.field)) {
 					return {
-						type: 'validation_error',
+						type: "validation_error",
 						message: `Invalid filter field: ${filter.field}`,
 					};
 				}
 
 				if (!(filter.operator && filter.value)) {
 					return {
-						type: 'validation_error',
-						message: 'All filters must have an operator and value',
+						type: "validation_error",
+						message: "All filters must have an operator and value",
 					};
 				}
 			}
 
 			return null;
 		},
-		[]
+		[],
 	);
 
 	const saveFilter = useCallback(
 		(
 			name: string,
-			filters: DynamicQueryFilter[]
+			filters: DynamicQueryFilter[],
 		): { success: boolean; data?: SavedFilter; error?: SavedFilterError } => {
 			// Validate inputs
 			const nameError = validateFilterName(name);
@@ -266,7 +266,7 @@ export function useSavedFilters(websiteId: string) {
 				return {
 					success: false,
 					error: {
-						type: 'validation_error',
+						type: "validation_error",
 						message: `Maximum of ${MAX_FILTERS_PER_WEBSITE} saved filters allowed per website`,
 					},
 				};
@@ -284,20 +284,20 @@ export function useSavedFilters(websiteId: string) {
 			toast.success(`Filter "${newFilter.name}" saved successfully`);
 			return { success: true, data: newFilter };
 		},
-		[savedFilters, validateFilterName, validateFilters]
+		[savedFilters, validateFilterName, validateFilters],
 	);
 
 	const updateFilter = useCallback(
 		(
 			id: string,
 			name: string,
-			filters: DynamicQueryFilter[]
+			filters: DynamicQueryFilter[],
 		): { success: boolean; data?: SavedFilter; error?: SavedFilterError } => {
 			const existing = savedFilters.find((f) => f.id === id);
 			if (!existing) {
 				return {
 					success: false,
-					error: { type: 'validation_error', message: 'Filter not found' },
+					error: { type: "validation_error", message: "Filter not found" },
 				};
 			}
 
@@ -309,12 +309,12 @@ export function useSavedFilters(websiteId: string) {
 			};
 
 			setSavedFilters((prev) =>
-				prev.map((f) => (f.id === id ? updatedFilter : f))
+				prev.map((f) => (f.id === id ? updatedFilter : f)),
 			);
 			toast.success(`Filter "${updatedFilter.name}" updated successfully`);
 			return { success: true, data: updatedFilter };
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const deleteFilter = useCallback(
@@ -323,7 +323,7 @@ export function useSavedFilters(websiteId: string) {
 			if (!filterToDelete) {
 				return {
 					success: false,
-					error: { type: 'validation_error', message: 'Filter not found' },
+					error: { type: "validation_error", message: "Filter not found" },
 				};
 			}
 
@@ -331,25 +331,25 @@ export function useSavedFilters(websiteId: string) {
 			toast.success(`Filter "${filterToDelete.name}" deleted successfully`);
 			return { success: true };
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const getFilter = useCallback(
 		(id: string): SavedFilter | null => {
 			return savedFilters.find((f) => f.id === id) || null;
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const duplicateFilter = useCallback(
 		(
-			id: string
+			id: string,
 		): { success: boolean; data?: SavedFilter; error?: SavedFilterError } => {
 			const existing = savedFilters.find((f) => f.id === id);
 			if (!existing) {
 				return {
 					success: false,
-					error: { type: 'validation_error', message: 'Filter not found' },
+					error: { type: "validation_error", message: "Filter not found" },
 				};
 			}
 
@@ -358,7 +358,7 @@ export function useSavedFilters(websiteId: string) {
 				return {
 					success: false,
 					error: {
-						type: 'validation_error',
+						type: "validation_error",
 						message: `Maximum of ${MAX_FILTERS_PER_WEBSITE} saved filters allowed per website`,
 					},
 				};
@@ -370,7 +370,7 @@ export function useSavedFilters(websiteId: string) {
 
 			while (
 				savedFilters.some(
-					(filter) => filter.name.toLowerCase() === copyName.toLowerCase()
+					(filter) => filter.name.toLowerCase() === copyName.toLowerCase(),
 				)
 			) {
 				copyName = `${existing.name} (Copy ${copyIndex})`;
@@ -389,12 +389,12 @@ export function useSavedFilters(websiteId: string) {
 			toast.success(`Filter duplicated as "${duplicatedFilter.name}"`);
 			return { success: true, data: duplicatedFilter };
 		},
-		[savedFilters]
+		[savedFilters],
 	);
 
 	const deleteAllFilters = useCallback(() => {
 		setSavedFilters([]);
-		toast.success('All saved filters deleted successfully');
+		toast.success("All saved filters deleted successfully");
 	}, []);
 
 	return {

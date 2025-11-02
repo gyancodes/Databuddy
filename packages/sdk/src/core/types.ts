@@ -363,7 +363,7 @@ export interface DatabuddyTracker {
 	 */
 	track<T extends EventName>(
 		eventName: T,
-		properties?: PropertiesForEvent<T>
+		properties?: PropertiesForEvent<T>,
 	): Promise<void>;
 
 	/**
@@ -399,12 +399,12 @@ declare global {
 	interface Window {
 		databuddy?: DatabuddyTracker;
 		db?: {
-			track: DatabuddyTracker['track'];
-			screenView: DatabuddyTracker['screenView'];
-			clear: DatabuddyTracker['clear'];
-			flush: DatabuddyTracker['flush'];
-			setGlobalProperties: DatabuddyTracker['setGlobalProperties'];
-			trackCustomEvent: DatabuddyTracker['trackCustomEvent'];
+			track: DatabuddyTracker["track"];
+			screenView: DatabuddyTracker["screenView"];
+			clear: DatabuddyTracker["clear"];
+			flush: DatabuddyTracker["flush"];
+			setGlobalProperties: DatabuddyTracker["setGlobalProperties"];
+			trackCustomEvent: DatabuddyTracker["trackCustomEvent"];
 		};
 	}
 }
@@ -414,7 +414,7 @@ declare global {
  */
 export interface DataAttributes {
 	/** Event name to track when element is clicked */
-	'data-track': string;
+	"data-track": string;
 	/** Additional data attributes (converted to camelCase) */
 	[key: `data-${string}`]: string;
 }
@@ -424,12 +424,12 @@ export interface DataAttributes {
  */
 export type TrackFunction = <T extends EventName>(
 	eventName: T,
-	properties?: PropertiesForEvent<T>
+	properties?: PropertiesForEvent<T>,
 ) => Promise<void>;
 
 export type ScreenViewFunction = (
 	path?: string,
-	properties?: EventProperties
+	properties?: EventProperties,
 ) => void;
 
 export type SetGlobalPropertiesFunction = (properties: EventProperties) => void;

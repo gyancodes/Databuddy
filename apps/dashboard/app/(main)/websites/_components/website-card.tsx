@@ -1,22 +1,25 @@
-import type { ProcessedMiniChartData, Website } from '@databuddy/shared/types/website';
+import type {
+	ProcessedMiniChartData,
+	Website,
+} from "@databuddy/shared/types/website";
 import {
 	ArrowRightIcon,
 	MinusIcon,
 	TrendDownIcon,
 	TrendUpIcon,
-} from '@phosphor-icons/react';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { memo, Suspense } from 'react';
-import { FaviconImage } from '@/components/analytics/favicon-image';
+} from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { memo, Suspense } from "react";
+import { FaviconImage } from "@/components/analytics/favicon-image";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WebsiteCardProps {
 	website: Website;
@@ -26,44 +29,44 @@ interface WebsiteCardProps {
 
 function TrendStat({
 	trend,
-	className = 'flex items-center gap-1 font-medium text-xs sm:text-sm',
+	className = "flex items-center gap-1 font-medium text-xs sm:text-sm",
 }: {
-	trend: ProcessedMiniChartData['trend'] | undefined;
+	trend: ProcessedMiniChartData["trend"] | undefined;
 	className?: string;
 }) {
 	if (!trend) {
 		return null;
 	}
-	if (trend.type === 'up') {
+	if (trend.type === "up") {
 		return (
 			<div className={className}>
 				<TrendUpIcon
 					aria-hidden="true"
 					className="!text-success h-4 w-4"
-					style={{ color: 'var(--tw-success, #22c55e)' }}
+					style={{ color: "var(--tw-success, #22c55e)" }}
 					weight="duotone"
 				/>
 				<span
 					className="!text-success"
-					style={{ color: 'var(--tw-success, #22c55e)' }}
+					style={{ color: "var(--tw-success, #22c55e)" }}
 				>
 					+{trend.value.toFixed(0)}%
 				</span>
 			</div>
 		);
 	}
-	if (trend.type === 'down') {
+	if (trend.type === "down") {
 		return (
 			<div className={className}>
 				<TrendDownIcon
 					aria-hidden
 					className="!text-destructive h-4 w-4"
-					style={{ color: 'var(--tw-destructive, #ef4444)' }}
+					style={{ color: "var(--tw-destructive, #ef4444)" }}
 					weight="duotone"
 				/>
 				<span
 					className="!text-destructive"
-					style={{ color: 'var(--tw-destructive, #ef4444)' }}
+					style={{ color: "var(--tw-destructive, #ef4444)" }}
 				>
 					-{trend.value.toFixed(0)}%
 				</span>
@@ -94,11 +97,11 @@ const formatNumber = (num: number) => {
 
 // Lazy load the chart component to improve initial page load
 const MiniChart = dynamic(
-	() => import('./mini-chart').then((mod) => mod.default),
+	() => import("./mini-chart").then((mod) => mod.default),
 	{
 		loading: () => <Skeleton className="h-12 w-full rounded" />,
 		ssr: false,
-	}
+	},
 );
 
 export const WebsiteCard = memo(
@@ -186,10 +189,10 @@ export const WebsiteCard = memo(
 				</Card>
 			</Link>
 		);
-	}
+	},
 );
 
-WebsiteCard.displayName = 'WebsiteCard';
+WebsiteCard.displayName = "WebsiteCard";
 
 export function WebsiteCardSkeleton() {
 	return (

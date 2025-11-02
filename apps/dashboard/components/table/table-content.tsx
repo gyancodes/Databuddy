@@ -2,12 +2,9 @@ import {
 	ArrowDownIcon,
 	ArrowUpIcon,
 	DatabaseIcon,
-} from '@phosphor-icons/react';
-import {
-	flexRender,
-	type Table,
-} from '@tanstack/react-table';
-import { Fragment, useCallback, useState } from 'react';
+} from "@phosphor-icons/react";
+import { flexRender, type Table } from "@tanstack/react-table";
+import { Fragment, useCallback, useState } from "react";
 import {
 	TableBody,
 	TableCell,
@@ -15,8 +12,8 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const PERCENTAGE_THRESHOLDS = {
 	HIGH: 50,
@@ -33,10 +30,9 @@ function getRowPercentage(row: PercentageRow): number {
 	return value !== undefined ? Number.parseFloat(String(value)) || 0 : 0;
 }
 
-
 const GRADIENT_COLORS = {
 	high: {
-		rgb: '34, 197, 94',
+		rgb: "34, 197, 94",
 		opacity: {
 			background: 0.08,
 			hover: 0.12,
@@ -46,7 +42,7 @@ const GRADIENT_COLORS = {
 		},
 	},
 	medium: {
-		rgb: '59, 130, 246',
+		rgb: "59, 130, 246",
 		opacity: {
 			background: 0.08,
 			hover: 0.12,
@@ -56,7 +52,7 @@ const GRADIENT_COLORS = {
 		},
 	},
 	low: {
-		rgb: '245, 158, 11',
+		rgb: "245, 158, 11",
 		opacity: {
 			background: 0.08,
 			hover: 0.12,
@@ -66,7 +62,7 @@ const GRADIENT_COLORS = {
 		},
 	},
 	default: {
-		rgb: '107, 114, 128',
+		rgb: "107, 114, 128",
 		opacity: {
 			background: 0.08,
 			hover: 0.12,
@@ -86,7 +82,7 @@ function createGradient(
 		accent: number;
 		glow: number;
 	},
-	percentage: number
+	percentage: number,
 ) {
 	const {
 		background: bgOpacity,
@@ -110,27 +106,27 @@ function getPercentageGradient(percentage: number) {
 		return createGradient(
 			GRADIENT_COLORS.high.rgb,
 			GRADIENT_COLORS.high.opacity,
-			percentage
+			percentage,
 		);
 	}
 	if (percentage >= PERCENTAGE_THRESHOLDS.MEDIUM) {
 		return createGradient(
 			GRADIENT_COLORS.medium.rgb,
 			GRADIENT_COLORS.medium.opacity,
-			percentage
+			percentage,
 		);
 	}
 	if (percentage >= PERCENTAGE_THRESHOLDS.LOW) {
 		return createGradient(
 			GRADIENT_COLORS.low.rgb,
 			GRADIENT_COLORS.low.opacity,
-			percentage
+			percentage,
 		);
 	}
 	return createGradient(
 		GRADIENT_COLORS.default.rgb,
 		GRADIENT_COLORS.default.opacity,
-		percentage
+		percentage,
 	);
 }
 
@@ -143,7 +139,7 @@ interface TableContentProps<TData extends { name: string | number }> {
 	renderSubRow?: (
 		subRow: TData,
 		parentRow: TData,
-		index: number
+		index: number,
 	) => React.ReactNode;
 	onAddFilter?: (field: string, value: string, tableTitle?: string) => void;
 	onRowAction?: (row: TData) => void;
@@ -166,7 +162,7 @@ export function TableContent<TData extends { name: string | number }>({
 	onRowClick,
 	tabs,
 	activeTab,
-	emptyMessage = 'No data available',
+	emptyMessage = "No data available",
 	className,
 }: TableContentProps<TData>) {
 	const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -195,10 +191,9 @@ export function TableContent<TData extends { name: string | number }>({
 			return;
 		}
 		if (onRowClick) {
-			onRowClick('name', row.name);
+			onRowClick("name", row.name);
 		}
 	};
-
 
 	if (!displayData.length) {
 		return (
@@ -225,8 +220,8 @@ export function TableContent<TData extends { name: string | number }>({
 		<div
 			aria-labelledby={`tab-${activeTab}`}
 			className={cn(
-				'custom-scrollbar relative overflow-auto border-sidebar-border bg-sidebar',
-				className
+				"custom-scrollbar relative overflow-auto border-sidebar-border bg-sidebar",
+				className,
 			)}
 			id={`tabpanel-${activeTab}`}
 			role="tabpanel"
@@ -242,14 +237,17 @@ export function TableContent<TData extends { name: string | number }>({
 							{headerGroup.headers.map((header) => (
 								<TableHead
 									className={cn(
-										'h-10 bg-sidebar-accent px-2 font-semibold text-sidebar-foreground/70 text-xs uppercase tracking-wide',
-										(header.column.columnDef.meta as any)?.className
+										"h-10 bg-sidebar-accent px-2 font-semibold text-sidebar-foreground/70 text-xs uppercase tracking-wide",
+										(header.column.columnDef.meta as any)?.className,
 									)}
 									key={header.id}
 									style={{
-										width: header.getSize() !== 150 ? `${Math.min(header.getSize(), 300)}px` : undefined,
-										maxWidth: '300px',
-										minWidth: '80px',
+										width:
+											header.getSize() !== 150
+												? `${Math.min(header.getSize(), 300)}px`
+												: undefined,
+										maxWidth: "300px",
+										minWidth: "80px",
 									}}
 								>
 									<span className="truncate">
@@ -257,7 +255,7 @@ export function TableContent<TData extends { name: string | number }>({
 											? null
 											: flexRender(
 													header.column.columnDef.header,
-													header.getContext()
+													header.getContext(),
 												)}
 									</span>
 								</TableHead>
@@ -267,51 +265,66 @@ export function TableContent<TData extends { name: string | number }>({
 				</TableHeader>
 				<TableBody className="overflow-hidden">
 					{displayData.map((row, rowIndex) => {
-						const subRows = expandable && getSubRows ? getSubRows(row.original) : undefined;
+						const subRows =
+							expandable && getSubRows ? getSubRows(row.original) : undefined;
 						const hasSubRows = !!subRows?.length;
 						const percentage = getRowPercentage(row.original as PercentageRow);
-						const gradient = percentage > 0 ? getPercentageGradient(percentage) : null;
+						const gradient =
+							percentage > 0 ? getPercentageGradient(percentage) : null;
 
 						return (
 							<Fragment key={row.id}>
 								<TableRow
 									className={cn(
-										'relative h-11 border-border/20 pl-3 transition-all duration-300 ease-in-out',
-										(isInteractive || hasSubRows) && 'cursor-pointer',
-										!gradient && (rowIndex % 2 === 0 ? 'bg-background/50' : 'bg-muted/10')
+										"relative h-11 border-border/20 pl-3 transition-all duration-300 ease-in-out",
+										(isInteractive || hasSubRows) && "cursor-pointer",
+										!gradient &&
+											(rowIndex % 2 === 0 ? "bg-background/50" : "bg-muted/10"),
 									)}
-									onClick={() => handleRowClick(row.original, hasSubRows, row.id)}
+									onClick={() =>
+										handleRowClick(row.original, hasSubRows, row.id)
+									}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter' || e.key === ' ') {
+										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
 											e.currentTarget.click();
 										}
 									}}
-									role={(isInteractive || hasSubRows) ? 'button' : undefined}
+									role={isInteractive || hasSubRows ? "button" : undefined}
 									style={{
 										background: gradient?.background,
-										boxShadow: gradient ? `inset 3px 0 0 0 ${gradient.accentColor}` : undefined,
+										boxShadow: gradient
+											? `inset 3px 0 0 0 ${gradient.accentColor}`
+											: undefined,
 									}}
-									tabIndex={(isInteractive || hasSubRows) ? 0 : -1}
+									tabIndex={isInteractive || hasSubRows ? 0 : -1}
 								>
 									{row.getVisibleCells().map((cell, cellIndex) => (
 										<TableCell
 											className={cn(
-												'px-2 py-2 font-medium text-sm transition-colors text-sidebar-foreground/80',
-												cellIndex === 0 && 'font-semibold text-sidebar-foreground',
-												(cell.column.columnDef.meta as any)?.className
+												"px-2 py-2 font-medium text-sm transition-colors text-sidebar-foreground/80",
+												cellIndex === 0 &&
+													"font-semibold text-sidebar-foreground",
+												(cell.column.columnDef.meta as any)?.className,
 											)}
 											key={cell.id}
 											style={{
-												width: cell.column.getSize() !== 150 ? `${Math.min(cell.column.getSize(), 300)}px` : undefined,
-												maxWidth: '300px',
-												minWidth: '80px',
+												width:
+													cell.column.getSize() !== 150
+														? `${Math.min(cell.column.getSize(), 300)}px`
+														: undefined,
+												maxWidth: "300px",
+												minWidth: "80px",
 											}}
 										>
 											<div className="flex items-center gap-2">
 												{cellIndex === 0 && hasSubRows && (
 													<button
-														aria-label={expandedRow === row.id ? 'Collapse row' : 'Expand row'}
+														aria-label={
+															expandedRow === row.id
+																? "Collapse row"
+																: "Expand row"
+														}
 														className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-sidebar-accent/60"
 														onClick={(e) => {
 															e.stopPropagation();
@@ -330,7 +343,7 @@ export function TableContent<TData extends { name: string | number }>({
 													<div className="truncate">
 														{flexRender(
 															cell.column.columnDef.cell,
-															cell.getContext()
+															cell.getContext(),
 														)}
 													</div>
 												</div>
@@ -357,22 +370,25 @@ export function TableContent<TData extends { name: string | number }>({
 												row.getVisibleCells().map((cell, cellIndex) => (
 													<TableCell
 														className={cn(
-															'py-2 text-sidebar-foreground/70 text-sm',
-															cellIndex === 0 ? 'pl-8' : 'px-2'
+															"py-2 text-sidebar-foreground/70 text-sm",
+															cellIndex === 0 ? "pl-8" : "px-2",
 														)}
 														key={`sub-${cell.id}`}
 														style={{
-															width: cell.column.getSize() !== 150 ? `${Math.min(cell.column.getSize(), 300)}px` : undefined,
-															maxWidth: '300px',
-															minWidth: '80px',
+															width:
+																cell.column.getSize() !== 150
+																	? `${Math.min(cell.column.getSize(), 300)}px`
+																	: undefined,
+															maxWidth: "300px",
+															minWidth: "80px",
 														}}
 													>
-													<div className="truncate">
-														{cellIndex === 0 && (
-															<span className="text-xs">↳ </span>
-														)}
-														{(subRow as any)[cell.column.id] || ''}
-													</div>
+														<div className="truncate">
+															{cellIndex === 0 && (
+																<span className="text-xs">↳ </span>
+															)}
+															{(subRow as any)[cell.column.id] || ""}
+														</div>
 													</TableCell>
 												))
 											)}

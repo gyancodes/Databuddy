@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 import {
 	CheckIcon,
 	ClockIcon,
 	EnvelopeIcon,
 	XIcon,
-} from '@phosphor-icons/react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useOrganizationInvitations } from '@/hooks/use-organization-invitations';
+} from "@phosphor-icons/react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 import type {
 	ActiveOrganization,
 	Organization,
-} from '@/hooks/use-organizations';
-import { EmptyState } from '../components/empty-state';
-import { ListSkeleton } from '../components/list-skeleton';
-import { InvitationList } from './invitation-list';
+} from "@/hooks/use-organizations";
+import { EmptyState } from "../components/empty-state";
+import { ListSkeleton } from "../components/list-skeleton";
+import { InvitationList } from "./invitation-list";
 
 function InvitationsSkeleton() {
 	return <ListSkeleton count={6} />;
@@ -89,7 +89,11 @@ export function InvitationsView({
 								className="h-10 rounded-none border-transparent border-b-2 bg-transparent px-3 pt-2 pb-2 font-medium text-muted-foreground text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none sm:h-12 sm:px-6 sm:pt-3 sm:pb-3 sm:text-sm"
 								value="expired"
 							>
-								<XIcon className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" size={12} weight="bold" />
+								<XIcon
+									className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4"
+									size={12}
+									weight="bold"
+								/>
 								Expired
 								{expiredCount > 0 && (
 									<span className="ml-1 rounded-full bg-muted-foreground/10 px-1.5 py-0.5 font-medium text-muted-foreground text-xs sm:ml-2 sm:px-2">
@@ -101,7 +105,11 @@ export function InvitationsView({
 								className="h-10 rounded-none border-transparent border-b-2 bg-transparent px-3 pt-2 pb-2 font-medium text-muted-foreground text-xs data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none sm:h-12 sm:px-6 sm:pt-3 sm:pb-3 sm:text-sm"
 								value="accepted"
 							>
-								<CheckIcon className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4" size={12} weight="bold" />
+								<CheckIcon
+									className="mr-1 h-3 w-3 sm:mr-2 sm:h-4 sm:w-4"
+									size={12}
+									weight="bold"
+								/>
 								Accepted
 								{acceptedCount > 0 && (
 									<span className="ml-1 rounded-full bg-green-500/10 px-1.5 py-0.5 font-medium text-green-600 text-xs sm:ml-2 sm:px-2">

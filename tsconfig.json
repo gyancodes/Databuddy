@@ -1,14 +1,14 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./*"]
-    },
-    "esModuleInterop": true,
-    "strictNullChecks": true
-  },
-  "include": ["go-fuck-yourself-typescript.ts"],
-  "skipLibCheck": true,
-  "noResolve": true,
-  "noImplicitAny": false
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./*"]
+		},
+		"esModuleInterop": true,
+		"strictNullChecks": true
+	},
+	"include": ["go-fuck-yourself-typescript.ts"],
+	"skipLibCheck": true,
+	"noResolve": true,
+	"noImplicitAny": false
 }

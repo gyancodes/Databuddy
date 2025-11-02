@@ -1,5 +1,5 @@
-import { Button, Heading, Section, Text } from '@react-email/components';
-import { EmailLayout } from './email-layout';
+import { Button, Heading, Section, Text } from "@react-email/components";
+import { EmailLayout } from "./email-layout";
 
 interface InvitationEmailProps {
 	inviterName: string;

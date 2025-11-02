@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useQueryClient } from '@tanstack/react-query';
-import { useAtom } from 'jotai';
-import { useParams, usePathname } from 'next/navigation';
-import { toast } from 'sonner';
-import NotFound from '@/app/not-found';
-import { useTrackingSetup } from '@/hooks/use-tracking-setup';
-import { isAnalyticsRefreshingAtom } from '@/stores/jotai/filterAtoms';
-import { AnalyticsToolbar } from './_components/analytics-toolbar';
-import { FiltersSection } from './_components/filters-section';
+import { useQueryClient } from "@tanstack/react-query";
+import { useAtom } from "jotai";
+import { useParams, usePathname } from "next/navigation";
+import { toast } from "sonner";
+import NotFound from "@/app/not-found";
+import { useTrackingSetup } from "@/hooks/use-tracking-setup";
+import { isAnalyticsRefreshingAtom } from "@/stores/jotai/filterAtoms";
+import { AnalyticsToolbar } from "./_components/analytics-toolbar";
+import { FiltersSection } from "./_components/filters-section";
 
 interface WebsiteLayoutProps {
 	children: React.ReactNode;
@@ -28,29 +28,29 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	const websiteId = id as string;
 
 	const isAssistantPage =
-		pathname.includes('/assistant') ||
-		pathname.includes('/map') ||
-		pathname.includes('/flags') ||
-		pathname.includes('/databunny') ||
-		pathname.includes('/settings') ||
-		pathname.includes('/users');
+		pathname.includes("/assistant") ||
+		pathname.includes("/map") ||
+		pathname.includes("/flags") ||
+		pathname.includes("/databunny") ||
+		pathname.includes("/settings") ||
+		pathname.includes("/users");
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
 		try {
 			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ['websites', id] }),
+				queryClient.invalidateQueries({ queryKey: ["websites", id] }),
 				queryClient.invalidateQueries({
-					queryKey: ['websites', 'isTrackingSetup', id],
+					queryKey: ["websites", "isTrackingSetup", id],
 				}),
-				queryClient.invalidateQueries({ queryKey: ['dynamic-query', id] }),
+				queryClient.invalidateQueries({ queryKey: ["dynamic-query", id] }),
 				queryClient.invalidateQueries({
-					queryKey: ['batch-dynamic-query', id],
+					queryKey: ["batch-dynamic-query", id],
 				}),
 			]);
-			toast.success('Data refreshed');
+			toast.success("Data refreshed");
 		} catch {
-			toast.error('Failed to refresh data');
+			toast.error("Failed to refresh data");
 		} finally {
 			setIsRefreshing(false);
 		}
@@ -69,7 +69,9 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 				</div>
 			)}
 
-			<div className={`${isAssistantPage ? 'min-h-0 flex-1' : isTrackingSetup && !isAssistantPage ? 'min-h-0 flex-1 overflow-y-auto pt-[88px] md:pt-[88px]' : 'min-h-0 flex-1 overflow-y-auto'}`}>
+			<div
+				className={`${isAssistantPage ? "min-h-0 flex-1" : isTrackingSetup && !isAssistantPage ? "min-h-0 flex-1 overflow-y-auto pt-[88px] md:pt-[88px]" : "min-h-0 flex-1 overflow-y-auto"}`}
+			>
 				{children}
 			</div>
 		</div>

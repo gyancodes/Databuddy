@@ -1,6 +1,6 @@
-import { defineComponent, onMounted, onUnmounted, ref, watch } from 'vue';
-import { createScript, type DatabuddyConfig, isScriptInjected } from '@/core';
-import type { IsOptional } from '@/utils';
+import { defineComponent, onMounted, onUnmounted, ref, watch } from "vue";
+import { createScript, type DatabuddyConfig, isScriptInjected } from "@/core";
+import type { IsOptional } from "@/utils";
 
 export const Databuddy = defineComponent({
 	props: {} as {
@@ -50,7 +50,7 @@ export const Databuddy = defineComponent({
 				removeScript();
 				injectScript();
 			},
-			{ deep: true }
+			{ deep: true },
 		);
 
 		return () => null;

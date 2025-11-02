@@ -3,4 +3,4 @@ export type {
 	Project,
 	TriageAction,
 	WebsiteConfig,
-} from '@databuddy/shared/types/vercel';
+} from "@databuddy/shared/types/vercel";

@@ -17,7 +17,7 @@ class InMemoryRateLimit {
 			() => {
 				this.cleanup();
 			},
-			5 * 60 * 1000
+			5 * 60 * 1000,
 		);
 	}
 

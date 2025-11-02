@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { authClient } from '@databuddy/auth/client';
-import { Suspense } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { OrganizationsList } from './components/organizations-list';
+import { authClient } from "@databuddy/auth/client";
+import { Suspense } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { OrganizationsList } from "./components/organizations-list";
 
 function OrganizationsSkeleton() {
 	return (

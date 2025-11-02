@@ -1,8 +1,8 @@
-import type { IconProps } from '@phosphor-icons/react';
-import type { ComponentType } from 'react';
-import { SciFiCard } from '@/components/scifi-card';
-import { cn } from '@/lib/utils';
-import { GridPatternBg } from './grid-pattern';
+import type { IconProps } from "@phosphor-icons/react";
+import type { ComponentType } from "react";
+import { SciFiCard } from "@/components/scifi-card";
+import { cn } from "@/lib/utils";
+import { GridPatternBg } from "./grid-pattern";
 
 interface GridCard {
 	title: string;
@@ -23,9 +23,9 @@ export const SciFiGridCard = ({
 	return (
 		<div
 			className={cn(
-				'group relative w-full overflow-hidden',
-				'min-h-[340px] sm:min-h-[380px] lg:min-h-[420px]',
-				className
+				"group relative w-full overflow-hidden",
+				"min-h-[340px] sm:min-h-[380px] lg:min-h-[420px]",
+				className,
 			)}
 		>
 			<div className="absolute inset-0">

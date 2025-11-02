@@ -5,8 +5,8 @@ export const GridPatternBg = () => {
 				className="absolute inset-0 z-[1]"
 				style={{
 					background:
-						'radial-gradient(ellipse 40% 16% at 50% 15%, var(--ring) 0%, transparent 70%)',
-					filter: 'blur(20px)',
+						"radial-gradient(ellipse 40% 16% at 50% 15%, var(--ring) 0%, transparent 70%)",
+					filter: "blur(20px)",
 					opacity: 0.15,
 				}}
 			/>
@@ -17,11 +17,11 @@ export const GridPatternBg = () => {
 					linear-gradient(to right, var(--border) 1px, transparent 1px),
 					linear-gradient(to bottom, var(--border) 1px, transparent 1px)
 					`,
-					backgroundSize: '30px 30px',
+					backgroundSize: "30px 30px",
 					maskImage:
-						'radial-gradient(ellipse 40% 16% at 50% 15%, black 0%, black 40%, transparent 100%)',
+						"radial-gradient(ellipse 40% 16% at 50% 15%, black 0%, black 40%, transparent 100%)",
 					WebkitMaskImage:
-						'radial-gradient(ellipse 40% 16% at 50% 15%, black 0%, black 40%, transparent 100%)',
+						"radial-gradient(ellipse 40% 16% at 50% 15%, black 0%, black 40%, transparent 100%)",
 					opacity: 0.3,
 				}}
 			/>

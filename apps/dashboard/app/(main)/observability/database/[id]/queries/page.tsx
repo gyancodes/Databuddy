@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import type { QueryPerformanceSummary } from '@databuddy/shared/types/performance';
-import { DatabaseIcon } from '@phosphor-icons/react';
-import { useQueryState } from 'nuqs';
-import { use, useCallback, useMemo, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { trpc } from '@/lib/trpc';
-import { QueryDetailSheet } from '../performance/_components/query-detail-sheet';
-import { QueryRow } from './_components/query-row';
+import type { QueryPerformanceSummary } from "@databuddy/shared/types/performance";
+import { DatabaseIcon } from "@phosphor-icons/react";
+import { useQueryState } from "nuqs";
+import { use, useCallback, useMemo, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { trpc } from "@/lib/trpc";
+import { QueryDetailSheet } from "../performance/_components/query-detail-sheet";
+import { QueryRow } from "./_components/query-row";
 
 interface QueriesPageProps {
 	params: Promise<{ id: string }>;
@@ -44,7 +44,7 @@ const LoadingState = () => (
 	</div>
 );
 
-type TabId = 'most-called' | 'slowest' | 'resource-hogs' | 'all';
+type TabId = "most-called" | "slowest" | "resource-hogs" | "all";
 
 export default function QueriesPage({ params }: QueriesPageProps) {
 	const { id: connectionId } = use(params);
@@ -52,15 +52,15 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 		(QueryPerformanceSummary & { name: string }) | null
 	>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
-	const [activeTab, setActiveTab] = useQueryState('tab', {
-		defaultValue: 'most-called' as TabId,
+	const [activeTab, setActiveTab] = useQueryState("tab", {
+		defaultValue: "most-called" as TabId,
 	});
 
 	// Fetch data
 	const { data: metrics, isLoading: metricsLoading } =
 		trpc.performance.getMetrics.useQuery(
 			{ id: connectionId },
-			{ refetchInterval: 30_000 }
+			{ refetchInterval: 30_000 },
 		);
 
 	const handleQueryClick = useCallback((query: QueryPerformanceSummary) => {
@@ -84,18 +84,18 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 		// Remove duplicates based on queryid
 		const uniqueQueries = allQueries.filter(
 			(queryItem, index, self) =>
-				self.findIndex((q) => q.queryid === queryItem.queryid) === index
+				self.findIndex((q) => q.queryid === queryItem.queryid) === index,
 		);
 
 		return {
 			mostCalled: [...metrics.top_queries_by_calls].sort(
-				(a, b) => b.calls - a.calls
+				(a, b) => b.calls - a.calls,
 			),
 			slowest: [...metrics.slowest_queries].sort(
-				(a, b) => b.mean_exec_time - a.mean_exec_time
+				(a, b) => b.mean_exec_time - a.mean_exec_time,
 			),
 			resourceHogs: [...metrics.top_queries_by_time].sort(
-				(a, b) => b.percentage_of_total_time - a.percentage_of_total_time
+				(a, b) => b.percentage_of_total_time - a.percentage_of_total_time,
 			),
 			all: uniqueQueries.sort((a, b) => b.calls - a.calls), // Default sort by most called
 		};
@@ -153,7 +153,7 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 								value="most-called"
 							>
 								Most Called
-								{activeTab === 'most-called' && (
+								{activeTab === "most-called" && (
 									<div className="absolute bottom-0 left-0 h-[2px] w-full bg-primary" />
 								)}
 							</TabsTrigger>
@@ -162,7 +162,7 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 								value="slowest"
 							>
 								Slowest
-								{activeTab === 'slowest' && (
+								{activeTab === "slowest" && (
 									<div className="absolute bottom-0 left-0 h-[2px] w-full bg-primary" />
 								)}
 							</TabsTrigger>
@@ -171,7 +171,7 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 								value="resource-hogs"
 							>
 								Resource Hogs
-								{activeTab === 'resource-hogs' && (
+								{activeTab === "resource-hogs" && (
 									<div className="absolute bottom-0 left-0 h-[2px] w-full bg-primary" />
 								)}
 							</TabsTrigger>
@@ -180,7 +180,7 @@ export default function QueriesPage({ params }: QueriesPageProps) {
 								value="all"
 							>
 								All Queries
-								{activeTab === 'all' && (
+								{activeTab === "all" && (
 									<div className="absolute bottom-0 left-0 h-[2px] w-full bg-primary" />
 								)}
 							</TabsTrigger>

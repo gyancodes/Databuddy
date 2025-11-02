@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { UsersIcon } from '@phosphor-icons/react';
+import { UsersIcon } from "@phosphor-icons/react";
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	type ActiveOrganization,
 	type Organization,
 	useOrganizationMembers,
-} from '@/hooks/use-organizations';
-import { EmptyState } from '../components/empty-state';
-import { ListSkeleton } from '../components/list-skeleton';
-import { MemberList } from './member-list';
+} from "@/hooks/use-organizations";
+import { EmptyState } from "../components/empty-state";
+import { ListSkeleton } from "../components/list-skeleton";
+import { MemberList } from "./member-list";
 
 function MembersSkeleton() {
 	return <ListSkeleton count={6} />;
@@ -23,9 +23,9 @@ function EmptyMembersState() {
 			title="Build Your Team"
 			description="This organization doesn't have any team members yet. Invite people to start collaborating and building together."
 			features={[
-				{ label: 'Assign roles' },
-				{ label: 'Track activity' },
-				{ label: 'Share access' },
+				{ label: "Assign roles" },
+				{ label: "Track activity" },
+				{ label: "Share access" },
 			]}
 		/>
 	);

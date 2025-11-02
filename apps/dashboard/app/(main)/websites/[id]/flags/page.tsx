@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useFlags } from '@databuddy/sdk/react';
-import { FlagIcon, InfoIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import { useParams } from 'next/navigation';
-import { Suspense, useCallback, useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { useFlags } from "@databuddy/sdk/react";
+import { FlagIcon, InfoIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import { useParams } from "next/navigation";
+import { Suspense, useCallback, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useWebsite } from '@/hooks/use-websites';
-import { trpc } from '@/lib/trpc';
-import { isAnalyticsRefreshingAtom } from '@/stores/jotai/filterAtoms';
-import { WebsitePageHeader } from '../_components/website-page-header';
-import { FlagSheet } from './_components/flag-sheet';
-import { FlagsList } from './_components/flags-list';
-import type { Flag } from './_components/types';
+} from "@/components/ui/tooltip";
+import { useWebsite } from "@/hooks/use-websites";
+import { trpc } from "@/lib/trpc";
+import { isAnalyticsRefreshingAtom } from "@/stores/jotai/filterAtoms";
+import { WebsitePageHeader } from "../_components/website-page-header";
+import { FlagSheet } from "./_components/flag-sheet";
+import { FlagsList } from "./_components/flags-list";
+import type { Flag } from "./_components/types";
 
 const FlagsListSkeleton = () => (
 	<div className="space-y-3">
@@ -64,7 +64,7 @@ export default function FlagsPage() {
 
 	const { data: website } = useWebsite(websiteId);
 	const { isEnabled } = useFlags();
-	const experimentFlag = isEnabled('experiment-50');
+	const experimentFlag = isEnabled("experiment-50");
 	const {
 		data: flags,
 		isLoading,
@@ -79,7 +79,7 @@ export default function FlagsPage() {
 		try {
 			await refetchFlags();
 		} catch (error) {
-			console.error('Failed to refresh flag data:', error);
+			console.error("Failed to refresh flag data:", error);
 		} finally {
 			setIsRefreshing(false);
 		}
@@ -143,7 +143,7 @@ export default function FlagsPage() {
 				subtitle={
 					isLoading
 						? undefined
-						: `${flags?.length || 0} flag${(flags?.length || 0) !== 1 ? 's' : ''}`
+						: `${flags?.length || 0} flag${(flags?.length || 0) !== 1 ? "s" : ""}`
 				}
 				title="Feature Flags"
 				websiteId={websiteId}
@@ -153,7 +153,7 @@ export default function FlagsPage() {
 				<div className="flex items-center gap-3">
 					<FlagIcon
 						className="h-5 w-5"
-						color={experimentFlag.enabled ? 'red' : 'blue'}
+						color={experimentFlag.enabled ? "red" : "blue"}
 						size={16}
 						weight="fill"
 					/>

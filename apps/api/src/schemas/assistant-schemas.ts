@@ -1,4 +1,4 @@
-import { t } from 'elysia';
+import { t } from "elysia";
 
 export const AssistantRequestSchema = t.Object(
 	{
@@ -6,19 +6,19 @@ export const AssistantRequestSchema = t.Object(
 		messages: t.Array(
 			t.Object(
 				{
-					role: t.Union([t.Literal('user'), t.Literal('assistant')]),
+					role: t.Union([t.Literal("user"), t.Literal("assistant")]),
 					content: t.String(),
 				},
-				{ additionalProperties: false }
+				{ additionalProperties: false },
 			),
-			{ minItems: 1 }
+			{ minItems: 1 },
 		),
 		websiteId: t.String(),
 		model: t.Optional(
-			t.Union([t.Literal('chat'), t.Literal('agent'), t.Literal('agent-max')])
+			t.Union([t.Literal("chat"), t.Literal("agent"), t.Literal("agent-max")]),
 		),
 	},
-	{ additionalProperties: false }
+	{ additionalProperties: false },
 );
 
 export type AssistantRequestType = typeof AssistantRequestSchema.static;

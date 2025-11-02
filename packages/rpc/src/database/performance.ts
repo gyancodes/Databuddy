@@ -4,8 +4,8 @@ import type {
 	PgStatStatement,
 	QueryDistribution,
 	QueryPerformanceSummary,
-} from '@databuddy/shared/types/performance';
-import { Client } from 'pg';
+} from "@databuddy/shared/types/performance";
+import { Client } from "pg";
 
 async function createClient(connectionUrl: string): Promise<Client> {
 	const client = new Client({
@@ -19,7 +19,7 @@ async function createClient(connectionUrl: string): Promise<Client> {
 
 export async function getPerformanceStatements(
 	connectionUrl: string,
-	filters: PerformanceFilters = {}
+	filters: PerformanceFilters = {},
 ): Promise<PgStatStatement[]> {
 	const client = await createClient(connectionUrl);
 
@@ -28,8 +28,8 @@ export async function getPerformanceStatements(
 			limit = 100,
 			min_calls = 1,
 			min_exec_time = 0,
-			order_by = 'total_exec_time',
-			order_direction = 'desc',
+			order_by = "total_exec_time",
+			order_direction = "desc",
 		} = filters;
 
 		const query = `
@@ -49,11 +49,11 @@ export async function getPerformanceStatements(
 function formatQuery(
 	query: string,
 	queryid: string,
-	mean_exec_time: number
+	mean_exec_time: number,
 ): string {
-	if (query === '<insufficient privilege>') {
+	if (query === "<insufficient privilege>") {
 		const speed =
-			mean_exec_time < 1 ? 'Fast' : mean_exec_time < 100 ? 'Medium' : 'Slow';
+			mean_exec_time < 1 ? "Fast" : mean_exec_time < 100 ? "Medium" : "Slow";
 		return `Query ID: ${queryid} (${speed} query)`;
 	}
 	return query.substring(0, 200);
@@ -62,7 +62,7 @@ function formatQuery(
 async function getTopQueries(
 	client: Client,
 	orderBy: string,
-	limit = 10
+	limit = 10,
 ): Promise<QueryPerformanceSummary[]> {
 	const query = `
 		WITH total_time AS (SELECT SUM(total_exec_time) as total FROM pg_stat_statements)
@@ -89,7 +89,7 @@ async function getTopQueries(
 				ELSE 0 
 			END as percentage_of_total_time
 		FROM pg_stat_statements
-		WHERE calls > ${orderBy === 'mean_exec_time' ? '5' : '0'}
+		WHERE calls > ${orderBy === "mean_exec_time" ? "5" : "0"}
 		ORDER BY ${orderBy} DESC
 		LIMIT $1
 	`;
@@ -102,7 +102,7 @@ async function getTopQueries(
 }
 
 export async function getPerformanceMetrics(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<PerformanceMetrics> {
 	const client = await createClient(connectionUrl);
 
@@ -137,9 +137,9 @@ export async function getPerformanceMetrics(
 
 		const [overallResult, topByTime, topByCalls, slowest] = await Promise.all([
 			client.query(overallQuery),
-			getTopQueries(client, 'total_exec_time'),
-			getTopQueries(client, 'calls'),
-			getTopQueries(client, 'mean_exec_time'),
+			getTopQueries(client, "total_exec_time"),
+			getTopQueries(client, "calls"),
+			getTopQueries(client, "mean_exec_time"),
 		]);
 
 		// Query distribution
@@ -171,9 +171,9 @@ export async function getPerformanceMetrics(
 			total_exec_time: Number.parseFloat(overall.total_exec_time),
 			avg_exec_time: Number.parseFloat(overall.avg_exec_time),
 			cache_hit_ratio: Number.parseFloat(overall.cache_hit_ratio),
-			p50_exec_time: Number.parseFloat(overall.p50_exec_time || '0'),
-			p95_exec_time: Number.parseFloat(overall.p95_exec_time || '0'),
-			p99_exec_time: Number.parseFloat(overall.p99_exec_time || '0'),
+			p50_exec_time: Number.parseFloat(overall.p50_exec_time || "0"),
+			p95_exec_time: Number.parseFloat(overall.p95_exec_time || "0"),
+			p99_exec_time: Number.parseFloat(overall.p99_exec_time || "0"),
 			top_queries_by_time: topByTime,
 			top_queries_by_calls: topByCalls,
 			slowest_queries: slowest,
@@ -185,24 +185,24 @@ export async function getPerformanceMetrics(
 }
 
 export async function resetPerformanceStats(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<void> {
 	const client = await createClient(connectionUrl);
 	try {
-		await client.query('SELECT pg_stat_statements_reset()');
+		await client.query("SELECT pg_stat_statements_reset()");
 	} finally {
 		await client.end();
 	}
 }
 
 export async function checkPgStatStatementsEnabled(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<boolean> {
 	const client = await createClient(connectionUrl);
 	try {
 		// Check extension exists
 		const extensionResult = await client.query(
-			`SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements') as extension_exists`
+			`SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements') as extension_exists`,
 		);
 
 		if (!extensionResult.rows[0].extension_exists) {
@@ -210,7 +210,7 @@ export async function checkPgStatStatementsEnabled(
 		}
 
 		// Test access
-		await client.query('SELECT COUNT(*) FROM pg_stat_statements LIMIT 1');
+		await client.query("SELECT COUNT(*) FROM pg_stat_statements LIMIT 1");
 		return true;
 	} catch {
 		return false;
@@ -260,13 +260,13 @@ export async function getCurrentUserInfo(connectionUrl: string): Promise<{
 // Online Advisor Extension Functions
 
 export async function checkOnlineAdvisorEnabled(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<boolean> {
 	const client = await createClient(connectionUrl);
 	try {
 		// Check extension exists
 		const extensionResult = await client.query(
-			`SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'online_advisor') as extension_exists`
+			`SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'online_advisor') as extension_exists`,
 		);
 
 		if (!extensionResult.rows[0].extension_exists) {
@@ -274,7 +274,7 @@ export async function checkOnlineAdvisorEnabled(
 		}
 
 		// Test access to views
-		await client.query('SELECT COUNT(*) FROM proposed_indexes LIMIT 1');
+		await client.query("SELECT COUNT(*) FROM proposed_indexes LIMIT 1");
 		return true;
 	} catch {
 		return false;
@@ -284,7 +284,7 @@ export async function checkOnlineAdvisorEnabled(
 }
 
 export async function getOnlineAdvisorIndexes(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<any[]> {
 	const client = await createClient(connectionUrl);
 
@@ -319,7 +319,7 @@ export async function getOnlineAdvisorIndexes(
 }
 
 export async function getOnlineAdvisorStatistics(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<any[]> {
 	const client = await createClient(connectionUrl);
 
@@ -343,12 +343,12 @@ export async function getOnlineAdvisorStatistics(
 
 export async function getExecutorStats(
 	connectionUrl: string,
-	reset = false
+	reset = false,
 ): Promise<any> {
 	const client = await createClient(connectionUrl);
 
 	try {
-		const result = await client.query('SELECT * FROM get_executor_stats($1)', [
+		const result = await client.query("SELECT * FROM get_executor_stats($1)", [
 			reset,
 		]);
 		return result.rows[0];
@@ -359,7 +359,7 @@ export async function getExecutorStats(
 
 export async function applyIndexRecommendation(
 	connectionUrl: string,
-	createIndexSQL: string
+	createIndexSQL: string,
 ): Promise<{ success: boolean; message?: string }> {
 	const client = await createClient(connectionUrl);
 
@@ -369,7 +369,7 @@ export async function applyIndexRecommendation(
 		return { success: true };
 	} catch (error) {
 		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error';
+			error instanceof Error ? error.message : "Unknown error";
 		return { success: false, message: errorMessage };
 	} finally {
 		await client.end();
@@ -378,7 +378,7 @@ export async function applyIndexRecommendation(
 
 export async function applyStatisticsRecommendation(
 	connectionUrl: string,
-	createStatsSQL: string
+	createStatsSQL: string,
 ): Promise<{ success: boolean; message?: string }> {
 	const client = await createClient(connectionUrl);
 
@@ -388,7 +388,7 @@ export async function applyStatisticsRecommendation(
 		return { success: true };
 	} catch (error) {
 		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error';
+			error instanceof Error ? error.message : "Unknown error";
 		return { success: false, message: errorMessage };
 	} finally {
 		await client.end();
@@ -396,17 +396,17 @@ export async function applyStatisticsRecommendation(
 }
 
 export async function activateOnlineAdvisor(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<{ success: boolean; message?: string }> {
 	const client = await createClient(connectionUrl);
 
 	try {
 		// Activate online_advisor by calling get_executor_stats()
-		await client.query('SELECT get_executor_stats()');
+		await client.query("SELECT get_executor_stats()");
 		return { success: true };
 	} catch (error) {
 		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error';
+			error instanceof Error ? error.message : "Unknown error";
 		return { success: false, message: errorMessage };
 	} finally {
 		await client.end();

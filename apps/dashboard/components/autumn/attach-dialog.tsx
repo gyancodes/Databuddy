@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import type { CheckProductPreview } from 'autumn-js';
-import { useCustomer } from 'autumn-js/react';
-import { ArrowRight, Loader2 } from 'lucide-react';
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
+import type { CheckProductPreview } from "autumn-js";
+import { useCustomer } from "autumn-js/react";
+import { ArrowRight, Loader2 } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogFooter,
 	DialogTitle,
-} from '@/components/ui/dialog';
-import { getAttachContent } from '@/lib/autumn/attach-content';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dialog";
+import { getAttachContent } from "@/lib/autumn/attach-content";
+import { cn } from "@/lib/utils";
 
 export interface AttachDialogProps {
 	open: boolean;
@@ -26,7 +26,7 @@ export default function AttachDialog(params?: AttachDialogProps) {
 	const { attach } = useCustomer();
 	const [loading, setLoading] = useState(false);
 	const [optionsInput, setOptionsInput] = useState<FeatureOption[]>(
-		params?.preview?.options || []
+		params?.preview?.options || [],
 	);
 
 	const getTotalPrice = () => {
@@ -54,10 +54,10 @@ export default function AttachDialog(params?: AttachDialogProps) {
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogContent
-				className={cn('gap-0 overflow-hidden p-0 pt-4 text-foreground text-sm')}
+				className={cn("gap-0 overflow-hidden p-0 pt-4 text-foreground text-sm")}
 			>
-				<DialogTitle className={cn('mb-1 px-6 ')}>{title}</DialogTitle>
-				<div className={cn('mt-1 mb-4 px-6 text-muted-foreground')}>
+				<DialogTitle className={cn("mb-1 px-6 ")}>{title}</DialogTitle>
+				<div className={cn("mt-1 mb-4 px-6 text-muted-foreground")}>
 					{message}
 				</div>
 				{(items || optionsInput.length > 0) && (
@@ -88,8 +88,8 @@ export default function AttachDialog(params?: AttachDialogProps) {
 						<TotalPrice>
 							<span>Due Today</span>
 							<span>
-								{new Intl.NumberFormat('en-US', {
-									style: 'currency',
+								{new Intl.NumberFormat("en-US", {
+									style: "currency",
 									currency: due_today.currency,
 								}).format(getTotalPrice())}
 							</span>
@@ -135,8 +135,8 @@ export const PriceItem = ({
 	return (
 		<div
 			className={cn(
-				'flex flex-col justify-between gap-1 pb-4 sm:h-7 sm:flex-row sm:items-center sm:gap-2 sm:pb-0',
-				className
+				"flex flex-col justify-between gap-1 pb-4 sm:h-7 sm:flex-row sm:items-center sm:gap-2 sm:pb-0",
+				className,
 			)}
 			{...props}
 		>
@@ -154,7 +154,7 @@ interface FeatureOption {
 }
 
 interface FeatureOptionWithRequiredPrice
-	extends Omit<FeatureOption, 'price' | 'quantity'> {
+	extends Omit<FeatureOption, "price" | "quantity"> {
 	price: number;
 	quantity: number;
 }
@@ -182,10 +182,10 @@ export const OptionsInput = ({
 						Number.parseInt(e.target.value, 10) * billing_units;
 					setOptionsInput(newOptions);
 				}}
-				value={quantity ? quantity / billing_units : ''}
+				value={quantity ? quantity / billing_units : ""}
 			>
 				<span className="">
-					× ${price} per {billing_units === 1 ? ' ' : billing_units}{' '}
+					× ${price} per {billing_units === 1 ? " " : billing_units}{" "}
 					{feature_name}
 				</span>
 			</QuantityInput>
@@ -216,7 +216,7 @@ export const QuantityInput = ({
 
 	return (
 		<div
-			className={cn(className, 'flex flex-row items-center gap-4')}
+			className={cn(className, "flex flex-row items-center gap-4")}
 			{...props}
 		>
 			<div className="flex items-center gap-1">
@@ -262,14 +262,14 @@ export const PricingDialogButton = ({
 	className,
 }: {
 	children: React.ReactNode;
-	size?: 'sm' | 'lg' | 'default' | 'icon';
+	size?: "sm" | "lg" | "default" | "icon";
 	onClick: () => void;
 	disabled?: boolean;
 	className?: string;
 }) => {
 	return (
 		<Button
-			className={cn(className, 'shadow-sm shadow-stone-400')}
+			className={cn(className, "shadow-sm shadow-stone-400")}
 			disabled={disabled}
 			onClick={onClick}
 			size={size}

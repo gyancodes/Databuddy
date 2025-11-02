@@ -1,9 +1,9 @@
-import type { Customer, CustomerProduct } from 'autumn-js';
-import { useCustomer, usePricingTable } from 'autumn-js/react';
-import dayjs from 'dayjs';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import AttachDialog from '@/components/autumn/attach-dialog';
+import type { Customer, CustomerProduct } from "autumn-js";
+import { useCustomer, usePricingTable } from "autumn-js/react";
+import dayjs from "dayjs";
+import { useState } from "react";
+import { toast } from "sonner";
+import AttachDialog from "@/components/autumn/attach-dialog";
 
 export type FeatureUsage = {
 	id: string;
@@ -20,7 +20,7 @@ export type Usage = {
 	features: FeatureUsage[];
 };
 
-export type { Customer, CustomerInvoice as Invoice } from 'autumn-js';
+export type { Customer, CustomerInvoice as Invoice } from "autumn-js";
 
 export function useBilling(refetch?: () => void) {
 	const { attach, cancel, check, track, openBillingPortal } = useCustomer();
@@ -47,7 +47,7 @@ export function useBilling(refetch?: () => void) {
 			const message =
 				error instanceof Error
 					? error.message
-					: 'An unexpected error occurred.';
+					: "An unexpected error occurred.";
 			toast.error(message);
 		} finally {
 			setIsActionLoading(false);
@@ -63,8 +63,8 @@ export function useBilling(refetch?: () => void) {
 			});
 			toast.success(
 				immediate
-					? 'Subscription cancelled immediately.'
-					: 'Subscription cancelled.'
+					? "Subscription cancelled immediately."
+					: "Subscription cancelled.",
 			);
 			if (refetch) {
 				setTimeout(() => refetch(), 500);
@@ -73,7 +73,7 @@ export function useBilling(refetch?: () => void) {
 			const message =
 				error instanceof Error
 					? error.message
-					: 'Failed to cancel subscription.';
+					: "Failed to cancel subscription.";
 			toast.error(message);
 		} finally {
 			setIsLoading(false);
@@ -83,7 +83,7 @@ export function useBilling(refetch?: () => void) {
 	const handleCancelClick = (
 		planId: string,
 		planName: string,
-		currentPeriodEnd?: number
+		currentPeriodEnd?: number,
 	) => {
 		setCancellingPlan({ id: planId, name: planName, currentPeriodEnd });
 		setShowCancelDialog(true);
@@ -105,25 +105,25 @@ export function useBilling(refetch?: () => void) {
 
 	const getSubscriptionStatus = (product: CustomerProduct) => {
 		if (product.canceled_at) {
-			return 'Cancelling';
+			return "Cancelling";
 		}
-		if (product.status === 'scheduled') {
-			return 'Scheduled';
+		if (product.status === "scheduled") {
+			return "Scheduled";
 		}
-		return 'Active';
+		return "Active";
 	};
 
 	const getSubscriptionStatusDetails = (product: CustomerProduct) => {
 		if (product.canceled_at && product.current_period_end) {
-			return `Access until ${dayjs(product.current_period_end).format('MMM D, YYYY')}`;
+			return `Access until ${dayjs(product.current_period_end).format("MMM D, YYYY")}`;
 		}
-		if (product.status === 'scheduled') {
-			return `Starts on ${dayjs(product.started_at).format('MMM D, YYYY')}`;
+		if (product.status === "scheduled") {
+			return `Starts on ${dayjs(product.started_at).format("MMM D, YYYY")}`;
 		}
 		if (product.current_period_end) {
-			return `Renews on ${dayjs(product.current_period_end).format('MMM D, YYYY')}`;
+			return `Renews on ${dayjs(product.current_period_end).format("MMM D, YYYY")}`;
 		}
-		return '';
+		return "";
 	};
 
 	const getFeatureUsage = (featureId: string, customer?: Customer) => {
@@ -154,7 +154,7 @@ export function useBilling(refetch?: () => void) {
 			balance,
 			unlimited: isUnlimited,
 			nextReset: feature.next_reset_at
-				? dayjs(feature.next_reset_at).format('MMM D, YYYY')
+				? dayjs(feature.next_reset_at).format("MMM D, YYYY")
 				: null,
 			interval: feature.interval ?? null,
 		};
@@ -187,7 +187,7 @@ export function useBillingData() {
 		error: customerError,
 		refetch: refetchCustomer,
 	} = useCustomer({
-		expand: ['invoices'],
+		expand: ["invoices"],
 	});
 
 	const {
@@ -200,7 +200,7 @@ export function useBillingData() {
 
 	const refetch = () => {
 		refetchCustomer();
-		if (typeof refetchPricing === 'function') {
+		if (typeof refetchPricing === "function") {
 			refetchPricing();
 		}
 	};
@@ -232,7 +232,7 @@ export function useBillingData() {
 						balance,
 						unlimited: isUnlimited,
 						nextReset: feature.next_reset_at
-							? dayjs(feature.next_reset_at).format('MMM D, YYYY')
+							? dayjs(feature.next_reset_at).format("MMM D, YYYY")
 							: null,
 						interval: feature.interval ?? null,
 					};

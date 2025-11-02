@@ -1,31 +1,38 @@
-'use client';
+"use client";
 
 import {
+	EyeIcon,
+	EyeSlashIcon,
 	NoteIcon,
 	PencilIcon,
 	PlusIcon,
 	TagIcon,
-	EyeIcon,
-	EyeSlashIcon,
-} from '@phosphor-icons/react';
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+} from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
-import type { Annotation, AnnotationFormData } from '@/types/annotations';
-import { ANNOTATION_COLORS, COMMON_ANNOTATION_TAGS, DEFAULT_ANNOTATION_VALUES } from '@/lib/annotation-constants';
-import { validateAnnotationForm, sanitizeAnnotationText } from '@/lib/annotation-utils';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import {
+	ANNOTATION_COLORS,
+	COMMON_ANNOTATION_TAGS,
+	DEFAULT_ANNOTATION_VALUES,
+} from "@/lib/annotation-constants";
+import {
+	sanitizeAnnotationText,
+	validateAnnotationForm,
+} from "@/lib/annotation-utils";
+import { cn } from "@/lib/utils";
+import type { Annotation, AnnotationFormData } from "@/types/annotations";
 
 interface EditAnnotationModalProps {
 	isOpen: boolean;
@@ -42,11 +49,15 @@ export function EditAnnotationModal({
 	onSave,
 	isSaving = false,
 }: EditAnnotationModalProps) {
-	const [text, setText] = useState('');
+	const [text, setText] = useState("");
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
-	const [customTag, setCustomTag] = useState('');
-	const [selectedColor, setSelectedColor] = useState<string>(DEFAULT_ANNOTATION_VALUES.color);
-	const [isPublic, setIsPublic] = useState<boolean>(DEFAULT_ANNOTATION_VALUES.isPublic);
+	const [customTag, setCustomTag] = useState("");
+	const [selectedColor, setSelectedColor] = useState<string>(
+		DEFAULT_ANNOTATION_VALUES.color,
+	);
+	const [isPublic, setIsPublic] = useState<boolean>(
+		DEFAULT_ANNOTATION_VALUES.isPublic,
+	);
 
 	// Reset form when annotation changes
 	useEffect(() => {
@@ -55,7 +66,7 @@ export function EditAnnotationModal({
 			setSelectedTags(annotation.tags || []);
 			setSelectedColor(annotation.color);
 			setIsPublic(annotation.isPublic);
-			setCustomTag('');
+			setCustomTag("");
 		}
 	}, [annotation]);
 
@@ -66,13 +77,13 @@ export function EditAnnotationModal({
 	};
 
 	const removeTag = (tag: string) => {
-		setSelectedTags(selectedTags.filter(t => t !== tag));
+		setSelectedTags(selectedTags.filter((t) => t !== tag));
 	};
 
 	const handleCustomTagSubmit = () => {
 		if (customTag.trim()) {
 			addTag(customTag.trim());
-			setCustomTag('');
+			setCustomTag("");
 		}
 	};
 
@@ -89,7 +100,7 @@ export function EditAnnotationModal({
 		const validation = validateAnnotationForm(formData);
 		if (!validation.isValid) {
 			// Could show validation errors to user
-			console.error('Validation errors:', validation.errors);
+			console.error("Validation errors:", validation.errors);
 			return;
 		}
 
@@ -97,17 +108,17 @@ export function EditAnnotationModal({
 	};
 
 	const formatDate = (date: Date | string) => {
-		return new Date(date).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric',
+		return new Date(date).toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
 		});
 	};
 
 	const formatDateRange = (start: Date | string, end: Date | string | null) => {
 		const startDate = new Date(start);
 		const endDate = end ? new Date(end) : null;
-		
+
 		if (!endDate || startDate.getTime() === endDate.getTime()) {
 			return formatDate(startDate);
 		}
@@ -125,7 +136,8 @@ export function EditAnnotationModal({
 						Edit Annotation
 					</DialogTitle>
 					<DialogDescription>
-						Editing annotation for {formatDateRange(annotation.xValue, annotation.xEndValue)}
+						Editing annotation for{" "}
+						{formatDateRange(annotation.xValue, annotation.xEndValue)}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -134,7 +146,9 @@ export function EditAnnotationModal({
 					<div className="space-y-3">
 						<div className="flex items-center gap-2">
 							<NoteIcon className="h-4 w-4 text-primary" />
-							<Label htmlFor="edit-text" className="font-medium">Annotation Text</Label>
+							<Label htmlFor="edit-text" className="font-medium">
+								Annotation Text
+							</Label>
 						</div>
 						<Textarea
 							id="edit-text"
@@ -148,7 +162,9 @@ export function EditAnnotationModal({
 						/>
 						<div className="flex justify-between items-center text-xs text-muted-foreground">
 							<span>Keep it concise and descriptive</span>
-							<span>{text.length}/{DEFAULT_ANNOTATION_VALUES.maxTextLength}</span>
+							<span>
+								{text.length}/{DEFAULT_ANNOTATION_VALUES.maxTextLength}
+							</span>
 						</div>
 					</div>
 
@@ -158,7 +174,7 @@ export function EditAnnotationModal({
 							<TagIcon className="h-4 w-4 text-primary" />
 							<Label className="font-medium">Tags (optional)</Label>
 						</div>
-						
+
 						{selectedTags.length > 0 && (
 							<div className="flex flex-wrap gap-2 mb-3">
 								{selectedTags.map((tag) => (
@@ -181,7 +197,7 @@ export function EditAnnotationModal({
 									value={customTag}
 									onChange={(e) => setCustomTag(e.target.value)}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter') {
+										if (e.key === "Enter") {
 											e.preventDefault();
 											handleCustomTagSubmit();
 										}
@@ -198,11 +214,13 @@ export function EditAnnotationModal({
 									<PlusIcon className="h-4 w-4" />
 								</Button>
 							</div>
-							
+
 							<div className="space-y-2">
 								<div className="text-xs text-muted-foreground">Quick add:</div>
-							<div className="flex flex-wrap gap-2">
-								{COMMON_ANNOTATION_TAGS.filter(tag => !selectedTags.includes(tag.value)).map((tag) => (
+								<div className="flex flex-wrap gap-2">
+									{COMMON_ANNOTATION_TAGS.filter(
+										(tag) => !selectedTags.includes(tag.value),
+									).map((tag) => (
 										<button
 											key={tag.value}
 											onClick={() => addTag(tag.value)}
@@ -210,8 +228,8 @@ export function EditAnnotationModal({
 											style={{ borderColor: tag.color }}
 											disabled={isSaving}
 										>
-											<div 
-												className="h-2 w-2 rounded-full" 
+											<div
+												className="h-2 w-2 rounded-full"
 												style={{ backgroundColor: tag.color }}
 											/>
 											{tag.label}
@@ -233,7 +251,7 @@ export function EditAnnotationModal({
 										"w-10 h-10 rounded-full border-2 transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
 										selectedColor === color.value
 											? "border-foreground scale-110 shadow-lg"
-											: "border-border hover:border-foreground/50"
+											: "border-border hover:border-foreground/50",
 									)}
 									style={{ backgroundColor: color.value }}
 									onClick={() => setSelectedColor(color.value)}

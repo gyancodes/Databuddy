@@ -1,3 +1,5 @@
+import { createLogger, createNoopLogger, type Logger } from "./logger";
+import { EventQueue } from "./queue";
 import type {
 	BatchEventInput,
 	BatchEventResponse,
@@ -6,9 +8,7 @@ import type {
 	EventResponse,
 	GlobalProperties,
 	Middleware,
-} from './types';
-import { createLogger, createNoopLogger, type Logger } from './logger';
-import { EventQueue } from './queue';
+} from "./types";
 
 export type {
 	BatchEventInput,
@@ -19,9 +19,9 @@ export type {
 	GlobalProperties,
 	Logger,
 	Middleware,
-} from './types';
+} from "./types";
 
-const DEFAULT_API_URL = 'https://basket.databuddy.cc';
+const DEFAULT_API_URL = "https://basket.databuddy.cc";
 const DEFAULT_BATCH_SIZE = 10;
 const DEFAULT_BATCH_TIMEOUT = 2000;
 const DEFAULT_MAX_QUEUE_SIZE = 1000;
@@ -43,8 +43,8 @@ export class Databuddy {
 	private maxDeduplicationCacheSize: number;
 
 	constructor(config: DatabuddyConfig) {
-		if (!config.clientId || typeof config.clientId !== 'string') {
-			throw new Error('clientId is required and must be a string');
+		if (!config.clientId || typeof config.clientId !== "string") {
+			throw new Error("clientId is required and must be a string");
 		}
 
 		this.clientId = config.clientId.trim();
@@ -55,7 +55,8 @@ export class Databuddy {
 		this.queue = new EventQueue(config.maxQueueSize || DEFAULT_MAX_QUEUE_SIZE);
 		this.middleware = config.middleware || [];
 		this.enableDeduplication = config.enableDeduplication !== false;
-		this.maxDeduplicationCacheSize = config.maxDeduplicationCacheSize || DEFAULT_MAX_DEDUPLICATION_CACHE_SIZE;
+		this.maxDeduplicationCacheSize =
+			config.maxDeduplicationCacheSize || DEFAULT_MAX_DEDUPLICATION_CACHE_SIZE;
 
 		// Initialize logger: use provided logger, or create one based on debug flag
 		if (config.logger) {
@@ -66,7 +67,7 @@ export class Databuddy {
 			this.logger = createNoopLogger();
 		}
 
-		this.logger.info('Initialized', {
+		this.logger.info("Initialized", {
 			clientId: this.clientId,
 			apiUrl: this.apiUrl,
 			enableBatching: this.enableBatching,
@@ -90,15 +91,15 @@ export class Databuddy {
 	 * ```
 	 */
 	async track(event: CustomEventInput): Promise<EventResponse> {
-		if (!event.name || typeof event.name !== 'string') {
+		if (!event.name || typeof event.name !== "string") {
 			return {
 				success: false,
-				error: 'Event name is required and must be a string',
+				error: "Event name is required and must be a string",
 			};
 		}
 
 		const batchEvent: BatchEventInput = {
-			type: 'custom',
+			type: "custom",
 			name: event.name,
 			eventId: event.eventId,
 			anonymousId: event.anonymousId,
@@ -112,13 +113,15 @@ export class Databuddy {
 
 		const processedEvent = await this.applyMiddleware(batchEvent);
 		if (!processedEvent) {
-			this.logger.debug('Event dropped by middleware', { name: event.name });
+			this.logger.debug("Event dropped by middleware", { name: event.name });
 			return { success: true };
 		}
 
 		if (this.enableDeduplication && processedEvent.eventId) {
 			if (this.deduplicationCache.has(processedEvent.eventId)) {
-				this.logger.debug('Event deduplicated', { eventId: processedEvent.eventId });
+				this.logger.debug("Event deduplicated", {
+					eventId: processedEvent.eventId,
+				});
 				return { success: true };
 			}
 			this.addToDeduplicationCache(processedEvent.eventId);
@@ -129,7 +132,7 @@ export class Databuddy {
 		}
 
 		const shouldFlush = this.queue.add(processedEvent);
-		this.logger.debug('Event queued', { queueSize: this.queue.size() });
+		this.logger.debug("Event queued", { queueSize: this.queue.size() });
 
 		this.scheduleFlush();
 
@@ -144,23 +147,23 @@ export class Databuddy {
 		try {
 			const url = `${this.apiUrl}/?client_id=${encodeURIComponent(this.clientId)}`;
 
-			this.logger.info('📤 SENDING SINGLE EVENT:', {
+			this.logger.info("📤 SENDING SINGLE EVENT:", {
 				name: event.name,
 				properties: JSON.stringify(event.properties, null, 2),
-				propertiesCount: Object.keys(event.properties || {}).length
+				propertiesCount: Object.keys(event.properties || {}).length,
 			});
 
 			const response = await fetch(url, {
-				method: 'POST',
+				method: "POST",
 				headers: {
-					'Content-Type': 'application/json',
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(event),
 			});
 
 			if (!response.ok) {
-				const errorText = await response.text().catch(() => 'Unknown error');
-				this.logger.error('Request failed', {
+				const errorText = await response.text().catch(() => "Unknown error");
+				this.logger.error("Request failed", {
 					status: response.status,
 					statusText: response.statusText,
 					body: errorText,
@@ -173,9 +176,9 @@ export class Databuddy {
 
 			const data = await response.json();
 
-			this.logger.info('Response received', data);
+			this.logger.info("Response received", data);
 
-			if (data.status === 'success') {
+			if (data.status === "success") {
 				return {
 					success: true,
 					eventId: data.eventId,
@@ -184,16 +187,16 @@ export class Databuddy {
 
 			return {
 				success: false,
-				error: data.message || 'Unknown error from server',
+				error: data.message || "Unknown error from server",
 			};
 		} catch (error) {
-			this.logger.error('Request error', {
+			this.logger.error("Request error", {
 				error: error instanceof Error ? error.message : String(error),
 			});
 			return {
 				success: false,
 				error:
-					error instanceof Error ? error.message : 'Network request failed',
+					error instanceof Error ? error.message : "Network request failed",
 			};
 		}
 	}
@@ -205,7 +208,7 @@ export class Databuddy {
 
 		this.flushTimer = setTimeout(() => {
 			this.flush().catch((error) => {
-				this.logger.error('Auto-flush error', {
+				this.logger.error("Auto-flush error", {
 					error: error instanceof Error ? error.message : String(error),
 				});
 			});
@@ -239,7 +242,7 @@ export class Databuddy {
 		const events = this.queue.getAll();
 		this.queue.clear();
 
-		this.logger.info('Flushing events', { count: events.length });
+		this.logger.info("Flushing events", { count: events.length });
 
 		return this.batch(events);
 	}
@@ -260,34 +263,34 @@ export class Databuddy {
 		if (!Array.isArray(events)) {
 			return {
 				success: false,
-				error: 'Events must be an array',
+				error: "Events must be an array",
 			};
 		}
 
 		if (events.length === 0) {
 			return {
 				success: false,
-				error: 'Events array cannot be empty',
+				error: "Events array cannot be empty",
 			};
 		}
 
 		if (events.length > 100) {
 			return {
 				success: false,
-				error: 'Batch size cannot exceed 100 events',
+				error: "Batch size cannot exceed 100 events",
 			};
 		}
 
 		for (const event of events) {
-			if (!event.name || typeof event.name !== 'string') {
+			if (!event.name || typeof event.name !== "string") {
 				return {
 					success: false,
-					error: 'All events must have a valid name',
+					error: "All events must have a valid name",
 				};
 			}
 		}
 
-		const enrichedEvents = events.map(event => ({
+		const enrichedEvents = events.map((event) => ({
 			...event,
 			properties: {
 				...this.globalProperties,
@@ -304,7 +307,9 @@ export class Databuddy {
 
 			if (this.enableDeduplication && processedEvent.eventId) {
 				if (this.deduplicationCache.has(processedEvent.eventId)) {
-					this.logger.debug('Event deduplicated in batch', { eventId: processedEvent.eventId });
+					this.logger.debug("Event deduplicated in batch", {
+						eventId: processedEvent.eventId,
+					});
 					continue;
 				}
 				this.addToDeduplicationCache(processedEvent.eventId);
@@ -324,24 +329,30 @@ export class Databuddy {
 		try {
 			const url = `${this.apiUrl}/batch?client_id=${encodeURIComponent(this.clientId)}`;
 
-			this.logger.info('📦 SENDING BATCH EVENTS:', {
+			this.logger.info("📦 SENDING BATCH EVENTS:", {
 				count: processedEvents.length,
 				firstEventName: processedEvents[0]?.name,
-				firstEventProperties: JSON.stringify(processedEvents[0]?.properties, null, 2),
-				firstEventPropertiesCount: Object.keys(processedEvents[0]?.properties || {}).length
+				firstEventProperties: JSON.stringify(
+					processedEvents[0]?.properties,
+					null,
+					2,
+				),
+				firstEventPropertiesCount: Object.keys(
+					processedEvents[0]?.properties || {},
+				).length,
 			});
 
 			const response = await fetch(url, {
-				method: 'POST',
+				method: "POST",
 				headers: {
-					'Content-Type': 'application/json',
+					"Content-Type": "application/json",
 				},
 				body: JSON.stringify(processedEvents),
 			});
 
 			if (!response.ok) {
-				const errorText = await response.text().catch(() => 'Unknown error');
-				this.logger.error('Batch request failed', {
+				const errorText = await response.text().catch(() => "Unknown error");
+				this.logger.error("Batch request failed", {
 					status: response.status,
 					statusText: response.statusText,
 					body: errorText,
@@ -354,9 +365,9 @@ export class Databuddy {
 
 			const data = await response.json();
 
-			this.logger.info('Batch response received', data);
+			this.logger.info("Batch response received", data);
 
-			if (data.status === 'success') {
+			if (data.status === "success") {
 				return {
 					success: true,
 					processed: data.processed || processedEvents.length,
@@ -366,16 +377,16 @@ export class Databuddy {
 
 			return {
 				success: false,
-				error: data.message || 'Unknown error from server',
+				error: data.message || "Unknown error from server",
 			};
 		} catch (error) {
-			this.logger.error('Batch request error', {
+			this.logger.error("Batch request error", {
 				error: error instanceof Error ? error.message : String(error),
 			});
 			return {
 				success: false,
 				error:
-					error instanceof Error ? error.message : 'Network request failed',
+					error instanceof Error ? error.message : "Network request failed",
 			};
 		}
 	}
@@ -392,7 +403,7 @@ export class Databuddy {
 	 */
 	setGlobalProperties(properties: GlobalProperties): void {
 		this.globalProperties = { ...this.globalProperties, ...properties };
-		this.logger.debug('Global properties updated', { properties });
+		this.logger.debug("Global properties updated", { properties });
 	}
 
 	/**
@@ -418,7 +429,7 @@ export class Databuddy {
 	 */
 	clearGlobalProperties(): void {
 		this.globalProperties = {};
-		this.logger.debug('Global properties cleared');
+		this.logger.debug("Global properties cleared");
 	}
 
 	/**
@@ -433,7 +444,7 @@ export class Databuddy {
 	 *   event.properties = { ...event.properties, processed: true };
 	 *   return event;
 	 * });
-	 * 
+	 *
 	 * // Drop events matching a condition
 	 * client.addMiddleware((event) => {
 	 *   if (event.name === 'unwanted_event') return null;
@@ -443,7 +454,9 @@ export class Databuddy {
 	 */
 	addMiddleware(middleware: Middleware): void {
 		this.middleware.push(middleware);
-		this.logger.debug('Middleware added', { totalMiddleware: this.middleware.length });
+		this.logger.debug("Middleware added", {
+			totalMiddleware: this.middleware.length,
+		});
 	}
 
 	/**
@@ -456,7 +469,7 @@ export class Databuddy {
 	 */
 	clearMiddleware(): void {
 		this.middleware = [];
-		this.logger.debug('Middleware cleared');
+		this.logger.debug("Middleware cleared");
 	}
 
 	/**
@@ -483,10 +496,12 @@ export class Databuddy {
 	 */
 	clearDeduplicationCache(): void {
 		this.deduplicationCache.clear();
-		this.logger.debug('Deduplication cache cleared');
+		this.logger.debug("Deduplication cache cleared");
 	}
 
-	private async applyMiddleware(event: BatchEventInput): Promise<BatchEventInput | null> {
+	private async applyMiddleware(
+		event: BatchEventInput,
+	): Promise<BatchEventInput | null> {
 		let processedEvent: BatchEventInput | null = event;
 
 		for (const middleware of this.middleware) {
@@ -496,7 +511,7 @@ export class Databuddy {
 			try {
 				processedEvent = await middleware(processedEvent);
 			} catch (error) {
-				this.logger.error('Middleware error', {
+				this.logger.error("Middleware error", {
 					error: error instanceof Error ? error.message : String(error),
 				});
 			}
@@ -520,4 +535,3 @@ export class Databuddy {
  * Shorthand alias for Databuddy
  */
 export { Databuddy as db };
-

@@ -1,18 +1,18 @@
-import type { StreamingUpdate } from '@databuddy/shared/types/assistant';
-import { useAtom } from 'jotai';
-import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
-import { trpc } from '@/lib/trpc';
+import type { StreamingUpdate } from "@databuddy/shared/types/assistant";
+import { useAtom } from "jotai";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import {
 	inputValueAtom,
 	isLoadingAtom,
 	messagesAtom,
 	modelAtom,
 	websiteIdAtom,
-} from '@/stores/jotai/assistantAtoms';
-import type { Message } from '../types/message';
+} from "@/stores/jotai/assistantAtoms";
+import type { Message } from "../types/message";
 
-export type Vote = 'upvote' | 'downvote';
+export type Vote = "upvote" | "downvote";
 
 export function useChat() {
 	const [model] = useAtom(modelAtom);
@@ -24,13 +24,13 @@ export function useChat() {
 
 	// Validate required fields
 	if (!websiteId) {
-		throw new Error('Website ID is required');
+		throw new Error("Website ID is required");
 	}
 
 	const addFeedback = trpc.assistant.addFeedback.useMutation({
 		onError: (error) => {
 			toast.error(
-				error.message || 'Failed to submit feedback. Please try again.'
+				error.message || "Failed to submit feedback. Please try again.",
 			);
 		},
 	});
@@ -43,13 +43,13 @@ export function useChat() {
 				return newMessages;
 			});
 		},
-		[setMessages]
+		[setMessages],
 	);
 
 	const processStreamingUpdate = useCallback(
 		(update: StreamingUpdate, assistantMessage: Message): Message => {
 			switch (update.type) {
-				case 'thinking': {
+				case "thinking": {
 					return {
 						...assistantMessage,
 						thinkingSteps: [
@@ -58,12 +58,12 @@ export function useChat() {
 						],
 					};
 				}
-				case 'progress': {
+				case "progress": {
 					const updatedMessage = {
 						...assistantMessage,
 						content: update.content,
 						hasVisualization: update.data?.hasVisualization,
-						chartType: update.data?.chartType as Message['chartType'],
+						chartType: update.data?.chartType as Message["chartType"],
 						data: update.data?.data,
 						responseType: update.data?.responseType,
 						metricValue: update.data?.metricValue,
@@ -71,14 +71,14 @@ export function useChat() {
 					};
 					return updatedMessage;
 				}
-				case 'complete': {
+				case "complete": {
 					const completedMessage = {
 						...assistantMessage,
-						type: 'assistant' as const,
+						type: "assistant" as const,
 						content: update.content,
 						timestamp: new Date(),
 						hasVisualization: update.data?.hasVisualization,
-						chartType: update.data?.chartType as Message['chartType'],
+						chartType: update.data?.chartType as Message["chartType"],
 						data: update.data?.data,
 						responseType: update.data?.responseType,
 						metricValue: update.data?.metricValue,
@@ -87,14 +87,14 @@ export function useChat() {
 					};
 					return completedMessage;
 				}
-				case 'error': {
+				case "error": {
 					return {
 						...assistantMessage,
 						content: update.content,
 						debugInfo: update.debugInfo,
 					};
 				}
-				case 'metadata': {
+				case "metadata": {
 					setConversationId(update.data.conversationId);
 					return {
 						...assistantMessage,
@@ -106,13 +106,13 @@ export function useChat() {
 				}
 			}
 		},
-		[]
+		[],
 	);
 
 	const readStreamChunk = useCallback(
 		async (
 			reader: ReadableStreamDefaultReader<Uint8Array>,
-			assistantMessage: Message
+			assistantMessage: Message,
 		): Promise<Message> => {
 			const { done, value } = await reader.read();
 
@@ -121,30 +121,30 @@ export function useChat() {
 			}
 
 			const chunk = new TextDecoder().decode(value);
-			const lines = chunk.split('\n');
+			const lines = chunk.split("\n");
 			let updatedMessage = assistantMessage;
 
 			for (const line of lines) {
-				if (line.startsWith('data: ')) {
+				if (line.startsWith("data: ")) {
 					try {
 						const update: StreamingUpdate = JSON.parse(line.slice(6));
 						updatedMessage = processStreamingUpdate(update, updatedMessage);
 						updateAiMessage(updatedMessage);
 					} catch {
-						console.warn('Failed to parse SSE data:', line);
+						console.warn("Failed to parse SSE data:", line);
 					}
 				}
 			}
 
 			return readStreamChunk(reader, updatedMessage);
 		},
-		[processStreamingUpdate, updateAiMessage]
+		[processStreamingUpdate, updateAiMessage],
 	);
 
 	const processStreamReader = useCallback(
 		async (
 			reader: ReadableStreamDefaultReader<Uint8Array>,
-			initialAssistantMessage: Message
+			initialAssistantMessage: Message,
 		) => {
 			try {
 				return await readStreamChunk(reader, initialAssistantMessage);
@@ -152,7 +152,7 @@ export function useChat() {
 				reader.releaseLock();
 			}
 		},
-		[readStreamChunk]
+		[readStreamChunk],
 	);
 
 	const sendMessage = useCallback(
@@ -164,19 +164,19 @@ export function useChat() {
 
 			const userMessage: Message = {
 				id: Date.now().toString(),
-				type: 'user',
+				type: "user",
 				content: messageContent,
 				timestamp: new Date(),
 			};
 
 			setMessages((prev) => [...prev, userMessage]);
-			setInputValue('');
+			setInputValue("");
 			setIsLoading(true);
 
 			let assistantMessage: Message = {
-				id: '',
-				type: 'assistant',
-				content: '',
+				id: "",
+				type: "assistant",
+				content: "",
 				timestamp: new Date(),
 				hasVisualization: false,
 				thinkingSteps: [],
@@ -189,12 +189,12 @@ export function useChat() {
 				const response = await fetch(
 					`${process.env.NEXT_PUBLIC_API_URL}/v1/assistant/stream`,
 					{
-						method: 'POST',
+						method: "POST",
 						headers: {
-							'Content-Type': 'application/json',
-							'X-Website-Id': websiteId,
+							"Content-Type": "application/json",
+							"X-Website-Id": websiteId,
 						},
-						credentials: 'include',
+						credentials: "include",
 						body: JSON.stringify({
 							messages: [...messages, userMessage].map((message) => ({
 								role: message.type,
@@ -204,21 +204,21 @@ export function useChat() {
 							conversationId,
 							model,
 						}),
-					}
+					},
 				);
 
 				if (!response.ok) {
-					throw new Error('Failed to start stream');
+					throw new Error("Failed to start stream");
 				}
 
 				const reader = response.body?.getReader();
 				if (!reader) {
-					throw new Error('No response stream available');
+					throw new Error("No response stream available");
 				}
 
 				await processStreamReader(reader, assistantMessage);
 			} catch (error) {
-				console.error('Failed to get AI response:', error);
+				console.error("Failed to get AI response:", error);
 				assistantMessage = {
 					...assistantMessage,
 					content:
@@ -239,22 +239,22 @@ export function useChat() {
 			setInputValue,
 			setIsLoading,
 			setMessages,
-		]
+		],
 	);
 
 	const handleKeyPress = useCallback(
 		(e: React.KeyboardEvent) => {
-			if (e.key === 'Enter' && !e.shiftKey) {
+			if (e.key === "Enter" && !e.shiftKey) {
 				e.preventDefault();
 				sendMessage();
 			}
 		},
-		[sendMessage]
+		[sendMessage],
 	);
 
 	const resetChat = useCallback(() => {
 		setMessages([]);
-		setInputValue('');
+		setInputValue("");
 		setIsLoading(false);
 		setConversationId(undefined);
 	}, [setInputValue, setIsLoading, setMessages]);
@@ -263,7 +263,7 @@ export function useChat() {
 		(messageId: string, type: Vote) => {
 			addFeedback.mutate({ messageId, type });
 		},
-		[addFeedback]
+		[addFeedback],
 	);
 
 	const handleFeedbackComment = useCallback(
@@ -272,15 +272,15 @@ export function useChat() {
 				{ messageId, comment },
 				{
 					onSuccess: () => {
-						toast.success('Feedback submitted');
+						toast.success("Feedback submitted");
 					},
 					onError: () => {
-						toast.error('Failed to submit feedback');
+						toast.error("Failed to submit feedback");
 					},
-				}
+				},
 			);
 		},
-		[addFeedback]
+		[addFeedback],
 	);
 
 	return {

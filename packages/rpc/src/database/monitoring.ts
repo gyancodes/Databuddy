@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import { Client } from "pg";
 
 export interface DatabaseStats {
 	databaseName: string;
@@ -47,22 +47,22 @@ async function createClient(connectionUrl: string): Promise<Client> {
 }
 
 export async function getDatabaseStats(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<DatabaseStats> {
 	const client = await createClient(connectionUrl);
 
 	try {
 		const queries = [
 			// Database info
-			'SELECT current_database() as database_name, pg_size_pretty(pg_database_size(current_database())) as database_size',
+			"SELECT current_database() as database_name, pg_size_pretty(pg_database_size(current_database())) as database_size",
 			// Connection info
 			"SELECT setting as max_connections FROM pg_settings WHERE name = 'max_connections'",
 			"SELECT count(*) as active_connections FROM pg_stat_activity WHERE state = 'active'",
 			// Activity stats
-			'SELECT SUM(xact_commit + xact_rollback) as total_queries, SUM(tup_inserted) as total_inserts, SUM(tup_updated) as total_updates, SUM(tup_deleted) as total_deletes FROM pg_stat_database WHERE datname = current_database()',
+			"SELECT SUM(xact_commit + xact_rollback) as total_queries, SUM(tup_inserted) as total_inserts, SUM(tup_updated) as total_updates, SUM(tup_deleted) as total_deletes FROM pg_stat_database WHERE datname = current_database()",
 			// Performance metrics
-			'SELECT ROUND(100.0 * SUM(blks_hit) / NULLIF(SUM(blks_hit + blks_read), 0), 2) as hit_ratio FROM pg_stat_database WHERE datname = current_database()',
-			'SELECT ROUND(100.0 * SUM(idx_scan) / NULLIF(SUM(seq_scan + idx_scan), 0), 2) as index_usage FROM pg_stat_user_tables',
+			"SELECT ROUND(100.0 * SUM(blks_hit) / NULLIF(SUM(blks_hit + blks_read), 0), 2) as hit_ratio FROM pg_stat_database WHERE datname = current_database()",
+			"SELECT ROUND(100.0 * SUM(idx_scan) / NULLIF(SUM(seq_scan + idx_scan), 0), 2) as index_usage FROM pg_stat_user_tables",
 		];
 
 		const results = await Promise.all(queries.map((q) => client.query(q)));
@@ -81,14 +81,14 @@ export async function getDatabaseStats(
 			maxConnections: Number.parseInt(connectionInfo.max_connections, 10),
 			activeConnections: Number.parseInt(
 				activeConnections.active_connections,
-				10
+				10,
 			),
-			totalQueries: Number.parseInt(activity.total_queries || '0', 10),
-			totalInserts: Number.parseInt(activity.total_inserts || '0', 10),
-			totalUpdates: Number.parseInt(activity.total_updates || '0', 10),
-			totalDeletes: Number.parseInt(activity.total_deletes || '0', 10),
-			hitRatio: Number.parseFloat(hitRatio.hit_ratio || '0'),
-			indexUsage: Number.parseFloat(indexUsage.index_usage || '0'),
+			totalQueries: Number.parseInt(activity.total_queries || "0", 10),
+			totalInserts: Number.parseInt(activity.total_inserts || "0", 10),
+			totalUpdates: Number.parseInt(activity.total_updates || "0", 10),
+			totalDeletes: Number.parseInt(activity.total_deletes || "0", 10),
+			hitRatio: Number.parseFloat(hitRatio.hit_ratio || "0"),
+			indexUsage: Number.parseFloat(indexUsage.index_usage || "0"),
 		};
 	} finally {
 		await client.end();
@@ -97,7 +97,7 @@ export async function getDatabaseStats(
 
 export async function getTableStats(
 	connectionUrl: string,
-	limit?: number
+	limit?: number,
 ): Promise<TableStats[]> {
 	const client = await createClient(connectionUrl);
 
@@ -116,7 +116,7 @@ export async function getTableStats(
 				n_dead_tup as dead_tuples
 			FROM pg_stat_user_tables 
 			ORDER BY pg_total_relation_size(quote_ident(schemaname)||'.'||quote_ident(relname)) DESC
-			${limit ? 'LIMIT $1' : ''}
+			${limit ? "LIMIT $1" : ""}
 		`;
 
 		const result = limit
@@ -126,7 +126,7 @@ export async function getTableStats(
 		return result.rows.map((row) => ({
 			tableName: row.table_name,
 			schemaName: row.schema_name,
-			rowCount: Number.parseInt(row.row_count || '0', 10),
+			rowCount: Number.parseInt(row.row_count || "0", 10),
 			totalSize: row.total_size,
 			indexSize: row.index_size,
 			lastVacuum: row.last_vacuum
@@ -135,9 +135,9 @@ export async function getTableStats(
 			lastAnalyze: row.last_analyze
 				? new Date(row.last_analyze).toISOString()
 				: undefined,
-			sequentialScans: Number.parseInt(row.sequential_scans || '0', 10),
-			indexScans: Number.parseInt(row.index_scans || '0', 10),
-			deadTuples: Number.parseInt(row.dead_tuples || '0', 10),
+			sequentialScans: Number.parseInt(row.sequential_scans || "0", 10),
+			indexScans: Number.parseInt(row.index_scans || "0", 10),
+			deadTuples: Number.parseInt(row.dead_tuples || "0", 10),
 		}));
 	} finally {
 		await client.end();
@@ -145,20 +145,20 @@ export async function getTableStats(
 }
 
 export async function getExtensions(
-	connectionUrl: string
+	connectionUrl: string,
 ): Promise<ExtensionInfo[]> {
 	const client = await createClient(connectionUrl);
 
 	try {
 		const [extensionsResult, availableResult] = await Promise.all([
 			client.query(
-				"SELECT e.extname as name, e.extversion as version, n.nspname as schema, COALESCE(c.description, 'No description available') as description FROM pg_extension e LEFT JOIN pg_namespace n ON n.oid = e.extnamespace LEFT JOIN pg_description c ON c.objoid = e.oid AND c.classoid = 'pg_extension'::regclass ORDER BY e.extname"
+				"SELECT e.extname as name, e.extversion as version, n.nspname as schema, COALESCE(c.description, 'No description available') as description FROM pg_extension e LEFT JOIN pg_namespace n ON n.oid = e.extnamespace LEFT JOIN pg_description c ON c.objoid = e.oid AND c.classoid = 'pg_extension'::regclass ORDER BY e.extname",
 			),
-			client.query('SELECT name, default_version FROM pg_available_extensions'),
+			client.query("SELECT name, default_version FROM pg_available_extensions"),
 		]);
 
 		const availableVersions = new Map(
-			availableResult.rows.map((row) => [row.name, row.default_version])
+			availableResult.rows.map((row) => [row.name, row.default_version]),
 		);
 
 		return extensionsResult.rows.map((row) => {
@@ -180,21 +180,21 @@ export async function getExtensions(
 
 export async function resetExtensionStats(
 	connectionUrl: string,
-	extensionName: string
+	extensionName: string,
 ): Promise<void> {
 	const client = await createClient(connectionUrl);
 
 	try {
 		switch (extensionName) {
-			case 'pg_stat_statements':
-				await client.query('SELECT pg_stat_statements_reset()');
+			case "pg_stat_statements":
+				await client.query("SELECT pg_stat_statements_reset()");
 				break;
-			case 'pg_stat_monitor':
-				await client.query('SELECT pg_stat_monitor_reset()');
+			case "pg_stat_monitor":
+				await client.query("SELECT pg_stat_monitor_reset()");
 				break;
 			default:
 				throw new Error(
-					`Stats reset not supported for extension: ${extensionName}`
+					`Stats reset not supported for extension: ${extensionName}`,
 				);
 		}
 	} finally {
@@ -204,15 +204,15 @@ export async function resetExtensionStats(
 
 export async function updateExtension(
 	connectionUrl: string,
-	extensionName: string
+	extensionName: string,
 ): Promise<void> {
 	const client = await createClient(connectionUrl);
 
 	try {
 		// Check if extension exists and needs updating
 		const versionCheck = await client.query(
-			'SELECT e.extversion as current_version, av.default_version as available_version FROM pg_extension e JOIN pg_available_extensions av ON e.extname = av.name WHERE e.extname = $1',
-			[extensionName]
+			"SELECT e.extversion as current_version, av.default_version as available_version FROM pg_extension e JOIN pg_available_extensions av ON e.extname = av.name WHERE e.extname = $1",
+			[extensionName],
 		);
 
 		if (versionCheck.rows.length === 0) {
@@ -234,7 +234,7 @@ export async function safeInstallExtension(
 	connectionUrl: string,
 	extensionName: string,
 	schema?: string,
-	force = false
+	force = false,
 ): Promise<{ success: boolean; warnings: string[] }> {
 	const client = await createClient(connectionUrl);
 	const warnings: string[] = [];
@@ -242,8 +242,8 @@ export async function safeInstallExtension(
 	try {
 		// Check if available
 		const availableCheck = await client.query(
-			'SELECT name FROM pg_available_extensions WHERE name = $1',
-			[extensionName]
+			"SELECT name FROM pg_available_extensions WHERE name = $1",
+			[extensionName],
 		);
 
 		if (availableCheck.rows.length === 0) {
@@ -255,8 +255,8 @@ export async function safeInstallExtension(
 
 		// Check if already installed
 		const installedCheck = await client.query(
-			'SELECT extversion FROM pg_extension WHERE extname = $1',
-			[extensionName]
+			"SELECT extversion FROM pg_extension WHERE extname = $1",
+			[extensionName],
 		);
 
 		if (installedCheck.rows.length > 0) {
@@ -273,7 +273,7 @@ export async function safeInstallExtension(
 		}
 
 		if (force) {
-			query += ' WITH FORCE';
+			query += " WITH FORCE";
 		}
 
 		await client.query(query);
@@ -303,7 +303,7 @@ export async function getAvailableExtensions(connectionUrl: string): Promise<
 		return result.rows.map((row) => ({
 			name: row.name,
 			defaultVersion: row.default_version,
-			description: row.comment || 'No description available',
+			description: row.comment || "No description available",
 		}));
 	} finally {
 		await client.end();
@@ -312,7 +312,7 @@ export async function getAvailableExtensions(connectionUrl: string): Promise<
 
 export async function checkExtensionSafety(
 	connectionUrl: string,
-	extensionName: string
+	extensionName: string,
 ): Promise<{
 	canSafelyDrop: boolean;
 	canSafelyUpdate: boolean;
@@ -327,15 +327,15 @@ export async function checkExtensionSafety(
 			`SELECT COUNT(*) as dependency_count FROM pg_depend d
 			 JOIN pg_extension e ON d.refobjid = e.oid
 			 WHERE e.extname = $1 AND d.deptype IN ('n', 'a')`,
-			[extensionName]
+			[extensionName],
 		);
 
 		const dependencyCount = Number.parseInt(
 			dependencyResult.rows[0].dependency_count,
-			10
+			10,
 		);
-		const hasStatefulData = ['pg_stat_statements', 'pg_stat_monitor'].includes(
-			extensionName
+		const hasStatefulData = ["pg_stat_statements", "pg_stat_monitor"].includes(
+			extensionName,
 		);
 		const canSafelyDrop = dependencyCount === 0;
 		const canSafelyUpdate = true;
@@ -343,7 +343,7 @@ export async function checkExtensionSafety(
 		const warnings: string[] = [];
 		if (hasStatefulData) {
 			warnings.push(
-				'Extension contains stateful data that will be lost if dropped'
+				"Extension contains stateful data that will be lost if dropped",
 			);
 		}
 		if (dependencyCount > 0) {
@@ -364,7 +364,7 @@ export async function checkExtensionSafety(
 export async function safeDropExtension(
 	connectionUrl: string,
 	extensionName: string,
-	cascade = false
+	cascade = false,
 ): Promise<{ success: boolean; warnings: string[] }> {
 	const client = await createClient(connectionUrl);
 	const warnings: string[] = [];
@@ -372,8 +372,8 @@ export async function safeDropExtension(
 	try {
 		// Check if exists
 		const extensionCheck = await client.query(
-			'SELECT extname FROM pg_extension WHERE extname = $1',
-			[extensionName]
+			"SELECT extname FROM pg_extension WHERE extname = $1",
+			[extensionName],
 		);
 
 		if (extensionCheck.rows.length === 0) {
@@ -386,8 +386,8 @@ export async function safeDropExtension(
 		// Drop
 		let query = `DROP EXTENSION "${extensionName}"`;
 		if (cascade) {
-			query += ' CASCADE';
-			warnings.push('Using CASCADE to drop dependent objects');
+			query += " CASCADE";
+			warnings.push("Using CASCADE to drop dependent objects");
 		}
 
 		await client.query(query);

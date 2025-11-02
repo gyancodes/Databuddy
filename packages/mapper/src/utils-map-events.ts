@@ -1,5 +1,5 @@
-import type { AnalyticsEvent } from '@databuddy/db';
-import type { AnalyticsEventAdapter } from './types';
+import type { AnalyticsEvent } from "@databuddy/db";
+import type { AnalyticsEventAdapter } from "./types";
 
 /**
  * Maps an array of input rows to AnalyticsEvent using the provided adapter.
@@ -9,7 +9,7 @@ import type { AnalyticsEventAdapter } from './types';
  */
 export function mapEvents<T>(
 	adapter: AnalyticsEventAdapter<T>,
-	rows: T[]
+	rows: T[],
 ): AnalyticsEvent[] {
 	return rows.map((row) => adapter.mapRowToEvent(row));
 }

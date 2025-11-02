@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { RocketIcon, TagIcon } from '@phosphor-icons/react';
-import { useMemo } from 'react';
-import { SciFiCard } from '@/components/scifi-card';
+import { RocketIcon, TagIcon } from "@phosphor-icons/react";
+import { useMemo } from "react";
+import { SciFiCard } from "@/components/scifi-card";
 
 interface ProcessedRelease {
 	name: string;
@@ -25,34 +25,34 @@ function calculateAverageDaysBetween(releases: ProcessedRelease[]): number {
 	const daysDiffs: number[] = [];
 	for (let i = 0; i < releases.length - 1; i++) {
 		const diff = Math.abs(
-			releases[i].date.getTime() - releases[i + 1].date.getTime()
+			releases[i].date.getTime() - releases[i + 1].date.getTime(),
 		);
 		daysDiffs.push(diff / (1000 * 60 * 60 * 24));
 	}
 
 	return Math.round(
-		daysDiffs.reduce((sum, days) => sum + days, 0) / daysDiffs.length
+		daysDiffs.reduce((sum, days) => sum + days, 0) / daysDiffs.length,
 	);
 }
 
 // Helper function to determine release frequency
 function determineReleaseFrequency(avgDaysBetween: number): string {
 	if (avgDaysBetween <= 0) {
-		return 'No data';
+		return "No data";
 	}
 	if (avgDaysBetween <= 7) {
-		return 'Weekly';
+		return "Weekly";
 	}
 	if (avgDaysBetween <= 21) {
-		return 'Bi-weekly';
+		return "Bi-weekly";
 	}
 	if (avgDaysBetween <= 45) {
-		return 'Monthly';
+		return "Monthly";
 	}
 	if (avgDaysBetween <= 90) {
-		return 'Quarterly';
+		return "Quarterly";
 	}
-	return 'Irregular';
+	return "Irregular";
 }
 
 export default function ReleasesTimeline({ data }: Props) {
@@ -66,14 +66,14 @@ export default function ReleasesTimeline({ data }: Props) {
 					prereleases: 0,
 					avgDaysBetween: 0,
 					lastReleaseDate: null as string | null,
-					releaseFrequency: 'No data',
+					releaseFrequency: "No data",
 				},
 			};
 		}
 
 		// Sort releases by date (newest first)
 		const sortedReleases = [...data].sort(
-			(a, b) => b.date.getTime() - a.date.getTime()
+			(a, b) => b.date.getTime() - a.date.getTime(),
 		);
 
 		// Calculate insights
@@ -118,10 +118,10 @@ export default function ReleasesTimeline({ data }: Props) {
 	}
 
 	const formatDate = (dateString: string) => {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
+		return new Date(dateString).toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "short",
+			day: "numeric",
 		});
 	};
 
@@ -132,20 +132,20 @@ export default function ReleasesTimeline({ data }: Props) {
 		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
 		if (diffDays === 0) {
-			return 'Today';
+			return "Today";
 		}
 		if (diffDays === 1) {
-			return '1 day ago';
+			return "1 day ago";
 		}
 		if (diffDays < 30) {
 			return `${diffDays} days ago`;
 		}
 		if (diffDays < 365) {
 			const months = Math.floor(diffDays / 30);
-			return months === 1 ? '1 month ago' : `${months} months ago`;
+			return months === 1 ? "1 month ago" : `${months} months ago`;
 		}
 		const years = Math.floor(diffDays / 365);
-		return years === 1 ? '1 year ago' : `${years} years ago`;
+		return years === 1 ? "1 year ago" : `${years} years ago`;
 	};
 
 	return (
@@ -155,7 +155,7 @@ export default function ReleasesTimeline({ data }: Props) {
 					Release Timeline
 				</h3>
 				<p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
-					Recent releases showing project delivery momentum •{' '}
+					Recent releases showing project delivery momentum •{" "}
 					{insights.totalReleases} total releases
 				</p>
 			</div>
@@ -181,7 +181,7 @@ export default function ReleasesTimeline({ data }: Props) {
 					<div className="font-bold text-2xl">
 						{insights.lastReleaseDate
 							? getTimeSince(insights.lastReleaseDate)
-							: 'N/A'}
+							: "N/A"}
 					</div>
 					<div className="text-muted-foreground text-sm">Last Release</div>
 				</SciFiCard>
@@ -206,8 +206,8 @@ export default function ReleasesTimeline({ data }: Props) {
 								<div
 									className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 ${
 										release.isPrerelease
-											? 'border-orange-500 bg-orange-100'
-											: 'border-green-500 bg-green-100'
+											? "border-orange-500 bg-orange-100"
+											: "border-green-500 bg-green-100"
 									}`}
 								>
 									{release.isPrerelease ? (
@@ -254,18 +254,18 @@ export default function ReleasesTimeline({ data }: Props) {
 			<SciFiCard className="mt-8 rounded border border-border bg-card/50 p-4 backdrop-blur-sm">
 				<p className="text-muted-foreground text-sm">
 					<span className="font-medium">Release pattern:</span> The project has
-					shipped {insights.totalReleases} total releases with a{' '}
+					shipped {insights.totalReleases} total releases with a{" "}
 					<span className="font-medium">
 						{insights.releaseFrequency.toLowerCase()}
-					</span>{' '}
+					</span>{" "}
 					cadence
 					{insights.avgDaysBetween > 0 && (
 						<>, averaging {insights.avgDaysBetween} days between releases</>
 					)}
-					.{' '}
+					.{" "}
 					{insights.stableReleases > insights.prereleases
-						? 'Focus on stable releases indicates mature development practices.'
-						: 'Active pre-release testing shows careful development approach.'}
+						? "Focus on stable releases indicates mature development practices."
+						: "Active pre-release testing shows careful development approach."}
 				</p>
 			</SciFiCard>
 		</div>

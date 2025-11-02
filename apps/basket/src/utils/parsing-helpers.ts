@@ -1,8 +1,8 @@
-import type { z } from 'zod';
-import { logBlockedTraffic } from '../lib/blocked-traffic';
-import { VALIDATION_LIMITS } from './validation';
+import type { z } from "zod";
+import { logBlockedTraffic } from "../lib/blocked-traffic";
+import { VALIDATION_LIMITS } from "./validation";
 
-type ParseResult<T> = 
+type ParseResult<T> =
 	| { success: true; data: T }
 	| { success: false; error: { issues: z.ZodIssue[] } };
 
@@ -14,23 +14,23 @@ export async function validateEventSchema<T>(
 	event: unknown,
 	request: Request,
 	query: unknown,
-	clientId: string
+	clientId: string,
 ): Promise<ParseResult<T>> {
-	if (process.env.NODE_ENV === 'development') {
+	if (process.env.NODE_ENV === "development") {
 		return { success: true, data: event as T };
 	}
 
 	const parseResult = schema.safeParse(event);
-	
+
 	if (!parseResult.success) {
 		await logBlockedTraffic(
 			request,
 			event,
 			query,
-			'invalid_schema',
-			'Schema Validation',
+			"invalid_schema",
+			"Schema Validation",
 			undefined,
-			clientId
+			clientId,
 		);
 		return {
 			success: false,
@@ -46,8 +46,8 @@ export async function validateEventSchema<T>(
  */
 export function createSchemaErrorResponse(errors: z.ZodIssue[]) {
 	return {
-		status: 'error',
-		message: 'Invalid event schema',
+		status: "error",
+		message: "Invalid event schema",
 		errors,
 	};
 }
@@ -57,10 +57,10 @@ export function createSchemaErrorResponse(errors: z.ZodIssue[]) {
  */
 export function createBotDetectedResponse(eventType: string) {
 	return {
-		status: 'error',
-		message: 'Bot detected',
+		status: "error",
+		message: "Bot detected",
 		eventType,
-		error: 'ignored',
+		error: "ignored",
 	};
 }
 
@@ -68,14 +68,14 @@ export function createBotDetectedResponse(eventType: string) {
  * Validates timestamp, returns current time if invalid
  */
 export function parseTimestamp(timestamp: unknown): number {
-	return typeof timestamp === 'number' ? timestamp : Date.now();
+	return typeof timestamp === "number" ? timestamp : Date.now();
 }
 
 /**
  * Parses properties object to JSON string, defaults to empty object
  */
 export function parseProperties(properties: unknown): string {
-	return properties ? JSON.stringify(properties) : '{}';
+	return properties ? JSON.stringify(properties) : "{}";
 }
 
 /**
@@ -94,13 +94,18 @@ export interface BotCheckResult {
 /**
  * Parses and sanitizes event ID, generates UUID if missing
  */
-export function parseEventId(eventId: unknown, generateFn: () => string): string {
+export function parseEventId(
+	eventId: unknown,
+	generateFn: () => string,
+): string {
 	const sanitizeString = (str: unknown, maxLength: number): string => {
-		if (typeof str !== 'string') return '';
+		if (typeof str !== "string") return "";
 		return str.slice(0, maxLength);
 	};
 
-	const sanitized = sanitizeString(eventId, VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH);
+	const sanitized = sanitizeString(
+		eventId,
+		VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH,
+	);
 	return sanitized || generateFn();
 }
-

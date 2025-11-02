@@ -1,10 +1,10 @@
-import { chQuery } from '@databuddy/db';
-import { TRPCError } from '@trpc/server';
+import { chQuery } from "@databuddy/db";
+import { TRPCError } from "@trpc/server";
 
 export interface AnalyticsStep {
 	step_number: number;
 	name: string;
-	type: 'PAGE_VIEW' | 'EVENT';
+	type: "PAGE_VIEW" | "EVENT";
 	target: string;
 }
 
@@ -62,7 +62,7 @@ export interface ReferrerAnalytics {
 export const getTotalWebsiteUsers = async (
 	websiteId: string,
 	startDate: string,
-	endDate: string
+	endDate: string,
 ): Promise<number> => {
 	const params = {
 		websiteId,
@@ -85,11 +85,11 @@ export const getTotalWebsiteUsers = async (
 
 const buildWhereCondition = (
 	step: AnalyticsStep,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): string => {
 	const targetKey = `target_${step.step_number - 1}`;
 
-	if (step.type === 'PAGE_VIEW') {
+	if (step.type === "PAGE_VIEW") {
 		params[targetKey] = step.target;
 		params[`${targetKey}_like`] = `%${step.target}%`;
 		return `event_name = 'screen_view' AND (path = {${targetKey}:String} OR path LIKE {${targetKey}_like:String})`;
@@ -104,15 +104,15 @@ const buildStepQuery = (
 	stepIndex: number,
 	filterConditions: string,
 	params: Record<string, unknown>,
-	includeReferrer = false
+	includeReferrer = false,
 ): string => {
 	const stepNameKey = `step_name_${stepIndex}`;
 	params[stepNameKey] = step.name;
 
 	const whereCondition = buildWhereCondition(step, params);
-	const referrerSelect = includeReferrer ? ', any(referrer) as referrer' : '';
+	const referrerSelect = includeReferrer ? ", any(referrer) as referrer" : "";
 
-	if (step.type === 'PAGE_VIEW') {
+	if (step.type === "PAGE_VIEW") {
 		return `
 			SELECT 
 				${stepIndex + 1} as step_number,
@@ -130,7 +130,7 @@ const buildStepQuery = (
 
 	// For custom EVENT, query both analytics.events and analytics.custom_events
 	const targetKey = `target_${step.step_number - 1}`;
-	const referrerSelectCustom = includeReferrer ? ", '' as referrer" : '';
+	const referrerSelectCustom = includeReferrer ? ", '' as referrer" : "";
 
 	return `
 		WITH visitor_referrers AS (
@@ -150,7 +150,7 @@ const buildStepQuery = (
 			{${stepNameKey}:String} as step_name,
 			any(session_id) as session_id,
 			anonymous_id,
-			MIN(first_occurrence) as first_occurrence${includeReferrer ? ', COALESCE(vr.visitor_referrer, \'\') as referrer' : ''}
+			MIN(first_occurrence) as first_occurrence${includeReferrer ? ", COALESCE(vr.visitor_referrer, '') as referrer" : ""}
 		FROM (
 			SELECT 
 				anonymous_id,
@@ -173,9 +173,13 @@ const buildStepQuery = (
 				AND timestamp >= parseDateTimeBestEffort({startDate:String})
 				AND timestamp <= parseDateTimeBestEffort({endDate:String})
 				AND event_name = {${targetKey}:String}
-		) AS event_union${includeReferrer ? `
-		LEFT JOIN visitor_referrers vr ON event_union.anonymous_id = vr.anonymous_id` : ''}
-		GROUP BY anonymous_id${includeReferrer ? ', vr.visitor_referrer' : ''}`;
+		) AS event_union${
+			includeReferrer
+				? `
+		LEFT JOIN visitor_referrers vr ON event_union.anonymous_id = vr.anonymous_id`
+				: ""
+		}
+		GROUP BY anonymous_id${includeReferrer ? ", vr.visitor_referrer" : ""}`;
 };
 
 const processVisitorEvents = (
@@ -186,7 +190,7 @@ const processVisitorEvents = (
 		anonymous_id: string;
 		first_occurrence: number;
 		referrer?: string;
-	}>
+	}>,
 ): Map<
 	string,
 	Array<{
@@ -235,7 +239,7 @@ const calculateStepCounts = (
 			first_occurrence: number;
 			referrer?: string;
 		}>
-	>
+	>,
 ): Map<number, Set<string>> => {
 	const stepCounts = new Map<number, Set<string>>();
 
@@ -263,18 +267,18 @@ export const processGoalAnalytics = async (
 	steps: AnalyticsStep[],
 	filters: Array<{ field: string; operator: string; value: string | string[] }>,
 	params: Record<string, unknown>,
-	totalWebsiteUsers: number
+	totalWebsiteUsers: number,
 ): Promise<ProcessedAnalytics> => {
 	const { conditions: filterConditions, errors } = buildFilterConditions(
 		filters,
-		'f',
-		params
+		"f",
+		params,
 	);
 
 	if (errors.length > 0) {
 		throw new TRPCError({
-			code: 'BAD_REQUEST',
-			message: `Invalid filters: ${errors.join(', ')}`,
+			code: "BAD_REQUEST",
+			message: `Invalid filters: ${errors.join(", ")}`,
 		});
 	}
 
@@ -327,81 +331,81 @@ export const processGoalAnalytics = async (
 		total_users_entered: totalWebsiteUsers,
 		total_users_completed: goalCompletions,
 		avg_completion_time: 0,
-		avg_completion_time_formatted: '0s',
+		avg_completion_time_formatted: "0s",
 		steps_analytics: analyticsResults,
 	};
 };
 
 type AllowedField =
-	| 'event_name'
-	| 'path'
-	| 'referrer'
-	| 'user_agent'
-	| 'ip_address'
-	| 'country'
-	| 'city'
-	| 'device_type'
-	| 'browser'
-	| 'os'
-	| 'screen_resolution'
-	| 'language'
-	| 'utm_source'
-	| 'utm_medium'
-	| 'utm_campaign'
-	| 'utm_term'
-	| 'utm_content';
+	| "event_name"
+	| "path"
+	| "referrer"
+	| "user_agent"
+	| "ip_address"
+	| "country"
+	| "city"
+	| "device_type"
+	| "browser"
+	| "os"
+	| "screen_resolution"
+	| "language"
+	| "utm_source"
+	| "utm_medium"
+	| "utm_campaign"
+	| "utm_term"
+	| "utm_content";
 
 type AllowedOperator =
-	| 'equals'
-	| 'not_equals'
-	| 'contains'
-	| 'not_contains'
-	| 'starts_with'
-	| 'ends_with'
-	| 'in'
-	| 'not_in'
-	| 'is_null'
-	| 'is_not_null'
-	| 'greater_than'
-	| 'less_than'
-	| 'greater_than_or_equal'
-	| 'less_than_or_equal';
+	| "equals"
+	| "not_equals"
+	| "contains"
+	| "not_contains"
+	| "starts_with"
+	| "ends_with"
+	| "in"
+	| "not_in"
+	| "is_null"
+	| "is_not_null"
+	| "greater_than"
+	| "less_than"
+	| "greater_than_or_equal"
+	| "less_than_or_equal";
 
 const ALLOWED_FIELDS: readonly AllowedField[] = [
-	'event_name',
-	'path',
-	'referrer',
-	'user_agent',
-	'ip_address',
-	'country',
-	'city',
-	'device_type',
-	'browser',
-	'os',
-	'screen_resolution',
-	'language',
-	'utm_source',
-	'utm_medium',
-	'utm_campaign',
-	'utm_term',
-	'utm_content',
+	"event_name",
+	"path",
+	"referrer",
+	"user_agent",
+	"ip_address",
+	"country",
+	"city",
+	"device_type",
+	"browser",
+	"os",
+	"screen_resolution",
+	"language",
+	"utm_source",
+	"utm_medium",
+	"utm_campaign",
+	"utm_term",
+	"utm_content",
 ] as const;
 
 const ALLOWED_OPERATORS: readonly AllowedOperator[] = [
-	'equals',
-	'not_equals',
-	'contains',
-	'not_contains',
-	'starts_with',
-	'ends_with',
-	'in',
-	'not_in',
-	'is_null',
-	'is_not_null',
-	'greater_than',
-	'less_than',
-	'greater_than_or_equal',
-	'less_than_or_equal',
+	"equals",
+	"not_equals",
+	"contains",
+	"not_contains",
+	"starts_with",
+	"ends_with",
+	"in",
+	"not_in",
+	"is_null",
+	"is_not_null",
+	"greater_than",
+	"less_than",
+	"greater_than_or_equal",
+	"less_than_or_equal",
 ] as const;
 
 interface Filter {
@@ -420,7 +424,7 @@ const validateFilter = (filter: Filter): string | null => {
 	}
 
 	if (
-		!['is_null', 'is_not_null'].includes(filter.operator) &&
+		!["is_null", "is_not_null"].includes(filter.operator) &&
 		(!filter.value ||
 			(Array.isArray(filter.value) && filter.value.length === 0))
 	) {
@@ -431,7 +435,7 @@ const validateFilter = (filter: Filter): string | null => {
 };
 
 const escapeSqlWildcards = (value: string): string => {
-	return value.replace(/[%_]/g, '\\$&');
+	return value.replace(/[%_]/g, "\\$&");
 };
 
 const buildStringCondition = (
@@ -439,19 +443,19 @@ const buildStringCondition = (
 	operator: AllowedOperator,
 	value: string,
 	prefix: string,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): string => {
 	const paramKey = `${prefix}_${field}_${operator}`;
 
 	let processedValue = value;
 
-	if (operator === 'contains') {
+	if (operator === "contains") {
 		processedValue = `%${escapeSqlWildcards(value)}%`;
-	} else if (operator === 'not_contains') {
+	} else if (operator === "not_contains") {
 		processedValue = `%${escapeSqlWildcards(value)}%`;
-	} else if (operator === 'starts_with') {
+	} else if (operator === "starts_with") {
 		processedValue = `${escapeSqlWildcards(value)}%`;
-	} else if (operator === 'ends_with') {
+	} else if (operator === "ends_with") {
 		processedValue = `%${escapeSqlWildcards(value)}`;
 	} else {
 		processedValue = escapeSqlWildcards(value);
@@ -472,11 +476,11 @@ const buildStringCondition = (
 		less_than_or_equal: `${field} <= {${paramKey}:String}`,
 		is_null: `${field} IS NULL`,
 		is_not_null: `${field} IS NOT NULL`,
-		in: '',
-		not_in: '',
+		in: "",
+		not_in: "",
 	};
 
-	return conditions[operator] || '';
+	return conditions[operator] || "";
 };
 
 const buildArrayCondition = (
@@ -484,26 +488,26 @@ const buildArrayCondition = (
 	operator: AllowedOperator,
 	values: string[],
 	prefix: string,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): string => {
 	const paramKey = `${prefix}_${field}_${operator}`;
 	params[paramKey] = values;
 
-	if (operator === 'in') {
+	if (operator === "in") {
 		return `${field} IN {${paramKey}:Array(String)}`;
 	}
 
-	if (operator === 'not_in') {
+	if (operator === "not_in") {
 		return `${field} NOT IN {${paramKey}:Array(String)}`;
 	}
 
-	return '';
+	return "";
 };
 
 const buildFilterCondition = (
 	filter: Filter,
 	prefix: string,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): string => {
 	const validationError = validateFilter(filter);
 	if (validationError) {
@@ -516,7 +520,7 @@ const buildFilterCondition = (
 			filter.operator as AllowedOperator,
 			filter.value,
 			prefix,
-			params
+			params,
 		);
 		if (condition) {
 			return condition;
@@ -528,14 +532,14 @@ const buildFilterCondition = (
 		filter.operator as AllowedOperator,
 		filter.value as string,
 		prefix,
-		params
+		params,
 	);
 };
 
 export const buildFilterConditions = (
 	filters: Filter[],
 	prefix: string,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): { conditions: string; errors: string[] } => {
 	const conditions: string[] = [];
 	const errors: string[] = [];
@@ -548,60 +552,60 @@ export const buildFilterConditions = (
 			}
 		} catch (error) {
 			errors.push(
-				error instanceof Error ? error.message : 'Unknown filter error'
+				error instanceof Error ? error.message : "Unknown filter error",
 			);
 		}
 	}
 
 	return {
-		conditions: conditions.length > 0 ? ` AND ${conditions.join(' AND ')}` : '',
+		conditions: conditions.length > 0 ? ` AND ${conditions.join(" AND ")}` : "",
 		errors,
 	};
 };
 
 const parseReferrer = (referrer: string) => {
-	if (!referrer || referrer === 'Direct') {
-		return { name: 'Direct', type: 'direct', domain: '', url: '' };
+	if (!referrer || referrer === "Direct") {
+		return { name: "Direct", type: "direct", domain: "", url: "" };
 	}
 
 	try {
 		const url = new URL(referrer);
 		return {
 			name: url.hostname,
-			type: 'referrer',
+			type: "referrer",
 			domain: url.hostname,
 			url: referrer,
 		};
 	} catch {
-		return { name: referrer, type: 'referrer', domain: '', url: referrer };
+		return { name: referrer, type: "referrer", domain: "", url: referrer };
 	}
 };
 
 export const processFunnelAnalytics = async (
 	steps: AnalyticsStep[],
 	filters: Array<{ field: string; operator: string; value: string | string[] }>,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): Promise<FunnelAnalytics> => {
 	const { conditions: filterConditions, errors } = buildFilterConditions(
 		filters,
-		'f',
-		params
+		"f",
+		params,
 	);
 
 	if (errors.length > 0) {
 		throw new TRPCError({
-			code: 'BAD_REQUEST',
-			message: `Invalid filters: ${errors.join(', ')}`,
+			code: "BAD_REQUEST",
+			message: `Invalid filters: ${errors.join(", ")}`,
 		});
 	}
 
 	const stepQueries = steps.map((step, index) =>
-		buildStepQuery(step, index, filterConditions, params)
+		buildStepQuery(step, index, filterConditions, params),
 	);
 
 	const analysisQuery = `
 		WITH all_step_events AS (
-			${stepQueries.join('\n			UNION ALL\n')}
+			${stepQueries.join("\n			UNION ALL\n")}
 		)
 		SELECT DISTINCT
 			step_number,
@@ -656,7 +660,7 @@ export const processFunnelAnalytics = async (
 	const lastStep = analyticsResults.at(-1);
 	const biggestDropoff = analyticsResults.reduce(
 		(max, step) => (step.dropoff_rate > max.dropoff_rate ? step : max),
-		analyticsResults[1] || analyticsResults[0]
+		analyticsResults[1] || analyticsResults[0],
 	);
 
 	let overall_conversion_rate = 0;
@@ -673,7 +677,7 @@ export const processFunnelAnalytics = async (
 		total_users_entered: firstStep ? firstStep.total_users : 0,
 		total_users_completed: lastStep ? lastStep.users : 0,
 		avg_completion_time: 0,
-		avg_completion_time_formatted: '0s',
+		avg_completion_time_formatted: "0s",
 		biggest_dropoff_step: biggestDropoff ? biggestDropoff.step_number : 1,
 		biggest_dropoff_rate: biggestDropoff ? biggestDropoff.dropoff_rate : 0,
 		steps_analytics: analyticsResults,
@@ -693,7 +697,7 @@ const calculateReferrerStepCounts = (
 			first_occurrence: number;
 			referrer?: string;
 		}>
-	>
+	>,
 ): Map<number, Set<string>> => {
 	const stepCounts = new Map<number, Set<string>>();
 
@@ -725,7 +729,7 @@ const calculateReferrerStepCounts = (
 
 const calculateReferrerConversionRate = (
 	total_users: number,
-	completed_users: number
+	completed_users: number,
 ): number => {
 	if (total_users === 0) {
 		return 0;
@@ -748,7 +752,7 @@ const processReferrerGroup = (
 			referrer?: string;
 		}>
 	>,
-	steps: AnalyticsStep[]
+	steps: AnalyticsStep[],
 ): ReferrerAnalytics | null => {
 	const stepCounts = calculateReferrerStepCounts(group, visitorEvents);
 
@@ -760,7 +764,7 @@ const processReferrerGroup = (
 	const completed_users = stepCounts.get(steps.length)?.size || 0;
 	const conversion_rate = calculateReferrerConversionRate(
 		total_users,
-		completed_users
+		completed_users,
 	);
 
 	return {
@@ -773,7 +777,7 @@ const processReferrerGroup = (
 };
 
 const aggregateReferrerAnalytics = (
-	referrerAnalytics: ReferrerAnalytics[]
+	referrerAnalytics: ReferrerAnalytics[],
 ): ReferrerAnalytics[] => {
 	const aggregated = new Map<
 		string,
@@ -818,7 +822,7 @@ const aggregateReferrerAnalytics = (
 			if (agg.conversion_rate_count > 0) {
 				conversion_rate =
 					Math.round(
-						(agg.conversion_rate_sum / agg.conversion_rate_count) * 100
+						(agg.conversion_rate_sum / agg.conversion_rate_count) * 100,
 					) / 100;
 			}
 
@@ -836,28 +840,28 @@ const aggregateReferrerAnalytics = (
 export const processFunnelAnalyticsByReferrer = async (
 	steps: AnalyticsStep[],
 	filters: Array<{ field: string; operator: string; value: string | string[] }>,
-	params: Record<string, unknown>
+	params: Record<string, unknown>,
 ): Promise<{ referrer_analytics: ReferrerAnalytics[] }> => {
 	const { conditions: filterConditions, errors } = buildFilterConditions(
 		filters,
-		'f',
-		params
+		"f",
+		params,
 	);
 
 	if (errors.length > 0) {
 		throw new TRPCError({
-			code: 'BAD_REQUEST',
-			message: `Invalid filters: ${errors.join(', ')}`,
+			code: "BAD_REQUEST",
+			message: `Invalid filters: ${errors.join(", ")}`,
 		});
 	}
 
 	const stepQueries = steps.map((step, index) =>
-		buildStepQuery(step, index, filterConditions, params, true)
+		buildStepQuery(step, index, filterConditions, params, true),
 	);
 
 	const sessionReferrerQuery = `
 		WITH all_step_events AS (
-			${stepQueries.join('\n			UNION ALL\n')}
+			${stepQueries.join("\n			UNION ALL\n")}
 		)
 		SELECT DISTINCT
 			step_number,
@@ -890,9 +894,9 @@ export const processFunnelAnalyticsByReferrer = async (
 
 	for (const [visitorId, events] of Array.from(visitorEvents.entries())) {
 		if (events.length > 0) {
-			const referrer = events[0].referrer || 'Direct';
+			const referrer = events[0].referrer || "Direct";
 			const parsed = parseReferrer(referrer);
-			const groupKey = parsed.domain ? parsed.domain.toLowerCase() : 'direct';
+			const groupKey = parsed.domain ? parsed.domain.toLowerCase() : "direct";
 
 			if (!referrerGroups.has(groupKey)) {
 				referrerGroups.set(groupKey, { parsed, visitorIds: new Set() });
@@ -908,7 +912,7 @@ export const processFunnelAnalyticsByReferrer = async (
 			groupKey,
 			group,
 			visitorEvents,
-			steps
+			steps,
 		);
 		if (analytics) {
 			referrerAnalytics.push(analytics);

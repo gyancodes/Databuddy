@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import type { GoalFilter } from '@databuddy/shared/types/api';
-import { filterOptions } from '@databuddy/shared/lists/filters';
+import { filterOptions } from "@databuddy/shared/lists/filters";
+import type { GoalFilter } from "@databuddy/shared/types/api";
 import {
 	Eye,
 	MouseMiddleClick,
@@ -9,40 +9,40 @@ import {
 	PlusIcon,
 	Target,
 	TrashIcon,
-} from '@phosphor-icons/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@phosphor-icons/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
 	Sheet,
 	SheetContent,
 	SheetDescription,
 	SheetHeader,
 	SheetTitle,
-} from '@/components/ui/sheet';
-import { operatorOptions, useFilters } from '@/hooks/use-filters';
-import type { AutocompleteData } from '@/hooks/use-funnels';
-import type { CreateGoalData, Goal } from '@/hooks/use-goals';
-import { AutocompleteInput } from '../../funnels/_components/funnel-components';
+} from "@/components/ui/sheet";
+import { operatorOptions, useFilters } from "@/hooks/use-filters";
+import type { AutocompleteData } from "@/hooks/use-funnels";
+import type { CreateGoalData, Goal } from "@/hooks/use-goals";
+import { AutocompleteInput } from "../../funnels/_components/funnel-components";
 
 const defaultFilter: GoalFilter = {
-	field: 'browser_name',
-	operator: 'equals',
-	value: '',
+	field: "browser_name",
+	operator: "equals",
+	value: "",
 } as const;
 
 interface EditGoalDialogProps {
 	isOpen: boolean;
 	onClose: () => void;
-	onSave: (data: Goal | Omit<CreateGoalData, 'websiteId'>) => Promise<void>;
+	onSave: (data: Goal | Omit<CreateGoalData, "websiteId">) => Promise<void>;
 	goal: Goal | null;
 	isSaving: boolean;
 	autocompleteData?: AutocompleteData;
@@ -57,7 +57,7 @@ export function EditGoalDialog({
 	autocompleteData,
 }: EditGoalDialogProps) {
 	const [formData, setFormData] = useState<
-		Goal | Omit<CreateGoalData, 'websiteId'> | null
+		Goal | Omit<CreateGoalData, "websiteId"> | null
 	>(null);
 	const isCreateMode = !goal;
 
@@ -70,10 +70,10 @@ export function EditGoalDialog({
 		} else {
 			// Initialize for create mode
 			setFormData({
-				name: '',
-				description: '',
-				type: 'PAGE_VIEW' as const,
-				target: '',
+				name: "",
+				description: "",
+				type: "PAGE_VIEW" as const,
+				target: "",
 				filters: [],
 			});
 		}
@@ -89,10 +89,10 @@ export function EditGoalDialog({
 	const resetForm = useCallback(() => {
 		if (isCreateMode) {
 			setFormData({
-				name: '',
-				description: '',
-				type: 'PAGE_VIEW' as const,
-				target: '',
+				name: "",
+				description: "",
+				type: "PAGE_VIEW" as const,
+				target: "",
 				filters: [],
 			});
 		}
@@ -109,10 +109,10 @@ export function EditGoalDialog({
 							...prev,
 							[field]: value,
 						}
-					: prev
+					: prev,
 			);
 		},
-		[formData]
+		[formData],
 	);
 
 	const handleFiltersChange = useCallback((newFilters: GoalFilter[]) => {
@@ -132,25 +132,25 @@ export function EditGoalDialog({
 			}
 
 			switch (field) {
-				case 'browser_name':
+				case "browser_name":
 					return autocompleteData.browsers || [];
-				case 'os_name':
+				case "os_name":
 					return autocompleteData.operatingSystems || [];
-				case 'country':
+				case "country":
 					return autocompleteData.countries || [];
-				case 'device_type':
+				case "device_type":
 					return autocompleteData.deviceTypes || [];
-				case 'utm_source':
+				case "utm_source":
 					return autocompleteData.utmSources || [];
-				case 'utm_medium':
+				case "utm_medium":
 					return autocompleteData.utmMediums || [];
-				case 'utm_campaign':
+				case "utm_campaign":
 					return autocompleteData.utmCampaigns || [];
 				default:
 					return [];
 			}
 		},
-		[autocompleteData]
+		[autocompleteData],
 	);
 
 	const getStepSuggestions = useCallback(
@@ -159,16 +159,16 @@ export function EditGoalDialog({
 				return [];
 			}
 
-			if (stepType === 'PAGE_VIEW') {
+			if (stepType === "PAGE_VIEW") {
 				return autocompleteData.pagePaths || [];
 			}
-			if (stepType === 'EVENT') {
+			if (stepType === "EVENT") {
 				return autocompleteData.customEvents || [];
 			}
 
 			return [];
 		},
-		[autocompleteData]
+		[autocompleteData],
 	);
 
 	const handleClose = useCallback(() => {
@@ -186,15 +186,15 @@ export function EditGoalDialog({
 		return (
 			formData.name &&
 			formData.target &&
-			!(formData.filters || []).some((f) => !f.value || f.value === '')
+			!(formData.filters || []).some((f) => !f.value || f.value === "")
 		);
 	}, [formData]);
 
 	const getGoalIcon = (type: string) => {
 		switch (type) {
-			case 'PAGE_VIEW':
+			case "PAGE_VIEW":
 				return <Eye className="text-foreground" size={16} weight="duotone" />;
-			case 'EVENT':
+			case "EVENT":
 				return (
 					<MouseMiddleClick
 						className="text-green-600"
@@ -242,12 +242,12 @@ export function EditGoalDialog({
 						</div>
 						<div>
 							<SheetTitle className="font-semibold text-foreground text-xl">
-								{isCreateMode ? 'Create New Goal' : 'Edit Goal'}
+								{isCreateMode ? "Create New Goal" : "Edit Goal"}
 							</SheetTitle>
 							<SheetDescription className="mt-1 text-muted-foreground">
 								{isCreateMode
-									? 'Set up a new goal to track single-step conversions'
-									: 'Update goal configuration and tracking settings'}
+									? "Set up a new goal to track single-step conversions"
+									: "Update goal configuration and tracking settings"}
 							</SheetDescription>
 						</div>
 					</div>
@@ -267,7 +267,7 @@ export function EditGoalDialog({
 								id="edit-name"
 								onChange={(e) =>
 									setFormData((prev) =>
-										prev ? { ...prev, name: e.target.value } : prev
+										prev ? { ...prev, name: e.target.value } : prev,
 									)
 								}
 								placeholder="e.g., Newsletter Signup"
@@ -286,11 +286,11 @@ export function EditGoalDialog({
 								id="edit-description"
 								onChange={(e) =>
 									setFormData((prev) =>
-										prev ? { ...prev, description: e.target.value } : prev
+										prev ? { ...prev, description: e.target.value } : prev,
 									)
 								}
 								placeholder="Optional description"
-								value={formData.description || ''}
+								value={formData.description || ""}
 							/>
 						</div>
 					</div>
@@ -315,13 +315,13 @@ export function EditGoalDialog({
 
 							{/* Goal Icon */}
 							<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-muted/50 transition-all duration-200 group-hover:bg-muted/70">
-								{getGoalIcon(formData?.type || 'PAGE_VIEW')}
+								{getGoalIcon(formData?.type || "PAGE_VIEW")}
 							</div>
 
 							{/* Goal Fields */}
 							<div className="grid flex-1 grid-cols-1 gap-3 md:grid-cols-3">
 								<Select
-									onValueChange={(value) => updateGoal('type', value)}
+									onValueChange={(value) => updateGoal("type", value)}
 									value={formData?.type}
 								>
 									<SelectTrigger className="rounded-lg border-border/50 transition-all duration-200 hover:border-border focus:border-primary/50">
@@ -352,20 +352,20 @@ export function EditGoalDialog({
 								</Select>
 								<AutocompleteInput
 									className="rounded-lg border-border/50 transition-all duration-200 hover:border-border focus:border-primary/50 focus:ring-primary/20"
-									onValueChange={(value) => updateGoal('target', value)}
+									onValueChange={(value) => updateGoal("target", value)}
 									placeholder={
-										formData?.type === 'PAGE_VIEW' ? '/path' : 'event_name'
+										formData?.type === "PAGE_VIEW" ? "/path" : "event_name"
 									}
 									suggestions={getStepSuggestions(
-										formData?.type || 'PAGE_VIEW'
+										formData?.type || "PAGE_VIEW",
 									)}
-									value={formData?.target || ''}
+									value={formData?.target || ""}
 								/>
 								<Input
 									className="rounded-lg border-border/50 transition-all duration-200 hover:border-border focus:border-primary/50 focus:ring-primary/20"
-									onChange={(e) => updateGoal('name', e.target.value)}
+									onChange={(e) => updateGoal("name", e.target.value)}
 									placeholder="Goal name"
-									value={formData?.name || ''}
+									value={formData?.name || ""}
 								/>
 							</div>
 						</div>
@@ -393,7 +393,7 @@ export function EditGoalDialog({
 									>
 										<Select
 											onValueChange={(value) =>
-												updateFilter(index, 'field', value)
+												updateFilter(index, "field", value)
 											}
 											value={filter.field}
 										>
@@ -411,7 +411,7 @@ export function EditGoalDialog({
 
 										<Select
 											onValueChange={(value) =>
-												updateFilter(index, 'operator', value)
+												updateFilter(index, "operator", value)
 											}
 											value={filter.operator}
 										>
@@ -430,11 +430,11 @@ export function EditGoalDialog({
 										<AutocompleteInput
 											className="flex-1 rounded-lg border-border/50 transition-all duration-200 hover:border-border focus:border-primary/50 focus:ring-primary/20"
 											onValueChange={(value) =>
-												updateFilter(index, 'value', value)
+												updateFilter(index, "value", value)
 											}
 											placeholder="Filter value"
 											suggestions={getSuggestions(filter.field)}
-											value={(filter.value as string) || ''}
+											value={(filter.value as string) || ""}
 										/>
 
 										<Button
@@ -484,14 +484,14 @@ export function EditGoalDialog({
 									<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
 								</div>
 							)}
-							<span className={isSaving ? 'ml-6' : ''}>
+							<span className={isSaving ? "ml-6" : ""}>
 								{isCreateMode
 									? isSaving
-										? 'Creating...'
-										: 'Create Goal'
+										? "Creating..."
+										: "Create Goal"
 									: isSaving
-										? 'Updating...'
-										: 'Update Goal'}
+										? "Updating..."
+										: "Update Goal"}
 							</span>
 						</Button>
 					</div>

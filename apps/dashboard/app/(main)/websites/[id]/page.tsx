@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import type { DynamicQueryFilter } from '@databuddy/shared/types/api';
-import { WarningIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useDateFilters } from '@/hooks/use-date-filters';
-import { useTrackingSetup } from '@/hooks/use-tracking-setup';
-import { useWebsite } from '@/hooks/use-websites';
+import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { WarningIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDateFilters } from "@/hooks/use-date-filters";
+import { useTrackingSetup } from "@/hooks/use-tracking-setup";
+import { useWebsite } from "@/hooks/use-websites";
 import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 	isAnalyticsRefreshingAtom,
-} from '@/stores/jotai/filterAtoms';
+} from "@/stores/jotai/filterAtoms";
 import type {
 	FullTabProps,
 	WebsiteDataTabProps,
-} from './_components/utils/types';
-import { EmptyState } from './_components/utils/ui-components';
+} from "./_components/utils/types";
+import { EmptyState } from "./_components/utils/ui-components";
 
 const LoadingSkeleton = () => (
 	<div className="select-none space-y-6">
@@ -120,19 +120,18 @@ const LoadingSkeleton = () => (
 
 const WebsiteOverviewTab = dynamic(
 	() =>
-		import('./_components/tabs/overview-tab').then((mod) => ({
+		import("./_components/tabs/overview-tab").then((mod) => ({
 			default: mod.WebsiteOverviewTab,
 		})),
-	{ loading: () => <LoadingSkeleton />, ssr: false }
+	{ loading: () => <LoadingSkeleton />, ssr: false },
 );
 const WebsiteTrackingSetupTab = dynamic(
 	() =>
-		import('./_components/tabs/tracking-setup-tab').then((mod) => ({
+		import("./_components/tabs/tracking-setup-tab").then((mod) => ({
 			default: mod.WebsiteTrackingSetupTab,
 		})),
-	{ loading: () => <LoadingSkeleton />, ssr: false }
+	{ loading: () => <LoadingSkeleton />, ssr: false },
 );
-
 
 function WebsiteDetailsPage() {
 	const { id } = useParams();
@@ -144,13 +143,15 @@ function WebsiteDetailsPage() {
 
 	const { data, isLoading, isError } = useWebsite(id as string);
 
-	const { isTrackingSetup, isTrackingSetupLoading } = useTrackingSetup(id as string);
+	const { isTrackingSetup, isTrackingSetupLoading } = useTrackingSetup(
+		id as string,
+	);
 
 	const addFilter = useCallback(
 		(filter: DynamicQueryFilter) => {
 			addFilterAction(filter);
 		},
-		[addFilterAction]
+		[addFilterAction],
 	);
 
 	const tabProps: FullTabProps = {
@@ -216,7 +217,6 @@ function WebsiteDetailsPage() {
 		</div>
 	);
 }
-
 
 export default function Page() {
 	return <WebsiteDetailsPage />;

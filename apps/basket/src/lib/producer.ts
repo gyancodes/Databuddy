@@ -1,7 +1,7 @@
-import { CompressionTypes, Kafka, type Producer } from 'kafkajs';
-import { Semaphore } from 'async-mutex';
-import type { ClickHouseClient } from '@clickhouse/client';
-import { clickHouse, TABLE_NAMES } from '@databuddy/db';
+import type { ClickHouseClient } from "@clickhouse/client";
+import { clickHouse, TABLE_NAMES } from "@databuddy/db";
+import { Semaphore } from "async-mutex";
+import { CompressionTypes, Kafka, type Producer } from "kafkajs";
 
 type BufferedEvent = {
 	table: string;
@@ -68,7 +68,7 @@ export class EventProducer {
 	private readonly semaphore: Semaphore;
 	private readonly stats: ProducerStats;
 	private readonly buffer: BufferedEvent[] = [];
-	
+
 	private kafka: Kafka | null = null;
 	private producer: Producer | null = null;
 	private connected = false;
@@ -79,10 +79,7 @@ export class EventProducer {
 	private started = false;
 	private flushing = false;
 
-	constructor(
-		config: ProducerConfig,
-		dependencies: ProducerDependencies
-	) {
+	constructor(config: ProducerConfig, dependencies: ProducerDependencies) {
 		this.config = {
 			selfHost: false,
 			semaphoreLimit: 15,
@@ -124,17 +121,19 @@ export class EventProducer {
 
 	private initializeProducer(): void {
 		if (!this.config.username || !this.config.password) {
-			console.error('REDPANDA_BROKER set but credentials missing. Kafka producer disabled.');
+			console.error(
+				"REDPANDA_BROKER set but credentials missing. Kafka producer disabled.",
+			);
 			return;
 		}
 
 		this.kafka = new Kafka({
-			clientId: 'basket',
+			clientId: "basket",
 			brokers: [this.config.broker!],
 			connectionTimeout: 5000,
 			requestTimeout: this.config.kafkaTimeout,
 			sasl: {
-				mechanism: 'scram-sha-256',
+				mechanism: "scram-sha-256",
 				username: this.config.username,
 				password: this.config.password,
 			},
@@ -156,8 +155,11 @@ export class EventProducer {
 		if (!this.isEnabled() || !this.producer || this.connected) {
 			return this.connected;
 		}
-		
-		if (this.failed && Date.now() - this.lastRetry < this.config.reconnectCooldown) {
+
+		if (
+			this.failed &&
+			Date.now() - this.lastRetry < this.config.reconnectCooldown
+		) {
 			return false;
 		}
 
@@ -173,7 +175,10 @@ export class EventProducer {
 			this.stats.errors++;
 			this.stats.lastErrorTime = Date.now();
 			const error = err instanceof Error ? err : new Error(String(err));
-			console.error('Redpanda connection failed, using ClickHouse fallback:', error);
+			console.error(
+				"Redpanda connection failed, using ClickHouse fallback:",
+				error,
+			);
 			if (this.dependencies.onError) {
 				this.dependencies.onError(error);
 			}
@@ -188,26 +193,35 @@ export class EventProducer {
 		const items = this.buffer.splice(0);
 
 		try {
-			const grouped = items.reduce((acc, { table, event, retries, timestamp }) => {
-				if (!acc[table]) acc[table] = [];
-				acc[table].push({ event, retries, timestamp });
-				return acc;
-			}, {} as Record<string, Array<{ event: unknown; retries: number; timestamp: number }>>);
+			const grouped = items.reduce(
+				(acc, { table, event, retries, timestamp }) => {
+					if (!acc[table]) acc[table] = [];
+					acc[table].push({ event, retries, timestamp });
+					return acc;
+				},
+				{} as Record<
+					string,
+					Array<{ event: unknown; retries: number; timestamp: number }>
+				>,
+			);
 
 			const results = await Promise.allSettled(
 				Object.entries(grouped).map(async ([table, items]) => {
 					const controller = new AbortController();
-					const timeout = setTimeout(() => controller.abort(), this.config.flushTimeout);
+					const timeout = setTimeout(
+						() => controller.abort(),
+						this.config.flushTimeout,
+					);
 
 					try {
-						const events = items.map(i => i.event);
+						const events = items.map((i) => i.event);
 
 						for (let i = 0; i < events.length; i += this.config.chunkSize) {
 							const chunk = events.slice(i, i + this.config.chunkSize);
 							await this.dependencies.clickHouse.insert({
 								table,
 								values: chunk,
-								format: 'JSONEachRow',
+								format: "JSONEachRow",
 							});
 						}
 
@@ -220,28 +234,36 @@ export class EventProducer {
 						items.forEach(({ event, retries, timestamp }) => {
 							const age = Date.now() - timestamp;
 							if (retries < this.config.maxRetries && age < 300000) {
-								this.buffer.push({ table, event, retries: retries + 1, timestamp });
+								this.buffer.push({
+									table,
+									event,
+									retries: retries + 1,
+									timestamp,
+								});
 							} else {
 								this.stats.dropped++;
-								console.error(`Dropped event (retries: ${retries}, age: ${age}ms)`, {
-									table,
-									eventId: (event as { event_id?: string }).event_id,
-								});
+								console.error(
+									`Dropped event (retries: ${retries}, age: ${age}ms)`,
+									{
+										table,
+										eventId: (event as { event_id?: string }).event_id,
+									},
+								);
 							}
 						});
 					} finally {
 						clearTimeout(timeout);
 					}
-				})
+				}),
 			);
 
-			const failures = results.filter(r => r.status === 'rejected');
+			const failures = results.filter((r) => r.status === "rejected");
 			if (failures.length > 0) {
 				console.error(`${failures.length} table flush operations failed`);
 			}
 		} catch (err) {
 			this.stats.errors++;
-			console.error('Critical flush error:', err);
+			console.error("Critical flush error:", err);
 			this.buffer.push(...items);
 		} finally {
 			this.flushing = false;
@@ -253,9 +275,9 @@ export class EventProducer {
 		this.started = true;
 		this.timer = setInterval(() => {
 			if (!this.flushing && this.buffer.length > 0) {
-				this.flush().catch(err => {
+				this.flush().catch((err) => {
 					this.stats.errors++;
-					console.error('Flush timer error:', err);
+					console.error("Flush timer error:", err);
 				});
 			}
 		}, this.config.bufferInterval);
@@ -263,7 +285,7 @@ export class EventProducer {
 
 	private toBuffer(topic: string, event: unknown): void {
 		if (this.shuttingDown) {
-			console.error('Cannot buffer event during shutdown');
+			console.error("Cannot buffer event during shutdown");
 			return;
 		}
 
@@ -276,7 +298,9 @@ export class EventProducer {
 
 		if (this.buffer.length >= this.config.bufferHardMax) {
 			this.stats.dropped++;
-			console.error(`Buffer overflow, dropping event (size: ${this.buffer.length})`);
+			console.error(
+				`Buffer overflow, dropping event (size: ${this.buffer.length})`,
+			);
 			return;
 		}
 
@@ -285,9 +309,9 @@ export class EventProducer {
 
 		if (!this.timer) this.startTimer();
 		if (this.buffer.length >= this.config.bufferMax && !this.flushing) {
-			this.flush().catch(err => {
+			this.flush().catch((err) => {
 				this.stats.errors++;
-				console.error('Auto-flush error:', err);
+				console.error("Auto-flush error:", err);
 			});
 		}
 	}
@@ -301,14 +325,21 @@ export class EventProducer {
 		const [, release] = await this.semaphore.acquire();
 
 		try {
-			if (this.isEnabled() && (await this.connect()) && this.producer && this.connected) {
+			if (
+				this.isEnabled() &&
+				(await this.connect()) &&
+				this.producer &&
+				this.connected
+			) {
 				try {
 					await this.producer.send({
 						topic,
-						messages: [{ 
-							value: JSON.stringify(event), 
-							key: key || (event as { client_id?: string }).client_id 
-						}],
+						messages: [
+							{
+								value: JSON.stringify(event),
+								key: key || (event as { client_id?: string }).client_id,
+							},
+						],
 						timeout: this.config.kafkaTimeout,
 						compression: CompressionTypes.GZIP,
 					});
@@ -316,7 +347,7 @@ export class EventProducer {
 					return;
 				} catch (err) {
 					this.stats.failed++;
-					console.error('Redpanda send failed, buffering to ClickHouse:', err);
+					console.error("Redpanda send failed, buffering to ClickHouse:", err);
 					this.failed = true;
 				}
 			}
@@ -324,7 +355,7 @@ export class EventProducer {
 		} catch (err) {
 			this.stats.errors++;
 			this.stats.lastErrorTime = Date.now();
-			console.error('Send error:', err);
+			console.error("Send error:", err);
 			this.toBuffer(topic, event);
 		} finally {
 			release();
@@ -332,13 +363,17 @@ export class EventProducer {
 	}
 
 	sendEvent(topic: string, event: unknown, key?: string): void {
-		this.send(topic, event, key).catch(err => {
+		this.send(topic, event, key).catch((err) => {
 			this.stats.errors++;
-			console.error('sendEvent error:', err);
+			console.error("sendEvent error:", err);
 		});
 	}
 
-	async sendEventSync(topic: string, event: unknown, key?: string): Promise<void> {
+	async sendEventSync(
+		topic: string,
+		event: unknown,
+		key?: string,
+	): Promise<void> {
 		await this.send(topic, event, key);
 	}
 
@@ -355,14 +390,20 @@ export class EventProducer {
 		const [, release] = await this.semaphore.acquire();
 
 		try {
-			if (this.isEnabled() && (await this.connect()) && this.producer && this.connected) {
+			if (
+				this.isEnabled() &&
+				(await this.connect()) &&
+				this.producer &&
+				this.connected
+			) {
 				try {
 					await this.producer.send({
 						topic,
-						messages: events.map(e => ({
+						messages: events.map((e) => ({
 							value: JSON.stringify(e),
-							key: (e as { client_id?: string; event_id?: string }).client_id || 
-							     (e as { event_id?: string }).event_id,
+							key:
+								(e as { client_id?: string; event_id?: string }).client_id ||
+								(e as { event_id?: string }).event_id,
 						})),
 						timeout: this.config.kafkaTimeout,
 						compression: CompressionTypes.GZIP,
@@ -371,7 +412,7 @@ export class EventProducer {
 					return;
 				} catch (err) {
 					this.stats.failed += events.length;
-					console.error('Redpanda batch failed, buffering to ClickHouse:', err);
+					console.error("Redpanda batch failed, buffering to ClickHouse:", err);
 					this.failed = true;
 				}
 			}
@@ -380,7 +421,7 @@ export class EventProducer {
 			}
 		} catch (err) {
 			this.stats.errors++;
-			console.error('sendEventBatch error:', err);
+			console.error("sendEventBatch error:", err);
 			for (const e of events) {
 				this.toBuffer(topic, e);
 			}
@@ -394,16 +435,23 @@ export class EventProducer {
 		this.shuttingDown = true;
 
 		let checks = 0;
-		while (this.semaphore.getValue() < this.config.semaphoreLimit && checks++ < 50) {
-			await new Promise(r => setTimeout(r, 100));
+		while (
+			this.semaphore.getValue() < this.config.semaphoreLimit &&
+			checks++ < 50
+		) {
+			await new Promise((r) => setTimeout(r, 100));
 		}
 
 		await this.flush();
 
 		let finalFlushAttempts = 0;
-		while (this.buffer.length > 0 && finalFlushAttempts++ < 3 && !this.flushing) {
+		while (
+			this.buffer.length > 0 &&
+			finalFlushAttempts++ < 3 &&
+			!this.flushing
+		) {
 			await this.flush();
-			await new Promise(r => setTimeout(r, 1000));
+			await new Promise((r) => setTimeout(r, 1000));
 		}
 
 		if (this.timer) {
@@ -416,7 +464,7 @@ export class EventProducer {
 			try {
 				await this.producer.disconnect();
 			} catch (err) {
-				console.error('Error disconnecting Redpanda producer:', err);
+				console.error("Error disconnecting Redpanda producer:", err);
 			} finally {
 				this.connected = false;
 			}
@@ -439,7 +487,7 @@ const defaultConfig: ProducerConfig = {
 	broker: process.env.REDPANDA_BROKER,
 	username: process.env.REDPANDA_USER,
 	password: process.env.REDPANDA_PASSWORD,
-	selfHost: process.env.SELFHOST === 'true',
+	selfHost: process.env.SELFHOST === "true",
 };
 
 let defaultProducer: EventProducer | null = null;
@@ -449,26 +497,37 @@ function getDefaultProducer(): EventProducer {
 		defaultProducer = new EventProducer(defaultConfig, {
 			clickHouse,
 			topicMap: {
-				'analytics-events': TABLE_NAMES.events,
-				'analytics-errors': TABLE_NAMES.errors,
-				'analytics-web-vitals': TABLE_NAMES.web_vitals,
-				'analytics-custom-events': TABLE_NAMES.custom_events,
-				'analytics-outgoing-links': TABLE_NAMES.outgoing_links,
+				"analytics-events": TABLE_NAMES.events,
+				"analytics-errors": TABLE_NAMES.errors,
+				"analytics-web-vitals": TABLE_NAMES.web_vitals,
+				"analytics-custom-events": TABLE_NAMES.custom_events,
+				"analytics-outgoing-links": TABLE_NAMES.outgoing_links,
 			},
 		});
 	}
 	return defaultProducer;
 }
 
-export const sendEvent = (topic: string, event: unknown, key?: string): void => {
+export const sendEvent = (
+	topic: string,
+	event: unknown,
+	key?: string,
+): void => {
 	getDefaultProducer().sendEvent(topic, event, key);
 };
 
-export const sendEventSync = async (topic: string, event: unknown, key?: string): Promise<void> => {
+export const sendEventSync = async (
+	topic: string,
+	event: unknown,
+	key?: string,
+): Promise<void> => {
 	await getDefaultProducer().sendEventSync(topic, event, key);
 };
 
-export const sendEventBatch = async (topic: string, events: unknown[]): Promise<void> => {
+export const sendEventBatch = async (
+	topic: string,
+	events: unknown[],
+): Promise<void> => {
 	await getDefaultProducer().sendEventBatch(topic, events);
 };
 
@@ -482,12 +541,12 @@ export const getProducerStats = () => {
 	return getDefaultProducer().getStats();
 };
 
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
 	await disconnectProducer().catch(console.error);
 	process.exit(0);
 });
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
 	await disconnectProducer().catch(console.error);
 	process.exit(0);
 });

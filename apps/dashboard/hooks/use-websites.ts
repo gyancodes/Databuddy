@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { authClient } from '@databuddy/auth/client';
-import type { AppRouter } from '@databuddy/rpc';
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-import { trpc } from '@/lib/trpc';
+import { authClient } from "@databuddy/auth/client";
+import type { AppRouter } from "@databuddy/rpc";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
+import { trpc } from "@/lib/trpc";
 
 type RouterInput = inferRouterInputs<AppRouter>;
 type RouterOutput = inferRouterOutputs<AppRouter>;
 
-export type Website = RouterOutput['websites']['list'][number];
-export type CreateWebsiteData = RouterInput['websites']['create'];
-export type UpdateWebsiteData = RouterInput['websites']['update'];
+export type Website = RouterOutput["websites"]["list"][number];
+export type CreateWebsiteData = RouterInput["websites"]["create"];
+export type UpdateWebsiteData = RouterInput["websites"]["update"];
 
 export function useWebsites() {
 	const { data: activeOrganization, isPending: isLoadingOrganization } =
@@ -19,7 +19,7 @@ export function useWebsites() {
 	const { data, isLoading, isError, refetch, isFetching } =
 		trpc.websites.listWithCharts.useQuery(
 			{ organizationId: activeOrganization?.id },
-			{ enabled: !isLoadingOrganization }
+			{ enabled: !isLoadingOrganization },
 		);
 
 	return {
@@ -61,7 +61,7 @@ export function useCreateWebsite() {
 			});
 		},
 		onError: (error) => {
-			console.error('Failed to create website:', error);
+			console.error("Failed to create website:", error);
 		},
 	});
 }
@@ -82,7 +82,7 @@ export function useUpdateWebsite() {
 				return {
 					...old,
 					websites: old.websites.map((website) =>
-						website.id === updatedWebsite.id ? updatedWebsite : website
+						website.id === updatedWebsite.id ? updatedWebsite : website,
 					),
 				};
 			});
@@ -90,7 +90,7 @@ export function useUpdateWebsite() {
 			utils.websites.getById.setData(getByIdKey, updatedWebsite);
 		},
 		onError: (error) => {
-			console.error('Failed to update website:', error);
+			console.error("Failed to update website:", error);
 		},
 	});
 }
@@ -111,7 +111,7 @@ export function useTogglePublicWebsite() {
 				return {
 					...old,
 					websites: old.websites.map((website) =>
-						website.id === updatedWebsite.id ? updatedWebsite : website
+						website.id === updatedWebsite.id ? updatedWebsite : website,
 					),
 				};
 			});
@@ -119,7 +119,7 @@ export function useTogglePublicWebsite() {
 			utils.websites.getById.setData(getByIdKey, updatedWebsite);
 		},
 		onError: (error) => {
-			console.error('Failed to toggle website privacy:', error);
+			console.error("Failed to toggle website privacy:", error);
 		},
 	});
 }
@@ -146,7 +146,7 @@ export function useDeleteWebsite() {
 					...old,
 					websites: old.websites.filter((w) => w.id !== id),
 					chartData: Object.fromEntries(
-						Object.entries(old.chartData).filter(([key]) => key !== id)
+						Object.entries(old.chartData).filter(([key]) => key !== id),
 					),
 				};
 			});
@@ -157,7 +157,7 @@ export function useDeleteWebsite() {
 			if (context?.previousData && context.listKey) {
 				utils.websites.listWithCharts.setData(
 					context.listKey,
-					context.previousData
+					context.previousData,
 				);
 			}
 		},

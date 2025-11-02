@@ -1,11 +1,11 @@
-import { XIcon } from '@phosphor-icons/react';
+import { XIcon } from "@phosphor-icons/react";
 import {
 	type ColumnDef,
 	getCoreRowModel,
 	useReactTable,
-} from '@tanstack/react-table';
-import { TableContent } from './table-content';
-import { TableTabs } from './table-tabs';
+} from "@tanstack/react-table";
+import { TableContent } from "./table-content";
+import { TableTabs } from "./table-tabs";
 
 interface TabConfig<TData> {
 	id: string;
@@ -29,7 +29,7 @@ interface FullScreenModalProps<TData extends { name: string | number }> {
 	renderSubRow?: (
 		subRow: TData,
 		parentRow: TData,
-		index: number
+		index: number,
 	) => React.ReactNode;
 	onAddFilter?: (field: string, value: string, tableTitle?: string) => void;
 	onRowAction?: (row: TData) => void;
@@ -52,7 +52,6 @@ export function FullScreenModal<TData extends { name: string | number }>({
 	onRowAction,
 	onRowClick,
 }: FullScreenModalProps<TData>) {
-
 	const currentTabData = tabs?.find((tab) => tab.id === activeTab);
 	const tableData = currentTabData?.data || data || [];
 	const tableColumns = currentTabData?.columns || columns || [];
@@ -60,7 +59,7 @@ export function FullScreenModal<TData extends { name: string | number }>({
 	const table = useReactTable({
 		data: tableData,
 		columns: tableColumns,
-		getRowId: (_row, index) => `${activeTab || 'row'}-${index}`,
+		getRowId: (_row, index) => `${activeTab || "row"}-${index}`,
 		getCoreRowModel: getCoreRowModel(),
 	});
 
@@ -101,7 +100,7 @@ export function FullScreenModal<TData extends { name: string | number }>({
 			{tabs && tabs.length > 1 && (
 				<div className="mt-2">
 					<TableTabs
-						activeTab={activeTab ?? ''}
+						activeTab={activeTab ?? ""}
 						onTabChange={handleTabChange}
 						tabs={tabs}
 					/>

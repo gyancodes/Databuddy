@@ -9,7 +9,7 @@ export interface OverageInfo {
 export function calculateOverageCost(
 	eventCount: number,
 	totalEvents: number,
-	overageInfo: OverageInfo | null
+	overageInfo: OverageInfo | null,
 ): number {
 	if (!overageInfo?.hasOverage || totalEvents === 0) {
 		return 0;

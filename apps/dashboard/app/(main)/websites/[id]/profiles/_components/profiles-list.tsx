@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { SpinnerIcon, UsersIcon } from '@phosphor-icons/react';
-import { useAtom } from 'jotai';
-import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useDateFilters } from '@/hooks/use-date-filters';
-import { useProfilesData } from '@/hooks/use-dynamic-query';
-import { dynamicQueryFiltersAtom } from '@/stores/jotai/filterAtoms';
+import { SpinnerIcon, UsersIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { useDateFilters } from "@/hooks/use-date-filters";
+import { useProfilesData } from "@/hooks/use-dynamic-query";
+import { dynamicQueryFiltersAtom } from "@/stores/jotai/filterAtoms";
 
 type ProfileData = {
 	visitor_id: string;
@@ -50,14 +50,14 @@ type ProfileData = {
 };
 
 const ProfileRow = dynamic(
-	() => import('./profile-row').then((mod) => ({ default: mod.ProfileRow })),
+	() => import("./profile-row").then((mod) => ({ default: mod.ProfileRow })),
 	{
 		loading: () => (
 			<div className="flex items-center justify-center p-4">
 				<SpinnerIcon className="h-4 w-4 animate-spin" />
 			</div>
 		),
-	}
+	},
 );
 
 interface ProfilesListProps {
@@ -70,7 +70,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 	const [filters] = useAtom(dynamicQueryFiltersAtom);
 
 	const [expandedProfileId, setExpandedProfileId] = useState<string | null>(
-		null
+		null,
 	);
 	const [page, setPage] = useState(1);
 	const [allProfiles, setAllProfiles] = useState<ProfileData[]>([]);
@@ -83,7 +83,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 		dateRange,
 		25,
 		page,
-		filters
+		filters,
 	);
 
 	// Reset page and profiles when dateRange or filters change
@@ -95,7 +95,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 
 	const toggleProfile = useCallback((profileId: string) => {
 		setExpandedProfileId((currentId) =>
-			currentId === profileId ? null : profileId
+			currentId === profileId ? null : profileId,
 		);
 	}, []);
 
@@ -106,7 +106,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 				setPage((prev) => prev + 1);
 			}
 		},
-		[pagination.hasNext, isLoading]
+		[pagination.hasNext, isLoading],
 	);
 
 	useEffect(() => {
@@ -116,7 +116,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 
 		const observer = new IntersectionObserver(handleIntersection, {
 			threshold: 0.1,
-			rootMargin: '300px',
+			rootMargin: "300px",
 		});
 
 		observer.observe(loadMoreRef);
@@ -136,7 +136,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 					if (!existingProfiles.has(profile.visitor_id)) {
 						existingProfiles.set(
 							profile.visitor_id,
-							profile as unknown as ProfileData
+							profile as unknown as ProfileData,
 						);
 						hasNewProfiles = true;
 					}
@@ -180,7 +180,7 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 						<UsersIcon className="mb-4 h-12 w-12 opacity-50" />
 						<p className="mb-2 font-medium text-lg">Failed to load profiles</p>
 						<p className="text-sm">
-							{error?.message || 'There was an error loading the profiles'}
+							{error?.message || "There was an error loading the profiles"}
 						</p>
 					</div>
 				</CardContent>
@@ -232,8 +232,8 @@ export function ProfilesList({ websiteId }: ProfilesListProps) {
 					) : (
 						<div className="text-center text-muted-foreground text-sm">
 							{allProfiles.length > 0
-								? 'All profiles loaded'
-								: 'No more profiles'}
+								? "All profiles loaded"
+								: "No more profiles"}
 						</div>
 					)}
 				</div>

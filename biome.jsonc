@@ -1,67 +1,67 @@
 {
-  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite"],
-  "files": {
-    "includes": [
-      "**",
-      "!**/*.mdx",
-      "!**/*.css",
-      "!**/countries.json",
-      "!**/subdivisions.json",
-      "!**/databuddy.js",
-      "!apps/better-admin/**",
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"extends": ["ultracite/react", "ultracite/next"],
+	"files": {
+		"includes": [
+			"**",
+			"!**/*.mdx",
+			"!**/*.css",
+			"!**/countries.json",
+			"!**/subdivisions.json",
+			"!**/databuddy.js",
+			"!apps/better-admin",
 
-      "!apps/docs/components/ui",
-      "!apps/dashboard/components/ui",
-      "!apps/database/components/ui",
+			"!apps/docs/components/ui",
+			"!apps/dashboard/components/ui",
+			"!apps/database/components/ui",
 
-      "!apps/docs/lib/utils.ts",
-      "!apps/dashboard/lib/utils.ts",
-      "!apps/database/lib/utils.ts",
+			"!apps/docs/lib/utils.ts",
+			"!apps/dashboard/lib/utils.ts",
+			"!apps/database/lib/utils.ts",
 
-      "!apps/docs/hooks/use-mobile.ts",
-      "!apps/dashboard/hooks/use-mobile.ts",
-      "!apps/database/hooks/use-mobile.ts"
-    ]
-  },
-  "javascript": {
-    "formatter": {
-      "indentStyle": "tab",
-      "indentWidth": 2
-    },
-    "globals": ["chrome"]
-  },
-  "linter": {
-    "rules": {
-      "suspicious": {
-        "noConsole": "off",
-        "noExplicitAny": "off",
-        "noEmptyBlockStatements": "off",
-        "noArrayIndexKey": "off",
-        "noDocumentCookie": "off"
-      },
-      "style": {
-        "noNestedTernary": "off",
-        "useFilenamingConvention": "off"
-      },
-      "complexity": {
-        "noExcessiveCognitiveComplexity": "off"
-      },
-      "performance": {
-        "noImgElement": "off"
-      },
-      "correctness": {
-        "useExhaustiveDependencies": "off"
-      },
-      "nursery": {
-        "noShadow": "off"
-      },
-      "a11y": {
-        "noStaticElementInteractions": "off"
-      },
-      "security": {
-        "noDangerouslySetInnerHtml": "off"
-      }
-    }
-  }
+			"!apps/docs/hooks/use-mobile.ts",
+			"!apps/dashboard/hooks/use-mobile.ts",
+			"!apps/database/hooks/use-mobile.ts"
+		]
+	},
+	"javascript": {
+		"formatter": {
+			"indentStyle": "tab",
+			"indentWidth": 2
+		},
+		"globals": ["chrome"]
+	},
+	"linter": {
+		"rules": {
+			"suspicious": {
+				"noConsole": "off",
+				"noExplicitAny": "off",
+				"noEmptyBlockStatements": "off",
+				"noArrayIndexKey": "off",
+				"noDocumentCookie": "off"
+			},
+			"style": {
+				"noNestedTernary": "off",
+				"useFilenamingConvention": "off"
+			},
+			"complexity": {
+				"noExcessiveCognitiveComplexity": "off"
+			},
+			"performance": {
+				"noImgElement": "off"
+			},
+			"correctness": {
+				"useExhaustiveDependencies": "off"
+			},
+			"nursery": {
+				"noShadow": "off"
+			},
+			"a11y": {
+				"noStaticElementInteractions": "off"
+			},
+			"security": {
+				"noDangerouslySetInnerHtml": "off"
+			}
+		}
+	}
 }
