@@ -173,11 +173,10 @@ const buildStepQuery = (
 				AND timestamp >= parseDateTimeBestEffort({startDate:String})
 				AND timestamp <= parseDateTimeBestEffort({endDate:String})
 				AND event_name = {${targetKey}:String}
-		) AS event_union${
-			includeReferrer
-				? `
+		) AS event_union${includeReferrer
+			? `
 		LEFT JOIN visitor_referrers vr ON event_union.anonymous_id = vr.anonymous_id`
-				: ""
+			: ""
 		}
 		GROUP BY anonymous_id${includeReferrer ? ", vr.visitor_referrer" : ""}`;
 };
@@ -346,7 +345,9 @@ type AllowedField =
 	| "city"
 	| "device_type"
 	| "browser"
+	| "browser_name"
 	| "os"
+	| "os_name"
 	| "screen_resolution"
 	| "language"
 	| "utm_source"
@@ -381,7 +382,9 @@ const ALLOWED_FIELDS: readonly AllowedField[] = [
 	"city",
 	"device_type",
 	"browser",
+	"browser_name",
 	"os",
+	"os_name",
 	"screen_resolution",
 	"language",
 	"utm_source",
@@ -408,7 +411,7 @@ const ALLOWED_OPERATORS: readonly AllowedOperator[] = [
 	"less_than_or_equal",
 ] as const;
 
-interface Filter {
+type Filter = {
 	field: string;
 	operator: string;
 	value: string | string[];
