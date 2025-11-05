@@ -1,6 +1,7 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
+import { track } from "@databuddy/sdk";
 import {
 	CaretLeftIcon,
 	CheckCircleIcon,
@@ -54,6 +55,20 @@ function RegisterPageContent() {
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	};
 
+	const trackSignUp = async (
+		method: "email" | "social",
+		provider?: "github" | "google"
+	) => {
+		try {
+			await track("signup_completed", {
+				method: method === "social" ? `${method}_${provider}` : method,
+				plan: selectedPlan || undefined,
+			});
+		} catch (error) {
+			console.error("Failed to track sign up event:", error);
+		}
+	};
+
 	const handleAuthSuccess = () => {
 		if (callbackUrl) {
 			toast.success("Account created! Completing integration...");
@@ -92,6 +107,7 @@ function RegisterPageContent() {
 			name: formData.name,
 			fetchOptions: {
 				onSuccess: () => {
+					trackSignUp("email").catch(console.error);
 					if (callbackUrl) {
 						handleAuthSuccess();
 					} else {
@@ -144,6 +160,7 @@ function RegisterPageContent() {
 				callbackURL: callbackUrl || "/websites",
 				fetchOptions: {
 					onSuccess: () => {
+						trackSignUp("social", provider).catch(console.error);
 						toast.success("Registration successful!");
 						handleAuthSuccess();
 					},
