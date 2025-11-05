@@ -6,19 +6,19 @@ import { MetricsChart } from "@/components/charts/metrics-chart";
 import type { ChartDataRow } from "@/components/charts/metrics-constants";
 import { DataTable } from "@/components/table/data-table";
 
-interface WebVitalsData {
+type WebVitalsData = {
 	date: string;
 	[key: string]: unknown;
-}
+};
 
-interface WebVitalsChartProps {
+type WebVitalsChartProps = {
 	data: WebVitalsData[];
 	isLoading: boolean;
 	isRefreshing: boolean;
 	webVitalsTabs?: Array<{
 		id: string;
 		label: string;
-		data: { name: string; [key: string]: unknown }[];
+		data: WebVitalsData[];
 		columns: {
 			id: string;
 			header: string;
@@ -28,7 +28,7 @@ interface WebVitalsChartProps {
 		getFilter: (row: { name: string }) => { field: string; value: string };
 	}>;
 	onAddFilter?: (field: string, value: string) => void;
-}
+};
 
 const WEB_VITALS_METRICS = [
 	{
@@ -98,7 +98,7 @@ export function WebVitalsChart({
 	return (
 		<div className="rounded border bg-muted/20 p-4">
 			<div className="mb-4 flex items-start gap-2">
-				<LightningIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+				<LightningIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
 				<div>
 					<p className="mb-1 font-medium text-foreground">Core Web Vitals</p>
 					<p className="text-muted-foreground text-xs">
@@ -145,7 +145,7 @@ export function WebVitalsChart({
 										</div>
 									</div>
 									{isSelected && (
-										<div className="h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
+										<div className="h-2 w-2 shrink-0 rounded-full bg-primary" />
 									)}
 								</div>
 								{isLoading ? (

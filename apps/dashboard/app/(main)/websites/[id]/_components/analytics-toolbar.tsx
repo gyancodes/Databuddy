@@ -39,11 +39,11 @@ const getStartDateForRange = (range: QuickRange) => {
 				.toDate();
 };
 
-interface AnalyticsToolbarProps {
+type AnalyticsToolbarProps = {
 	isRefreshing: boolean;
 	onRefresh: () => void;
 	websiteId: string;
-}
+};
 
 export function AnalyticsToolbar({
 	isRefreshing,
@@ -99,7 +99,9 @@ export function AnalyticsToolbar({
 
 	const isQuickRangeActive = useCallback(
 		(range: QuickRange) => {
-			if (!(selectedRange?.from && selectedRange?.to)) return false;
+			if (!(selectedRange?.from && selectedRange?.to)) {
+				return false;
+			}
 
 			const now = new Date();
 			const start = getStartDateForRange(range);

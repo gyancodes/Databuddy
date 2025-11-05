@@ -22,7 +22,7 @@ import {
 	getPerformanceScoreColor,
 } from "../_utils/performance-utils";
 
-interface FilterButtonProps {
+type FilterButtonProps = {
 	filter: "fast" | "slow";
 	icon: React.ComponentType<{ className?: string }>;
 	label: string;
@@ -31,7 +31,7 @@ interface FilterButtonProps {
 	colorClass: string;
 	activeFilter: "fast" | "slow" | null;
 	onFilterChange: (filter: "fast" | "slow" | null) => void;
-}
+};
 
 const FilterButton = ({
 	filter,
@@ -83,11 +83,11 @@ const FilterButton = ({
 	);
 };
 
-interface PerformanceSummaryCardProps {
+type PerformanceSummaryCardProps = {
 	summary: PerformanceSummary;
 	activeFilter: "fast" | "slow" | null;
-	onFilterChange: (filter: "fast" | "slow" | null) => void;
-}
+	onFilterChange: (filter: "fast" | "slow" | null) => void; // TODO: fix this
+};
 
 export function PerformanceSummaryCard({
 	summary,

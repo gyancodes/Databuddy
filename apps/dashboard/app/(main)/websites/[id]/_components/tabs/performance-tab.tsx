@@ -19,10 +19,10 @@ import { WebVitalsChart } from "./performance/_components/web-vitals-chart";
 import { WebVitalsMetricCell } from "./performance/_components/web-vitals-metric-cell";
 import { formatNumber } from "./performance/_utils/performance-utils";
 
-interface CellProps {
+type CellProps = {
 	getValue: () => unknown;
 	row: { original: Record<string, unknown> };
-}
+};
 
 const performanceColumns = [
 	{
@@ -151,6 +151,10 @@ export function WebsitePerformanceTab({
 	const [activeFilter, setActiveFilter] = useState<"fast" | "slow" | null>(
 		null
 	);
+
+	const handleFilterChange = useCallback((filter: "fast" | "slow" | null) => {
+		setActiveFilter(filter);
+	}, []);
 
 	const {
 		results: performanceResults,
@@ -304,14 +308,14 @@ export function WebsitePerformanceTab({
 			return countryName ? `${region}, ${countryName}` : name;
 		};
 
-		interface TabConfig {
+		type TabConfig = {
 			id: string;
 			label: string;
 			data: PerformanceEntry[];
 			iconRenderer?: (name: string) => React.ReactNode;
 			nameFormatter?: (name: string) => string;
 			getFilter: (row: { name: string }) => { field: string; value: string };
-		}
+		};
 
 		const configs: TabConfig[] = [
 			{
@@ -433,14 +437,14 @@ export function WebsitePerformanceTab({
 			return countryName ? `${region}, ${countryName}` : name;
 		};
 
-		interface WebVitalsTabConfig {
+		type WebVitalsTabConfig = {
 			id: string;
 			label: string;
 			data: unknown[];
 			iconRenderer?: (name: string) => React.ReactNode;
 			nameFormatter?: (name: string) => string;
 			getFilter: (row: { name: string }) => { field: string; value: string };
-		}
+		};
 
 		const webVitalsConfigs: WebVitalsTabConfig[] = [
 			{
@@ -544,7 +548,7 @@ export function WebsitePerformanceTab({
 
 			<div className="rounded border bg-muted/20 p-4">
 				<div className="mb-4 flex items-start gap-2">
-					<LightningIcon className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+					<LightningIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
 					<div>
 						<p className="mb-1 font-medium text-foreground">
 							Performance Overview
@@ -565,7 +569,7 @@ export function WebsitePerformanceTab({
 					<>
 						<PerformanceSummaryCard
 							activeFilter={activeFilter}
-							onFilterChange={setActiveFilter}
+							onFilterChange={handleFilterChange}
 							summary={performanceSummary}
 						/>
 

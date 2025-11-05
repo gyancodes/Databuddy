@@ -46,7 +46,7 @@ const CustomEventsSection = dynamic(() =>
 	}))
 );
 
-interface ChartDataPoint {
+type ChartDataPoint = {
 	date: string;
 	rawDate?: string;
 	pageviews?: number;
@@ -55,36 +55,36 @@ interface ChartDataPoint {
 	bounce_rate?: number;
 	avg_session_duration?: number;
 	[key: string]: unknown;
-}
+};
 
-interface TechnologyData {
+type TechnologyData = {
 	name: string;
 	visitors: number;
 	pageviews?: number;
 	percentage: number;
 	icon?: string;
 	category?: string;
-}
+};
 
-interface CellInfo {
+type CellInfo = {
 	getValue: () => unknown;
 	row: { original: unknown };
-}
+};
 
-interface PageRowData {
+type PageRowData = {
 	name: string;
 	visitors: number;
 	pageviews: number;
 	percentage: number;
-}
+};
 
-interface AnalyticsRowData {
+type AnalyticsRowData = {
 	name: string;
 	visitors: number;
 	pageviews: number;
 	percentage: number;
 	referrer?: string;
-}
+};
 
 const MIN_PREVIOUS_SESSIONS_FOR_TREND = 5;
 const MIN_PREVIOUS_VISITORS_FOR_TREND = 5;
@@ -313,7 +313,9 @@ export function WebsiteOverviewTab({
 	const dateDiff = dateTo.diff(dateFrom, "day");
 
 	const processedEventsData = useMemo(() => {
-		if (!analytics.events_by_date?.length) return [];
+		if (!analytics.events_by_date?.length) {
+			return [];
+		}
 
 		const now = dayjs();
 		const isHourly = dateRange.granularity === "hourly";
@@ -350,7 +352,9 @@ export function WebsiteOverviewTab({
 			if (isHourly) {
 				for (let hour = 0; hour < 24; hour++) {
 					const hourDate = current.hour(hour);
-					if (hourDate.isAfter(now)) break;
+					if (hourDate.isAfter(now)) {
+						break;
+					}
 
 					const key = hourDate.format("YYYY-MM-DD HH:00:00");
 					const existing = dataMap.get(key);
@@ -369,7 +373,9 @@ export function WebsiteOverviewTab({
 					);
 				}
 				current = current.add(1, "day");
-				if (current.isAfter(endDate, "day")) break;
+				if (current.isAfter(endDate, "day")) {
+					break;
+				}
 			} else {
 				const key = current.format("YYYY-MM-DD");
 				const existing = dataMap.get(key);
@@ -439,12 +445,14 @@ export function WebsiteOverviewTab({
 						? event.date
 						: event.date.slice(0, 10),
 				value: transform
-					? transform(event[field] as number)
+					? transform(Number(event[field]))
 					: (event[field] as number) || 0,
 			}));
 
 		const formatSessionDuration = (value: number) => {
-			if (value < 60) return Math.round(value);
+			if (value < 60) {
+				return Math.round(value);
+			}
 			const minutes = Math.floor(value / 60);
 			const seconds = Math.round(value % 60);
 			return minutes * 60 + seconds;
@@ -486,24 +494,6 @@ export function WebsiteOverviewTab({
 		},
 		[]
 	);
-
-	const formatTimeSeconds = useCallback((seconds: number): string => {
-		if (seconds < 60) {
-			return `${seconds.toFixed(1)}s`;
-		}
-		const minutes = Math.floor(seconds / 60);
-		const remainingSeconds = Math.round(seconds % 60);
-		return `${minutes}m ${remainingSeconds}s`;
-	}, []);
-
-	const createTimeCell = (info: CellInfo) => {
-		const seconds = (info.getValue() as number) ?? 0;
-		return (
-			<span className="font-medium text-foreground">
-				{formatTimeSeconds(seconds)}
-			</span>
-		);
-	};
 
 	const pagesTabs = useMemo(
 		() => [
@@ -1018,7 +1008,6 @@ export function WebsiteOverviewTab({
 					isLoading={isLoading}
 					minHeight={350}
 					onAddFilter={onAddFilter}
-					showSearch={false}
 					tabs={[
 						{
 							id: "devices",
@@ -1049,7 +1038,6 @@ export function WebsiteOverviewTab({
 					isLoading={isLoading}
 					minHeight={350}
 					onAddFilter={onAddFilter}
-					showSearch={false}
 					tabs={[
 						{
 							id: "browsers",
@@ -1073,7 +1061,6 @@ export function WebsiteOverviewTab({
 					isLoading={isLoading}
 					minHeight={350}
 					onAddFilter={onAddFilter}
-					showSearch={false}
 					tabs={[
 						{
 							id: "operating_systems",

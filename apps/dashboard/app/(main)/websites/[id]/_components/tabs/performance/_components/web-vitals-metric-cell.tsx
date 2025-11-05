@@ -3,10 +3,10 @@
 import { CheckCircle, Warning } from "@phosphor-icons/react";
 import { formatPerformanceTime } from "../_utils/performance-utils";
 
-interface WebVitalsMetricCellProps {
+type WebVitalsMetricCellProps = {
 	value?: number;
 	metric: "lcp" | "fcp" | "fid" | "inp" | "cls";
-}
+};
 
 const getWebVitalsThresholds = (metric: string) => {
 	switch (metric) {

@@ -34,28 +34,28 @@ import type { FullTabProps } from "../utils/types";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-interface BrowserVersion {
+type BrowserVersion = {
 	version: string;
 	visitors: number;
 	pageviews: number;
 	percentage?: number;
-}
+};
 
-interface BrowserEntry {
+type BrowserEntry = {
 	name: string;
 	browserName: string;
 	visitors: number;
 	pageviews: number;
 	percentage: number;
 	versions: BrowserVersion[];
-}
+};
 
-interface ScreenResolutionEntry {
+type ScreenResolutionEntry = {
 	name: string;
 	visitors: number;
 	pageviews?: number;
 	percentage?: number;
-}
+};
 
 const formatNumber = (value: number | null | undefined): string => {
 	if (value == null || Number.isNaN(value)) {
@@ -409,7 +409,6 @@ export function WebsiteAudienceTab({
 							</div>
 						);
 					}}
-					showSearch={false}
 					tabs={[
 						{
 							id: "browsers",
@@ -434,7 +433,6 @@ export function WebsiteAudienceTab({
 					onAddFilter={(field: string, value: string) =>
 						addFilter({ field, operator: "eq" as const, value })
 					}
-					showSearch={false}
 					tabs={[
 						{
 							id: "connections",
@@ -582,7 +580,7 @@ export function WebsiteAudienceTab({
 												{/* Enhanced Screen visualization with perspective */}
 												<div className="perspective relative mb-4 flex h-32 justify-center">
 													<div
-														className="relative flex transform-gpu items-center justify-center rounded-lg border-2 border-primary/20 bg-gradient-to-br from-primary/8 to-primary/12 shadow-lg transition-all duration-300 hover:shadow-xl"
+														className="relative flex transform-gpu items-center justify-center rounded-lg border-2 border-primary/20 bg-linear-to-br from-primary/8 to-primary/12 shadow-lg transition-all duration-300 hover:shadow-xl"
 														style={{
 															width: `${Math.min(200, 100 * Math.sqrt(aspectRatio))}px`,
 															height: `${Math.min(160, 100 / Math.sqrt(aspectRatio))}px`,

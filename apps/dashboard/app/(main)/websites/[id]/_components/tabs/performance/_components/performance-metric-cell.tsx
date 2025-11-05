@@ -6,10 +6,10 @@ import {
 	getMetricStyles,
 } from "../_utils/performance-utils";
 
-interface PerformanceMetricCellProps {
+type PerformanceMetricCellProps = {
 	value?: number;
 	type?: "time" | "cls";
-}
+};
 
 export function PerformanceMetricCell({
 	value,
