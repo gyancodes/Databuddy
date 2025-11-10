@@ -9,17 +9,17 @@ import {
 } from "../utils/validation";
 import { logBlockedTraffic } from "./blocked-traffic";
 
-interface ValidationResult {
+type ValidationResult = {
 	success: true;
 	clientId: string;
 	userAgent: string;
 	ip: string;
 	ownerId?: string;
-}
+};
 
-interface ValidationError {
+type ValidationError = {
 	error: { status: string; message: string };
-}
+};
 
 /**
  * Validate incoming request for analytics events
@@ -72,23 +72,27 @@ export async function validateRequest(
 	}
 
 	if (website.ownerId) {
-		const { data } = await autumn.check({
-			customer_id: website.ownerId,
-			feature_id: "events",
-			send_event: true,
-		});
+		try {
+			const { data } = await autumn.check({
+				customer_id: website.ownerId,
+				feature_id: "events",
+				send_event: true,
+			});
 
-		if (!data?.allowed) {
-			await logBlockedTraffic(
-				request,
-				body,
-				query,
-				"exceeded_event_limit",
-				"Validation Error",
-				undefined,
-				clientId
-			);
-			return { error: { status: "error", message: "Exceeded event limit" } };
+			if (data && !(data.allowed || data.overage_allowed)) {
+				await logBlockedTraffic(
+					request,
+					body,
+					query,
+					"exceeded_event_limit",
+					"Validation Error",
+					undefined,
+					clientId
+				);
+				return { error: { status: "error", message: "Exceeded event limit" } };
+			}
+		} catch (error) {
+			console.error("Autumn check failed, allowing event through:", error);
 		}
 	}
 
