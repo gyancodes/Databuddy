@@ -34,12 +34,12 @@ const HelpDialog = dynamic(
 );
 
 type CategorySidebarProps = {
-	onCategoryChange?: (categoryId: string) => void;
+	onCategoryChangeAction?: (categoryId: string) => void;
 	selectedCategory?: string;
 };
 
 export function CategorySidebar({
-	onCategoryChange,
+	onCategoryChangeAction,
 	selectedCategory,
 }: CategorySidebarProps) {
 	const pathname = usePathname();
@@ -104,7 +104,7 @@ export function CategorySidebar({
 										isActive &&
 											"bg-sidebar-accent text-sidebar-accent-foreground"
 									)}
-									onClick={() => onCategoryChange?.(category.id)}
+									onClick={() => onCategoryChangeAction?.(category.id)}
 									type="button"
 								>
 									<Icon
@@ -158,7 +158,7 @@ export function CategorySidebar({
 					</div>
 				</div>
 
-				<HelpDialog onOpenChange={setHelpOpen} open={helpOpen} />
+				<HelpDialog onOpenChangeAction={setHelpOpen} open={helpOpen} />
 			</div>
 		</div>
 	);

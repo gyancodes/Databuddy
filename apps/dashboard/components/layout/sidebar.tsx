@@ -203,13 +203,13 @@ export function Sidebar() {
 			{/* Category Sidebar - Desktop only */}
 			<div className="hidden md:block">
 				<CategorySidebar
-					onCategoryChange={setSelectedCategory}
+					onCategoryChangeAction={setSelectedCategory}
 					selectedCategory={selectedCategory}
 				/>
 			</div>
 
 			{isMobileOpen && (
-				<div
+				<button
 					className="fixed inset-0 z-30 bg-black/20 md:hidden"
 					onClick={closeSidebar}
 					onKeyDown={(e) => {
@@ -217,8 +217,8 @@ export function Sidebar() {
 							closeSidebar();
 						}
 					}}
-					role="button"
 					tabIndex={0}
+					type="button"
 				/>
 			)}
 
@@ -253,7 +253,7 @@ export function Sidebar() {
 
 						{/* Mobile Category Selector */}
 						<MobileCategorySelector
-							onCategoryChange={setSelectedCategory}
+							onCategoryChangeAction={setSelectedCategory}
 							selectedCategory={selectedCategory}
 						/>
 

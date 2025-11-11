@@ -11,7 +11,7 @@ import {
 
 type HelpDialogProps = {
 	open: boolean;
-	onOpenChange: (open: boolean) => void;
+	onOpenChangeAction: (open: boolean) => void;
 };
 
 const helpItems = [
@@ -38,9 +38,9 @@ const helpItems = [
 	},
 ] as const;
 
-export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
+export function HelpDialog({ open, onOpenChangeAction }: HelpDialogProps) {
 	return (
-		<Dialog onOpenChange={onOpenChange} open={open}>
+		<Dialog onOpenChange={onOpenChangeAction} open={open}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader className="text-center">
 					<DialogTitle>Help & Resources</DialogTitle>

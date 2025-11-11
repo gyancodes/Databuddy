@@ -22,12 +22,12 @@ import {
 } from "./navigation-config";
 
 type MobileCategorySelectorProps = {
-	onCategoryChange?: (categoryId: string) => void;
+	onCategoryChangeAction?: (categoryId: string) => void;
 	selectedCategory?: string;
 };
 
 export function MobileCategorySelector({
-	onCategoryChange,
+	onCategoryChangeAction,
 	selectedCategory,
 }: MobileCategorySelectorProps) {
 	const pathname = usePathname();
@@ -78,7 +78,7 @@ export function MobileCategorySelector({
 						<CaretDownIcon className="h-4 w-4" weight="fill" />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent className="w-full min-w-[var(--radix-dropdown-menu-trigger-width)]">
+				<DropdownMenuContent className="w-full min-w-(--radix-dropdown-menu-trigger-width)">
 					{categories.map((category) => {
 						const Icon = category.icon;
 						const isActive = activeCategory === category.id;
@@ -89,7 +89,7 @@ export function MobileCategorySelector({
 									isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
 								)}
 								key={category.id}
-								onClick={() => onCategoryChange?.(category.id)}
+								onClick={() => onCategoryChangeAction?.(category.id)}
 							>
 								<Icon
 									className={cn(
