@@ -40,16 +40,6 @@ export function NavigationItem({
 			return href === "" ? "/sandbox" : `/sandbox${href}`;
 		}
 
-		if (
-			pathname.startsWith("/observability/database/") &&
-			pathname !== "/observability/database" &&
-			pathname !== "/observability/database/"
-		) {
-			return href === ""
-				? `/observability/database/${currentWebsiteId}`
-				: `/observability/database/${currentWebsiteId}${href}`;
-		}
-
 		if (pathname.startsWith("/demo/")) {
 			return href === ""
 				? `/demo/${currentWebsiteId}`

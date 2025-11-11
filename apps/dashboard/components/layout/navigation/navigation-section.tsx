@@ -64,18 +64,6 @@ const checkWebsiteMatch = (
 	return pathname === fullPath;
 };
 
-const checkDatabaseMatch = (
-	item: NavigationSectionType["items"][0],
-	pathname: string,
-	currentDatabaseId: string | null | undefined
-) => {
-	const fullPath = buildFullPath(
-		`/observability/database/${currentDatabaseId}`,
-		item.href
-	);
-	return pathname === fullPath;
-};
-
 const getPathInfo = (
 	item: NavigationSectionType["items"][0],
 	pathname: string,
@@ -92,14 +80,6 @@ const getPathInfo = (
 
 	if (pathname.startsWith("/demo")) {
 		return { isActive: checkDemoMatch(item, pathname, currentWebsiteId) };
-	}
-
-	if (
-		pathname.startsWith("/observability/database/") &&
-		pathname !== "/observability/database" &&
-		pathname !== "/observability/database/"
-	) {
-		return { isActive: checkDatabaseMatch(item, pathname, currentWebsiteId) };
 	}
 
 	return { isActive: checkWebsiteMatch(item, pathname, currentWebsiteId) };
