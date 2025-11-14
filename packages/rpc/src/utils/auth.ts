@@ -17,10 +17,13 @@ const getWebsiteById = cacheable(
 				where: eq(websites.id, id),
 			});
 		} catch (error) {
-			logger.error("Error fetching website by ID", {
-				error: error instanceof Error ? error.message : String(error),
-				id,
-			});
+			logger.error(
+				{
+					error,
+					id,
+				},
+				"Error fetching website by ID"
+			);
 			return null;
 		}
 	},
@@ -41,10 +44,13 @@ const getDbConnectionById = async (id: string) => {
 			where: eq(dbConnections.id, id),
 		});
 	} catch (error) {
-		logger.error("Error fetching database connection by ID", {
-			error: error instanceof Error ? error.message : String(error),
-			id,
-		});
+		logger.error(
+			{
+				error,
+				id,
+			},
+			"Error fetching database connection by ID"
+		);
 		return null;
 	}
 };
