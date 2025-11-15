@@ -81,15 +81,15 @@ export function parseProperties(properties: unknown): string {
 /**
  * Creates standardized bot check result
  */
-export interface BotCheckResult {
+export type BotCheckResult = {
 	isBot: boolean;
 	response?: {
 		status: string;
 		message: string;
 		eventType: string;
-		error: string;
+		error?: string;
 	};
-}
+};
 
 /**
  * Parses and sanitizes event ID, generates UUID if missing
@@ -99,7 +99,9 @@ export function parseEventId(
 	generateFn: () => string
 ): string {
 	const sanitizeString = (str: unknown, maxLength: number): string => {
-		if (typeof str !== "string") return "";
+		if (typeof str !== "string") {
+			return "";
+		}
 		return str.slice(0, maxLength);
 	};
 

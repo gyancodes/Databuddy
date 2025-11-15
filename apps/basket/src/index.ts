@@ -45,10 +45,6 @@ const app = new Elysia()
 		);
 	})
 	.onBeforeHandle(({ request, set }) => {
-		// const { isBot } = await checkBotId();
-		// if (isBot) {
-		//   return new Response(null, { status: 403 });
-		// }
 		const origin = request.headers.get("origin");
 		if (origin) {
 			set.headers ??= {};

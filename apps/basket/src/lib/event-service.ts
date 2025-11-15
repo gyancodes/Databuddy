@@ -36,14 +36,19 @@ export async function insertError(
 		eventId = randomUUID();
 	}
 
-	if (await checkDuplicate(eventId, "error")) {
+	const [isDuplicate, geoData] = await Promise.all([
+		checkDuplicate(eventId, "error"),
+		getGeo(ip),
+	]);
+
+	if (isDuplicate) {
 		return;
 	}
 
 	const payload = errorData.payload;
 	const now = Date.now();
 
-	const { anonymizedIP, country, region } = await getGeo(ip);
+	const { anonymizedIP, country, region } = geoData;
 	const { browserName, browserVersion, osName, osVersion, deviceType } =
 		parseUserAgent(userAgent);
 
@@ -276,6 +281,7 @@ export async function insertTrackEvent(
 	userAgent: string,
 	ip: string
 ): Promise<void> {
+	console.time("insertTrackEvent");
 	let eventId = sanitizeString(
 		trackData.eventId,
 		VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
@@ -285,11 +291,17 @@ export async function insertTrackEvent(
 		eventId = randomUUID();
 	}
 
-	if (await checkDuplicate(eventId, "track")) {
+	const [isDuplicate, geoData] = await Promise.all([
+		checkDuplicate(eventId, "track"),
+		getGeo(ip),
+	]);
+
+	if (isDuplicate) {
+		console.timeEnd("insertTrackEvent");
 		return;
 	}
 
-	const { anonymizedIP, country, region, city } = await getGeo(ip);
+	const { anonymizedIP, country, region, city } = geoData;
 	const {
 		browserName,
 		browserVersion,
@@ -381,11 +393,13 @@ export async function insertTrackEvent(
 
 	try {
 		sendEvent("analytics-events", trackEvent);
+		console.timeEnd("insertTrackEvent");
 	} catch (error) {
 		logger.error(
 			{ error, eventId },
 			"Failed to queue track event"
 		);
+		console.timeEnd("insertTrackEvent");
 	}
 }
 

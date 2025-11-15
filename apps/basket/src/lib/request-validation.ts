@@ -1,3 +1,4 @@
+import { cacheable } from "@databuddy/redis";
 import { Autumn as autumn } from "autumn-js";
 import { getWebsiteByIdV2, isValidOrigin } from "../hooks/auth";
 import { extractIpFromRequest } from "../utils/ip-geo";
@@ -22,6 +23,25 @@ type ValidationError = {
 	error: { status: string; message: string };
 };
 
+const checkAutumnCached = cacheable(
+	async (ownerId: string) => {
+		console.time("autumnCheck");
+		const result = await autumn.check({
+			customer_id: ownerId,
+			feature_id: "events",
+			send_event: true,
+		});
+		console.timeEnd("autumnCheck");
+		return result.data;
+	},
+	{
+		expireInSec: 60,
+		prefix: "autumn_check_events",
+		staleWhileRevalidate: true,
+		staleTime: 30,
+	}
+);
+
 /**
  * Validate incoming request for analytics events
  */
@@ -30,6 +50,7 @@ export async function validateRequest(
 	query: any,
 	request: Request
 ): Promise<ValidationResult | ValidationError> {
+	console.time("validateRequest");
 	if (!validatePayloadSize(body, VALIDATION_LIMITS.PAYLOAD_MAX_SIZE)) {
 		await logBlockedTraffic(
 			request,
@@ -38,6 +59,7 @@ export async function validateRequest(
 			"payload_too_large",
 			"Validation Error"
 		);
+		console.timeEnd("validateRequest");
 		return { error: { status: "error", message: "Payload too large" } };
 	}
 
@@ -53,6 +75,7 @@ export async function validateRequest(
 			"missing_client_id",
 			"Validation Error"
 		);
+		console.timeEnd("validateRequest");
 		return { error: { status: "error", message: "Missing client ID" } };
 	}
 
@@ -67,6 +90,7 @@ export async function validateRequest(
 			undefined,
 			clientId
 		);
+		console.timeEnd("validateRequest");
 		return {
 			error: { status: "error", message: "Invalid or inactive client ID" },
 		};
@@ -74,11 +98,7 @@ export async function validateRequest(
 
 	if (website.ownerId) {
 		try {
-			const { data } = await autumn.check({
-				customer_id: website.ownerId,
-				feature_id: "events",
-				send_event: true,
-			});
+			const data = await checkAutumnCached(website.ownerId);
 
 			if (data && !(data.allowed || data.overage_allowed)) {
 				await logBlockedTraffic(
@@ -90,6 +110,7 @@ export async function validateRequest(
 					undefined,
 					clientId
 				);
+				console.timeEnd("validateRequest");
 				return { error: { status: "error", message: "Exceeded event limit" } };
 			}
 		} catch (error) {
@@ -108,6 +129,7 @@ export async function validateRequest(
 			undefined,
 			clientId
 		);
+		console.timeEnd("validateRequest");
 		return { error: { status: "error", message: "Origin not authorized" } };
 	}
 
@@ -119,6 +141,7 @@ export async function validateRequest(
 
 	const ip = extractIpFromRequest(request);
 
+	console.timeEnd("validateRequest");
 	return {
 		success: true,
 		clientId,

@@ -26,7 +26,9 @@ const REGEX_DOMAIN_LABEL = /^[a-zA-Z0-9-]+$/;
  * @returns A promise that resolves to the owner's user ID or null if not found.
  */
 async function _resolveOwnerId(website: Website): Promise<string | null> {
+	console.time("_resolveOwnerId");
 	if (website.userId) {
+		console.timeEnd("_resolveOwnerId");
 		return website.userId;
 	}
 
@@ -43,6 +45,7 @@ async function _resolveOwnerId(website: Website): Promise<string | null> {
 			});
 
 			if (orgMember) {
+				console.timeEnd("_resolveOwnerId");
 				return orgMember.userId;
 			}
 
@@ -66,6 +69,7 @@ async function _resolveOwnerId(website: Website): Promise<string | null> {
 		{ websiteId: website.id },
 		"No owner could be determined for website"
 	);
+	console.timeEnd("_resolveOwnerId");
 	return null;
 }
 
@@ -324,50 +328,43 @@ export function isLocalhost(hostname: string): boolean {
 	); // IPv4 loopback
 }
 
-const getWebsiteByIdCached = cacheable(
-	async (id: string): Promise<Website | null> => {
+const getWebsiteByIdWithOwnerCached = cacheable(
+	async (id: string): Promise<WebsiteWithOwner | null> => {
 		try {
 			const website = await db.query.websites.findFirst({
 				where: eq(websites.id, id),
 			});
-			return website ?? null;
+
+			if (!website) {
+				return null;
+			}
+
+			const ownerId = await _resolveOwnerId(website);
+			return { ...website, ownerId };
 		} catch (error) {
 			logger.error({ error, websiteId: id }, "Failed to get website by ID from cache");
 			return null;
 		}
 	},
 	{
-		expireInSec: 300, // 5 minutes
-		prefix: "website_by_id",
+		expireInSec: 600, // 10 minutes - longer cache for better performance
+		prefix: "website_with_owner_v2",
 		staleWhileRevalidate: true,
-		staleTime: 60, // 1 minute
-	}
-);
-
-const getOwnerIdCached = cacheable(
-	async (website: Website): Promise<string | null> =>
-		await _resolveOwnerId(website),
-	{
-		expireInSec: 300,
-		prefix: "website_owner_id",
-		staleWhileRevalidate: true,
-		staleTime: 60,
+		staleTime: 120, // 2 minutes stale time
 	}
 );
 
 export async function getWebsiteByIdV2(
 	id: string
 ): Promise<WebsiteWithOwner | null> {
+	console.time("getWebsiteByIdV2");
 	try {
-		const website = await getWebsiteByIdCached(id);
-		if (!website) {
-			return null;
-		}
-
-		const ownerId = await getOwnerIdCached(website);
-		return { ...website, ownerId };
+		const result = await getWebsiteByIdWithOwnerCached(id);
+		console.timeEnd("getWebsiteByIdV2");
+		return result;
 	} catch (error) {
 		logger.error({ error, websiteId: id }, "Failed to get website by ID V2");
+		console.timeEnd("getWebsiteByIdV2");
 		return null;
 	}
 }
