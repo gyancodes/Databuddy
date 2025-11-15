@@ -9,13 +9,13 @@ type ParseResult<T> =
 /**
  * Validates event schema in production, skips validation in development
  */
-export async function validateEventSchema<T>(
+export function validateEventSchema<T>(
 	schema: z.ZodSchema<T>,
 	event: unknown,
 	request: Request,
 	query: unknown,
 	clientId: string
-): Promise<ParseResult<T>> {
+): ParseResult<T> {
 	if (process.env.NODE_ENV === "development") {
 		return { success: true, data: event as T };
 	}
@@ -23,7 +23,7 @@ export async function validateEventSchema<T>(
 	const parseResult = schema.safeParse(event);
 
 	if (!parseResult.success) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			event,
 			query,

@@ -16,7 +16,7 @@ import {
 } from "../utils/validation";
 import { logger } from "./logger";
 import { sendEvent, sendEventBatch } from "./producer";
-import { checkDuplicate } from "./security";
+import { checkDuplicate, getDailySalt, saltAnonymousId } from "./security";
 
 /**
  * Insert an error event into the database
@@ -291,14 +291,23 @@ export async function insertTrackEvent(
 		eventId = randomUUID();
 	}
 
-	const [isDuplicate, geoData] = await Promise.all([
+	const [isDuplicate, geoData, salt] = await Promise.all([
 		checkDuplicate(eventId, "track"),
 		getGeo(ip),
+		getDailySalt(),
 	]);
 
 	if (isDuplicate) {
 		console.timeEnd("insertTrackEvent");
 		return;
+	}
+
+	let anonymousId = sanitizeString(
+		trackData.anonymousId,
+		VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+	);
+	if (anonymousId) {
+		anonymousId = saltAnonymousId(anonymousId, salt);
 	}
 
 	const { anonymizedIP, country, region, city } = geoData;
@@ -320,10 +329,7 @@ export async function insertTrackEvent(
 			trackData.name,
 			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
 		),
-		anonymous_id: sanitizeString(
-			trackData.anonymousId,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
+		anonymous_id: anonymousId,
 		time: typeof trackData.timestamp === "number" ? trackData.timestamp : now,
 		session_id: validateSessionId(trackData.sessionId),
 		event_type: "track",

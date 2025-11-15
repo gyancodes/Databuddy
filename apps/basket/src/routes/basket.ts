@@ -21,7 +21,6 @@ import {
 } from "../lib/event-service";
 import { logger } from "../lib/logger";
 import { checkForBot, validateRequest } from "../lib/request-validation";
-import { getDailySalt, saltAnonymousId } from "../lib/security";
 
 import {
 	analyticsEventSchema,
@@ -55,7 +54,13 @@ async function processTrackEventData(
 	ip: string
 ): Promise<AnalyticsEvent> {
 	const eventId = parseEventId(trackData.eventId, randomUUID);
-	const { anonymizedIP, country, region, city } = await getGeo(ip);
+
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { anonymizedIP, country, region, city } = geoData;
 	const {
 		browserName,
 		browserVersion,
@@ -64,7 +69,8 @@ async function processTrackEventData(
 		deviceType,
 		deviceBrand,
 		deviceModel,
-	} = parseUserAgent(userAgent);
+	} = uaData;
+
 	const now = Date.now();
 	const timestamp = parseTimestamp(trackData.timestamp);
 	const sessionStartTime = parseTimestamp(trackData.sessionStartTime);
@@ -145,9 +151,13 @@ async function processErrorEventData(
 	const now = Date.now();
 	const timestamp = parseTimestamp(payload.timestamp);
 
-	const { anonymizedIP, country, region } = await getGeo(ip);
-	const { browserName, browserVersion, osName, osVersion, deviceType } =
-		parseUserAgent(userAgent);
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { anonymizedIP, country, region } = geoData;
+	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
 
 	return {
 		id: randomUUID(),
@@ -199,9 +209,13 @@ async function processWebVitalsEventData(
 	const now = Date.now();
 	const timestamp = parseTimestamp(payload.timestamp);
 
-	const { country, region } = await getGeo(ip);
-	const { browserName, browserVersion, osName, osVersion, deviceType } =
-		parseUserAgent(userAgent);
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { country, region } = geoData;
+	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
 
 	return {
 		id: randomUUID(),
@@ -284,43 +298,26 @@ const app = new Elysia()
 
 		console.time("total-request");
 		try {
-			const saltPromise = getDailySalt();
-
 			const validation = await validateRequest(body, query, request);
+
 			if ("error" in validation) {
 				console.timeEnd("total-request");
 				return validation.error;
 			}
 
 			const { clientId, userAgent, ip } = validation;
-
-			const salt = await saltPromise;
-			if (body.anonymous_id) {
-				body.anonymous_id = saltAnonymousId(body.anonymous_id, salt);
-			}
-
 			const eventType = body.type || "track";
 
 			if (eventType === "track") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(analyticsEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					console.timeEnd("total-request");
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					analyticsEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					console.timeEnd("total-request");
@@ -342,25 +339,15 @@ const app = new Elysia()
 					};
 				}
 
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(errorEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					console.timeEnd("total-request");
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					errorEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					console.timeEnd("total-request");
@@ -373,25 +360,15 @@ const app = new Elysia()
 			}
 
 			if (eventType === "web_vitals") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(webVitalsEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					console.timeEnd("total-request");
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					webVitalsEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					console.timeEnd("total-request");
@@ -426,25 +403,15 @@ const app = new Elysia()
 			}
 
 			if (eventType === "outgoing_link") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(outgoingLinkSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					console.timeEnd("total-request");
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					outgoingLinkSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					console.timeEnd("total-request");
@@ -491,13 +458,6 @@ const app = new Elysia()
 
 			const { clientId, userAgent, ip } = validation;
 
-			const salt = await getDailySalt();
-			for (const event of body) {
-				if (event.anonymous_id) {
-					event.anonymous_id = saltAnonymousId(event.anonymous_id, salt);
-				}
-			}
-
 			logger.info(
 				{
 					website_id: clientId,
@@ -518,7 +478,6 @@ const app = new Elysia()
 
 			for (const event of body) {
 				const eventType = event.type || "track";
-				// logEventGlimpse(clientId, eventType, event, true);
 
 				try {
 					if (eventType === "track") {

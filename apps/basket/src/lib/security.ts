@@ -1,38 +1,46 @@
 import crypto, { createHash } from "node:crypto";
-import { redis } from "@databuddy/redis";
+import { cacheable, redis } from "@databuddy/redis";
 import { logger } from "./logger";
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const SALT_TTL = 60 * 60 * 24;
 const EXIT_EVENT_TTL = 172_800;
 const STANDARD_EVENT_TTL = 86_400;
 
 function getCurrentDay(): number {
+	const MS_PER_DAY = 24 * 60 * 60 * 1000;
 	return Math.floor(Date.now() / MS_PER_DAY);
 }
 
-export async function getDailySalt(): Promise<string> {
-	console.time("getDailySalt");
-	const saltKey = `salt:${getCurrentDay()}`;
-	try {
-		const salt = await redis.get(saltKey);
-		if (salt) {
-			console.timeEnd("getDailySalt");
-			return salt;
-		}
+export const getDailySalt = cacheable(
+	async (): Promise<string> => {
+		console.time("getDailySalt");
+		const saltKey = `salt:${getCurrentDay()}`;
+		try {
+			const salt = await redis.get(saltKey);
+			if (salt) {
+				console.timeEnd("getDailySalt");
+				return salt;
+			}
 
-		const newSalt = crypto.randomBytes(32).toString("hex");
-		redis.setex(saltKey, SALT_TTL, newSalt).catch((error) => {
-			logger.error({ error }, "Failed to set daily salt in Redis");
-		});
-		console.timeEnd("getDailySalt");
-		return newSalt;
-	} catch (error) {
-		logger.error({ error }, "Failed to get daily salt from Redis");
-		console.timeEnd("getDailySalt");
-		return crypto.randomBytes(32).toString("hex");
+			const newSalt = crypto.randomBytes(32).toString("hex");
+			const SALT_TTL = 60 * 60 * 24;
+			redis.setex(saltKey, SALT_TTL, newSalt).catch((error) => {
+				logger.error({ error }, "Failed to set daily salt in Redis");
+			});
+			console.timeEnd("getDailySalt");
+			return newSalt;
+		} catch (error) {
+			logger.error({ error }, "Failed to get daily salt from Redis");
+			console.timeEnd("getDailySalt");
+			return crypto.randomBytes(32).toString("hex");
+		}
+	},
+	{
+		expireInSec: 3600,
+		prefix: "daily_salt",
+		staleWhileRevalidate: true,
+		staleTime: 300,
 	}
-}
+);
 
 export function saltAnonymousId(anonymousId: string, salt: string): string {
 	try {
@@ -49,18 +57,12 @@ export async function checkDuplicate(
 ): Promise<boolean> {
 	console.time("checkDuplicate");
 	const key = `dedup:${eventType}:${eventId}`;
-	try {
-		if (await redis.exists(key)) {
-			console.timeEnd("checkDuplicate");
-			return true;
-		}
+	const ttl = eventId.startsWith("exit_") ? EXIT_EVENT_TTL : STANDARD_EVENT_TTL;
 
-		const ttl = eventId.startsWith("exit_") ? EXIT_EVENT_TTL : STANDARD_EVENT_TTL;
-		redis.setex(key, ttl, "1").catch((error) => {
-			logger.error({ error, eventId, eventType }, "Failed to set duplicate key in Redis");
-		});
+	try {
+		const result = await redis.set(key, "1", "EX", ttl, "NX");
 		console.timeEnd("checkDuplicate");
-		return false;
+		return result === null;
 	} catch (error) {
 		logger.error({ error, eventId, eventType }, "Failed to check duplicate event in Redis");
 		console.timeEnd("checkDuplicate");

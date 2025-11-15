@@ -52,7 +52,7 @@ export async function validateRequest(
 ): Promise<ValidationResult | ValidationError> {
 	console.time("validateRequest");
 	if (!validatePayloadSize(body, VALIDATION_LIMITS.PAYLOAD_MAX_SIZE)) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			body,
 			query,
@@ -68,7 +68,7 @@ export async function validateRequest(
 		VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
 	);
 	if (!clientId) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			body,
 			query,
@@ -81,7 +81,7 @@ export async function validateRequest(
 
 	const website = await getWebsiteByIdV2(clientId);
 	if (!website || website.status !== "ACTIVE") {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			body,
 			query,
@@ -101,7 +101,7 @@ export async function validateRequest(
 			const data = await checkAutumnCached(website.ownerId);
 
 			if (data && !(data.allowed || data.overage_allowed)) {
-				await logBlockedTraffic(
+				logBlockedTraffic(
 					request,
 					body,
 					query,
@@ -120,7 +120,7 @@ export async function validateRequest(
 
 	const origin = request.headers.get("origin");
 	if (origin && !isValidOrigin(origin, website.domain)) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			body,
 			query,
@@ -155,16 +155,16 @@ export async function validateRequest(
  * Check if request is from a bot
  * Returns error object if bot detected, undefined otherwise
  */
-export async function checkForBot(
+export function checkForBot(
 	request: Request,
 	body: any,
 	query: any,
 	clientId: string,
 	userAgent: string
-): Promise<{ error?: { status: string } } | undefined> {
+): { error?: { status: string } } | undefined {
 	const botCheck = detectBot(userAgent, request);
 	if (botCheck.isBot) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			body,
 			query,

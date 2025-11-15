@@ -167,9 +167,9 @@ sinks:
       user: "${CLICKHOUSE_USER}"
       password: "${CLICKHOUSE_PASSWORD}"
     batch:
-      max_events: 5000
+      max_events: 50000
       max_bytes: 5000000
-      timeout_secs: 5
+      timeout_secs: 60
     date_time_best_effort: true
     skip_unknown_fields: true
     encoding:

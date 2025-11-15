@@ -6,10 +6,7 @@ import { sanitizeString, VALIDATION_LIMITS } from "../utils/validation";
 import { logger } from "./logger";
 import { sendEvent } from "./producer";
 
-/**
- * Log blocked traffic for security and monitoring purposes
- */
-export async function logBlockedTraffic(
+async function _logBlockedTrafficAsync(
 	request: Request,
 	body: any,
 	_query: any,
@@ -105,4 +102,29 @@ export async function logBlockedTraffic(
 	} catch (error) {
 		logger.error({ error }, "Failed to log blocked traffic");
 	}
+}
+
+/**
+ * Log blocked traffic for security and monitoring purposes (fire-and-forget)
+ */
+export function logBlockedTraffic(
+	request: Request,
+	body: any,
+	query: any,
+	blockReason: string,
+	blockCategory: string,
+	botName?: string,
+	clientId?: string
+): void {
+	_logBlockedTrafficAsync(
+		request,
+		body,
+		query,
+		blockReason,
+		blockCategory,
+		botName,
+		clientId
+	).catch((error) => {
+		logger.error({ error }, "Failed to log blocked traffic");
+	});
 }
