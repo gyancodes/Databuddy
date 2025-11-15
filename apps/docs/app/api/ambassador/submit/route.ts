@@ -1,9 +1,10 @@
+import { createLogger } from "@databuddy/shared/logger";
 import { type NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/discord-webhook";
 import { formRateLimit } from "@/lib/rate-limit";
 
-// Type for ambassador form data
-interface AmbassadorFormData {
+const logger = createLogger("ambassador-form");
+
+type AmbassadorFormData = {
 	name: string;
 	email: string;
 	xHandle?: string;
@@ -115,10 +116,9 @@ export async function POST(request: NextRequest) {
 		const rateLimitResult = formRateLimit.check(clientIP);
 
 		if (!rateLimitResult.allowed) {
-			await logger.warning(
-				"Ambassador Form Rate Limited",
-				`IP ${clientIP} exceeded rate limit for ambassador form submissions`,
-				{ ip: clientIP, resetTime: rateLimitResult.resetTime }
+			logger.info(
+				{ ip: clientIP, resetTime: rateLimitResult.resetTime },
+				`IP ${clientIP} exceeded rate limit for ambassador form submissions`
 			);
 
 			return NextResponse.json(
@@ -135,10 +135,9 @@ export async function POST(request: NextRequest) {
 		const validation = validateFormData(formData);
 
 		if (!validation.valid) {
-			await logger.warning(
-				"Ambassador Form Validation Failed",
-				"Form submission failed validation",
-				{ errors: validation.errors, ip: clientIP }
+			logger.info(
+				{ errors: validation.errors, ip: clientIP },
+				"Form submission failed validation"
 			);
 
 			return NextResponse.json(
@@ -149,10 +148,7 @@ export async function POST(request: NextRequest) {
 
 		const ambassadorData = formData as AmbassadorFormData;
 
-		// Log successful submission
-		await logger.success(
-			"New Ambassador Application",
-			`${ambassadorData.name} (${ambassadorData.email}) submitted an ambassador application`,
+		logger.info(
 			{
 				name: ambassadorData.name,
 				email: ambassadorData.email,
@@ -164,8 +160,8 @@ export async function POST(request: NextRequest) {
 				referralSource: ambassadorData.referralSource || "Not provided",
 				ip: clientIP,
 				userAgent: request.headers.get("user-agent"),
-				timestamp: new Date().toISOString(),
-			}
+			},
+			`${ambassadorData.name} (${ambassadorData.email}) submitted an ambassador application`
 		);
 
 		return NextResponse.json({
@@ -173,14 +169,13 @@ export async function POST(request: NextRequest) {
 			message: "Ambassador application submitted successfully",
 		});
 	} catch (error) {
-		await logger.exception(
-			error instanceof Error
-				? error
-				: new Error("Unknown error in ambassador form submission"),
+		logger.error(
 			{
 				ip: getClientIP(request),
-				userAgent: request.headers.get("user-agent"),
-			}
+				userAgent: request.headers.get("user-agent") || "unknown",
+				error: error instanceof Error ? error.message : String(error),
+			},
+			"Unknown error in ambassador form submission"
 		);
 
 		return NextResponse.json(
