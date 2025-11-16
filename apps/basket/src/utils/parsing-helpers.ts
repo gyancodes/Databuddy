@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import { logBlockedTraffic } from "../lib/blocked-traffic";
+import { setAttributes } from "../lib/tracing";
 import { VALIDATION_LIMITS } from "./validation";
 
 type ParseResult<T> =
@@ -32,6 +33,11 @@ export function validateEventSchema<T>(
 			undefined,
 			clientId
 		);
+		setAttributes({
+			"validation.failed": true,
+			"validation.reason": "invalid_schema",
+			"schema.error_count": parseResult.error.issues.length,
+		});
 		return {
 			success: false,
 			error: { issues: parseResult.error.issues },

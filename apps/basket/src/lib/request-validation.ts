@@ -215,6 +215,13 @@ export function checkForBot(
 			botCheck.botName,
 			clientId
 		);
+		setAttributes({
+			"validation.failed": true,
+			"validation.reason": "bot_detected",
+			"bot.name": botCheck.botName || "unknown",
+			"bot.category": botCheck.category || "Bot Detection",
+			"bot.detection_reason": botCheck.reason || "unknown_bot",
+		});
 		return { error: { status: "ignored" } };
 	}
 	return;
