@@ -7,7 +7,7 @@ COPY package.json bun.lock turbo.json ./
 COPY apps/ ./apps/
 COPY packages/ ./packages/
 
-RUN bun install --production
+RUN bun install
 
 RUN bunx turbo build --filter=@databuddy/api...
 
