@@ -1,20 +1,37 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
-import { appRouter, createRPCContext } from "@databuddy/rpc";
+import {
+	appRouter,
+	createAbortSignalInterceptor,
+	createRPCContext,
+	recordORPCError,
+	setupUncaughtErrorHandlers,
+} from "@databuddy/rpc";
 import { logger } from "@databuddy/shared/logger";
 import cors from "@elysiajs/cors";
-import { onError } from "@orpc/server";
+import { context } from "@opentelemetry/api";
+import { ORPCError, onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { autumnHandler } from "autumn-js/elysia";
 import { Elysia } from "elysia";
+import {
+	endRequestSpan,
+	initTracing,
+	shutdownTracing,
+	startRequestSpan,
+} from "./lib/tracing";
 import { assistant } from "./routes/assistant";
 import { exportRoute } from "./routes/export";
 import { health } from "./routes/health";
 import { publicApi } from "./routes/public";
 import { query } from "./routes/query";
 
+initTracing();
+setupUncaughtErrorHandlers();
+
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
+		createAbortSignalInterceptor(),
 		onError((error) => {
 			logger.error(error);
 		}),
@@ -22,6 +39,11 @@ const rpcHandler = new RPCHandler(appRouter, {
 });
 
 const app = new Elysia()
+	.state("tracing", {
+		span: null as ReturnType<typeof startRequestSpan>["span"] | null,
+		activeContext: null as ReturnType<typeof context.active> | null | undefined,
+		startTime: 0,
+	})
 	.use(
 		cors({
 			credentials: true,
@@ -35,6 +57,31 @@ const app = new Elysia()
 	)
 	.use(publicApi)
 	.use(health)
+	.onBeforeHandle(function startTrace({ request, path, store }) {
+		const method = request.method;
+		const startTime = Date.now();
+
+		// Extract route from path (e.g., "/rpc/websites.list" -> "websites.list")
+		const route = path.startsWith("/rpc/") ? path.slice(5) : path;
+		const { span, activeContext } = startRequestSpan(
+			method,
+			request.url,
+			route
+		);
+
+		// Store span, context, and start time in Elysia store
+		store.tracing = {
+			span,
+			activeContext,
+			startTime,
+		};
+	})
+	.onAfterHandle(function endTrace({ response, store }) {
+		if (store.tracing?.span && store.tracing.startTime) {
+			const statusCode = response instanceof Response ? response.status : 200;
+			endRequestSpan(store.tracing.span, statusCode, store.tracing.startTime);
+		}
+	})
 	.use(
 		autumnHandler({
 			identify: async ({ request }) => {
@@ -62,17 +109,35 @@ const app = new Elysia()
 	.use(exportRoute)
 	.all(
 		"/rpc/*",
-		async ({ request }) => {
+		async ({ request, store }) => {
 			try {
 				const rpcContext = await createRPCContext({
 					headers: request.headers,
 				});
-				const { response } = await rpcHandler.handle(request, {
-					prefix: "/rpc",
-					context: rpcContext,
-				});
+
+				const handler = async () => {
+					const { response } = await rpcHandler.handle(request, {
+						prefix: "/rpc",
+						context: rpcContext,
+					});
+					return response;
+				};
+
+				const activeContext = store.tracing?.activeContext;
+				const response = activeContext
+					? await context.with(activeContext, handler)
+					: await handler();
+
 				return response ?? new Response("Not Found", { status: 404 });
 			} catch (error) {
+				// Record ORPC errors in OpenTelemetry
+				if (error instanceof ORPCError) {
+					recordORPCError({
+						code: error.code,
+						message: error.message,
+					});
+				}
+
 				logger.error({ error }, "RPC handler failed");
 				return new Response("Internal Server Error", { status: 500 });
 			}
@@ -81,7 +146,12 @@ const app = new Elysia()
 			parse: "none",
 		}
 	)
-	.onError(function handleError({ error, code }) {
+	.onError(function handleError({ error, code, store }) {
+		if (store.tracing?.span && store.tracing.startTime) {
+			const statusCode = code === "NOT_FOUND" ? 404 : 500;
+			endRequestSpan(store.tracing.span, statusCode, store.tracing.startTime);
+		}
+
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		logger.error({ error, code }, errorMessage);
 
@@ -100,12 +170,18 @@ export default {
 	port: 3001,
 };
 
-process.on("SIGINT", () => {
+process.on("SIGINT", async () => {
 	logger.info("SIGINT received, shutting down gracefully...");
+	await shutdownTracing().catch((error) =>
+		logger.error({ error }, "Shutdown error")
+	);
 	process.exit(0);
 });
 
-process.on("SIGTERM", () => {
+process.on("SIGTERM", async () => {
 	logger.info("SIGTERM received, shutting down gracefully...");
+	await shutdownTracing().catch((error) =>
+		logger.error({ error }, "Shutdown error")
+	);
 	process.exit(0);
 });

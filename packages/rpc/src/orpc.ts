@@ -8,10 +8,13 @@ import {
 } from "./lib/otel";
 
 export const createRPCContext = async (opts: { headers: Headers }) => {
+
 	const session = await auth.api.getSession({
 		headers: opts.headers,
 	});
 
+	console.log("createRPCContext", session);
+	console.log("createRPCContext", opts.headers);
 	return {
 		db,
 		auth,
@@ -46,6 +49,7 @@ export const protectedProcedure = os.use(({ context, next }) => {
 	}
 
 	if (!(context.user && context.session)) {
+		console.log("UNAUTHORIZED", context.user, context.session);
 		recordORPCError({ code: "UNAUTHORIZED" });
 		throw new ORPCError("UNAUTHORIZED");
 	}
