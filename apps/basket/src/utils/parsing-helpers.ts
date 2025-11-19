@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import { logBlockedTraffic } from "../lib/blocked-traffic";
-import { setAttributes } from "../lib/tracing";
+import { record, setAttributes } from "../lib/tracing";
 import { VALIDATION_LIMITS } from "./validation";
 
 type ParseResult<T> =
@@ -16,35 +16,37 @@ export function validateEventSchema<T>(
 	request: Request,
 	query: unknown,
 	clientId: string
-): ParseResult<T> {
-	if (process.env.NODE_ENV === "development") {
-		return { success: true, data: event as T };
-	}
+): Promise<ParseResult<T>> {
+	return record("validateEventSchema", async () => {
+		if (process.env.NODE_ENV === "development") {
+			return { success: true, data: event as T };
+		}
 
-	const parseResult = schema.safeParse(event);
+		const parseResult = await schema.safeParseAsync(event);
 
-	if (!parseResult.success) {
-		logBlockedTraffic(
-			request,
-			event,
-			query,
-			"invalid_schema",
-			"Schema Validation",
-			undefined,
-			clientId
-		);
-		setAttributes({
-			"validation.failed": true,
-			"validation.reason": "invalid_schema",
-			"schema.error_count": parseResult.error.issues.length,
-		});
-		return {
-			success: false,
-			error: { issues: parseResult.error.issues },
-		};
-	}
+		if (!parseResult.success) {
+			logBlockedTraffic(
+				request,
+				event,
+				query,
+				"invalid_schema",
+				"Schema Validation",
+				undefined,
+				clientId
+			);
+			setAttributes({
+				"validation.failed": true,
+				"validation.reason": "invalid_schema",
+				"schema.error_count": parseResult.error.issues.length,
+			});
+			return {
+				success: false,
+				error: { issues: parseResult.error.issues },
+			};
+		}
 
-	return parseResult;
+		return parseResult;
+	});
 }
 
 /**

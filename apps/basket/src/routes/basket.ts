@@ -20,7 +20,7 @@ import {
 	insertWebVitalsBatch,
 } from "../lib/event-service";
 import { checkForBot, validateRequest } from "../lib/request-validation";
-import { captureError } from "../lib/tracing";
+import { captureError, record } from "../lib/tracing";
 
 import {
 	analyticsEventSchema,
@@ -47,203 +47,213 @@ import {
 	validateSessionId,
 } from "../utils/validation";
 
-async function processTrackEventData(
+function processTrackEventData(
 	trackData: any,
 	clientId: string,
 	userAgent: string,
 	ip: string
 ): Promise<AnalyticsEvent> {
-	const eventId = parseEventId(trackData.eventId, randomUUID);
+	return record("processTrackEventData", async () => {
+		const eventId = parseEventId(trackData.eventId, randomUUID);
 
-	const [geoData, uaData] = await Promise.all([
-		getGeo(ip),
-		parseUserAgent(userAgent),
-	]);
+		const [geoData, uaData] = await Promise.all([
+			getGeo(ip),
+			parseUserAgent(userAgent),
+		]);
 
-	const { anonymizedIP, country, region, city } = geoData;
-	const {
-		browserName,
-		browserVersion,
-		osName,
-		osVersion,
-		deviceType,
-		deviceBrand,
-		deviceModel,
-	} = uaData;
+		const { anonymizedIP, country, region, city } = geoData;
+		const {
+			browserName,
+			browserVersion,
+			osName,
+			osVersion,
+			deviceType,
+			deviceBrand,
+			deviceModel,
+		} = uaData;
 
-	const now = Date.now();
-	const timestamp = parseTimestamp(trackData.timestamp);
-	const sessionStartTime = parseTimestamp(trackData.sessionStartTime);
+		const now = Date.now();
+		const timestamp = parseTimestamp(trackData.timestamp);
+		const sessionStartTime = parseTimestamp(trackData.sessionStartTime);
 
-	return {
-		id: randomUUID(),
-		client_id: clientId,
-		event_name: sanitizeString(
-			trackData.name,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
-		anonymous_id: sanitizeString(
-			trackData.anonymousId,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
-		time: timestamp,
-		session_id: validateSessionId(trackData.sessionId),
-		event_type: "track",
-		event_id: eventId,
-		session_start_time: sessionStartTime,
-		timestamp,
-		referrer: sanitizeString(
-			trackData.referrer,
-			VALIDATION_LIMITS.STRING_MAX_LENGTH
-		),
-		url: sanitizeString(trackData.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		path: sanitizeString(trackData.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		title: sanitizeString(trackData.title, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		ip: anonymizedIP || "",
-		user_agent: "",
-		browser_name: browserName || "",
-		browser_version: browserVersion || "",
-		os_name: osName || "",
-		os_version: osVersion || "",
-		device_type: deviceType || "",
-		device_brand: deviceBrand || "",
-		device_model: deviceModel || "",
-		country: country || "",
-		region: region || "",
-		city: city || "",
-		screen_resolution: trackData.screen_resolution,
-		viewport_size: trackData.viewport_size,
-		language: trackData.language,
-		timezone: trackData.timezone,
-		connection_type: trackData.connection_type,
-		rtt: trackData.rtt,
-		downlink: trackData.downlink,
-		time_on_page: trackData.time_on_page,
-		scroll_depth: trackData.scroll_depth,
-		interaction_count: trackData.interaction_count,
-		page_count: trackData.page_count || 1,
-		utm_source: trackData.utm_source,
-		utm_medium: trackData.utm_medium,
-		utm_campaign: trackData.utm_campaign,
-		utm_term: trackData.utm_term,
-		utm_content: trackData.utm_content,
-		load_time: validatePerformanceMetric(trackData.load_time),
-		dom_ready_time: validatePerformanceMetric(trackData.dom_ready_time),
-		dom_interactive: validatePerformanceMetric(trackData.dom_interactive),
-		ttfb: validatePerformanceMetric(trackData.ttfb),
-		connection_time: validatePerformanceMetric(trackData.connection_time),
-		render_time: validatePerformanceMetric(trackData.render_time),
-		redirect_time: validatePerformanceMetric(trackData.redirect_time),
-		domain_lookup_time: validatePerformanceMetric(trackData.domain_lookup_time),
-		properties: parseProperties(trackData.properties),
-		created_at: now,
-	};
+		return {
+			id: randomUUID(),
+			client_id: clientId,
+			event_name: sanitizeString(
+				trackData.name,
+				VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+			),
+			anonymous_id: sanitizeString(
+				trackData.anonymousId,
+				VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+			),
+			time: timestamp,
+			session_id: validateSessionId(trackData.sessionId),
+			event_type: "track",
+			event_id: eventId,
+			session_start_time: sessionStartTime,
+			timestamp,
+			referrer: sanitizeString(
+				trackData.referrer,
+				VALIDATION_LIMITS.STRING_MAX_LENGTH
+			),
+			url: sanitizeString(trackData.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			path: sanitizeString(trackData.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			title: sanitizeString(trackData.title, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			ip: anonymizedIP || "",
+			user_agent: "",
+			browser_name: browserName || "",
+			browser_version: browserVersion || "",
+			os_name: osName || "",
+			os_version: osVersion || "",
+			device_type: deviceType || "",
+			device_brand: deviceBrand || "",
+			device_model: deviceModel || "",
+			country: country || "",
+			region: region || "",
+			city: city || "",
+			screen_resolution: trackData.screen_resolution,
+			viewport_size: trackData.viewport_size,
+			language: trackData.language,
+			timezone: trackData.timezone,
+			connection_type: trackData.connection_type,
+			rtt: trackData.rtt,
+			downlink: trackData.downlink,
+			time_on_page: trackData.time_on_page,
+			scroll_depth: trackData.scroll_depth,
+			interaction_count: trackData.interaction_count,
+			page_count: trackData.page_count || 1,
+			utm_source: trackData.utm_source,
+			utm_medium: trackData.utm_medium,
+			utm_campaign: trackData.utm_campaign,
+			utm_term: trackData.utm_term,
+			utm_content: trackData.utm_content,
+			load_time: validatePerformanceMetric(trackData.load_time),
+			dom_ready_time: validatePerformanceMetric(trackData.dom_ready_time),
+			dom_interactive: validatePerformanceMetric(trackData.dom_interactive),
+			ttfb: validatePerformanceMetric(trackData.ttfb),
+			connection_time: validatePerformanceMetric(trackData.connection_time),
+			render_time: validatePerformanceMetric(trackData.render_time),
+			redirect_time: validatePerformanceMetric(trackData.redirect_time),
+			domain_lookup_time: validatePerformanceMetric(
+				trackData.domain_lookup_time
+			),
+			properties: parseProperties(trackData.properties),
+			created_at: now,
+		};
+	});
 }
 
-async function processErrorEventData(
+function processErrorEventData(
 	errorData: any,
 	clientId: string,
 	userAgent: string,
 	ip: string
 ): Promise<ErrorEvent> {
-	const payload = errorData.payload;
-	const eventId = parseEventId(payload.eventId, randomUUID);
-	const now = Date.now();
-	const timestamp = parseTimestamp(payload.timestamp);
+	return record("processErrorEventData", async () => {
+		const payload = errorData.payload;
+		const eventId = parseEventId(payload.eventId, randomUUID);
+		const now = Date.now();
+		const timestamp = parseTimestamp(payload.timestamp);
 
-	const [geoData, uaData] = await Promise.all([
-		getGeo(ip),
-		parseUserAgent(userAgent),
-	]);
+		const [geoData, uaData] = await Promise.all([
+			getGeo(ip),
+			parseUserAgent(userAgent),
+		]);
 
-	const { anonymizedIP, country, region } = geoData;
-	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
+		const { anonymizedIP, country, region } = geoData;
+		const { browserName, browserVersion, osName, osVersion, deviceType } =
+			uaData;
 
-	return {
-		id: randomUUID(),
-		client_id: clientId,
-		event_id: eventId,
-		anonymous_id: sanitizeString(
-			payload.anonymousId,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
-		session_id: validateSessionId(payload.sessionId),
-		timestamp,
-		path: sanitizeString(payload.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		message: sanitizeString(
-			payload.message,
-			VALIDATION_LIMITS.STRING_MAX_LENGTH
-		),
-		filename: sanitizeString(
-			payload.filename,
-			VALIDATION_LIMITS.STRING_MAX_LENGTH
-		),
-		lineno: payload.lineno,
-		colno: payload.colno,
-		stack: sanitizeString(payload.stack, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		error_type: sanitizeString(
-			payload.errorType,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
-		ip: anonymizedIP || "",
-		user_agent: "",
-		country: country || "",
-		region: region || "",
-		browser_name: browserName || "",
-		browser_version: browserVersion || "",
-		os_name: osName || "",
-		os_version: osVersion || "",
-		device_type: deviceType || "",
-		created_at: now,
-	};
+		return {
+			id: randomUUID(),
+			client_id: clientId,
+			event_id: eventId,
+			anonymous_id: sanitizeString(
+				payload.anonymousId,
+				VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+			),
+			session_id: validateSessionId(payload.sessionId),
+			timestamp,
+			path: sanitizeString(payload.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			message: sanitizeString(
+				payload.message,
+				VALIDATION_LIMITS.STRING_MAX_LENGTH
+			),
+			filename: sanitizeString(
+				payload.filename,
+				VALIDATION_LIMITS.STRING_MAX_LENGTH
+			),
+			lineno: payload.lineno,
+			colno: payload.colno,
+			stack: sanitizeString(payload.stack, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			error_type: sanitizeString(
+				payload.errorType,
+				VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+			),
+			ip: anonymizedIP || "",
+			user_agent: "",
+			country: country || "",
+			region: region || "",
+			browser_name: browserName || "",
+			browser_version: browserVersion || "",
+			os_name: osName || "",
+			os_version: osVersion || "",
+			device_type: deviceType || "",
+			created_at: now,
+		};
+	});
 }
 
-async function processWebVitalsEventData(
+function processWebVitalsEventData(
 	vitalsData: any,
 	clientId: string,
 	userAgent: string,
 	ip: string
 ): Promise<WebVitalsEvent> {
-	const payload = vitalsData.payload;
-	const eventId = parseEventId(payload.eventId, randomUUID);
-	const now = Date.now();
-	const timestamp = parseTimestamp(payload.timestamp);
+	return record("processWebVitalsEventData", async () => {
+		const payload = vitalsData.payload;
+		const eventId = parseEventId(payload.eventId, randomUUID);
+		const now = Date.now();
+		const timestamp = parseTimestamp(payload.timestamp);
 
-	const [geoData, uaData] = await Promise.all([
-		getGeo(ip),
-		parseUserAgent(userAgent),
-	]);
+		const [geoData, uaData] = await Promise.all([
+			getGeo(ip),
+			parseUserAgent(userAgent),
+		]);
 
-	const { country, region } = geoData;
-	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
+		const { country, region } = geoData;
+		const { browserName, browserVersion, osName, osVersion, deviceType } =
+			uaData;
 
-	return {
-		id: randomUUID(),
-		client_id: clientId,
-		event_id: eventId,
-		anonymous_id: sanitizeString(
-			payload.anonymousId,
-			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-		),
-		session_id: validateSessionId(payload.sessionId),
-		timestamp,
-		path: sanitizeString(payload.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
-		fcp: validatePerformanceMetric(payload.fcp),
-		lcp: validatePerformanceMetric(payload.lcp),
-		cls: validatePerformanceMetric(payload.cls),
-		fid: validatePerformanceMetric(payload.fid),
-		inp: validatePerformanceMetric(payload.inp),
-		ip: "",
-		user_agent: "",
-		country: country || "",
-		region: region || "",
-		browser_name: browserName || "",
-		browser_version: browserVersion || "",
-		os_name: osName || "",
-		os_version: osVersion || "",
-		device_type: deviceType || "",
-		created_at: now,
-	};
+		return {
+			id: randomUUID(),
+			client_id: clientId,
+			event_id: eventId,
+			anonymous_id: sanitizeString(
+				payload.anonymousId,
+				VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+			),
+			session_id: validateSessionId(payload.sessionId),
+			timestamp,
+			path: sanitizeString(payload.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			fcp: validatePerformanceMetric(payload.fcp),
+			lcp: validatePerformanceMetric(payload.lcp),
+			cls: validatePerformanceMetric(payload.cls),
+			fid: validatePerformanceMetric(payload.fid),
+			inp: validatePerformanceMetric(payload.inp),
+			ip: "",
+			user_agent: "",
+			country: country || "",
+			region: region || "",
+			browser_name: browserName || "",
+			browser_version: browserVersion || "",
+			os_name: osName || "",
+			os_version: osVersion || "",
+			device_type: deviceType || "",
+			created_at: now,
+		};
+	});
 }
 
 function processCustomEventData(

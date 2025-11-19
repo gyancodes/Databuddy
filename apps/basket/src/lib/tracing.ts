@@ -63,11 +63,22 @@ function getTracer() {
 export function record<T>(name: string, fn: () => Promise<T> | T): Promise<T> {
 	const tracer = getTracer();
 	return tracer.startActiveSpan(name, async (span) => {
+		const startTime = Date.now();
 		try {
 			const result = await fn();
+			const duration = Date.now() - startTime;
+			span.setAttribute("operation.duration_ms", duration);
+
+			if (duration > 1000) {
+				span.setAttribute("operation.slow", true);
+				span.setAttribute("operation.duration_seconds", duration / 1000);
+			}
+
 			span.setStatus({ code: SpanStatusCode.OK });
 			return result;
 		} catch (error) {
+			const duration = Date.now() - startTime;
+			span.setAttribute("operation.duration_ms", duration);
 			span.setStatus({
 				code: SpanStatusCode.ERROR,
 				message: error instanceof Error ? error.message : String(error),
@@ -145,8 +156,15 @@ export function endRequestSpan(
 	statusCode: number,
 	startTime: number
 ): void {
+	const duration = Date.now() - startTime;
 	span.setAttribute("http.status_code", statusCode);
-	span.setAttribute("http.response.duration_ms", Date.now() - startTime);
+	span.setAttribute("http.response.duration_ms", duration);
+
+	if (duration > 500) {
+		span.setAttribute("http.slow", true);
+		span.setAttribute("http.duration_seconds", duration / 1000);
+	}
+
 	span.setStatus({
 		code: statusCode >= 400 ? SpanStatusCode.ERROR : SpanStatusCode.OK,
 		message: statusCode >= 400 ? `HTTP ${statusCode}` : undefined,

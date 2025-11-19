@@ -199,27 +199,29 @@ export function checkForBot(
 	query: any,
 	clientId: string,
 	userAgent: string
-): { error?: { status: string } } | undefined {
-	const botCheck = detectBot(userAgent, request);
-	if (botCheck.isBot) {
-		logBlockedTraffic(
-			request,
-			body,
-			query,
-			botCheck.reason || "unknown_bot",
-			botCheck.category || "Bot Detection",
-			botCheck.botName,
-			clientId
-		);
-		setAttributes({
-			"validation.failed": true,
-			"validation.reason": "bot_detected",
-			"bot.name": botCheck.botName || "unknown",
-			"bot.category": botCheck.category || "Bot Detection",
-			"bot.detection_reason": botCheck.reason || "unknown_bot",
-		});
-		return { error: { status: "ignored" } };
-	}
-	return;
+): Promise<{ error?: { status: string } } | undefined> {
+	return record("checkForBot", () => {
+		const botCheck = detectBot(userAgent, request);
+		if (botCheck.isBot) {
+			logBlockedTraffic(
+				request,
+				body,
+				query,
+				botCheck.reason || "unknown_bot",
+				botCheck.category || "Bot Detection",
+				botCheck.botName,
+				clientId
+			);
+			setAttributes({
+				"validation.failed": true,
+				"validation.reason": "bot_detected",
+				"bot.name": botCheck.botName || "unknown",
+				"bot.category": botCheck.category || "Bot Detection",
+				"bot.detection_reason": botCheck.reason || "unknown_bot",
+			});
+			return { error: { status: "ignored" } };
+		}
+		return;
+	});
 }
 
