@@ -1,8 +1,8 @@
 import "./global.css";
+import { Databuddy } from "@databuddy/sdk/react";
 import { RootProvider } from "fumadocs-ui/provider";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Manrope } from "next/font/google";
-import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
@@ -91,18 +91,14 @@ export default function Layout({ children }: { children: ReactNode }) {
 			lang="en"
 			suppressHydrationWarning
 		>
-			{/* <Databuddy
+			<Databuddy
 				clientId="OXmNQsViBT-FOS_wZCTHc"
 				disabled={process.env.NODE_ENV === "development"}
+				scriptUrl="https://databuddy.b-cdn.net/databuddy.js"
 				trackAttributes
 				trackErrors
 				trackOutgoingLinks
 				trackWebVitals
-			/> */}
-			<Script
-				async
-				data-client-id="OXmNQsViBT-FOS_wZCTHc"
-				src="https://databuddy.b-cdn.net/databuddy.js"
 			/>
 			<body>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>

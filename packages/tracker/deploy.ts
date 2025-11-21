@@ -1,7 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { confirm } from "@inquirer/prompts";
-import { file } from "bun";
+import { file, hash } from "bun";
 import chalk from "chalk";
 import { Command } from "commander";
 
@@ -12,18 +11,21 @@ program
     .description("Deploy Databuddy tracker scripts to Bunny.net Storage")
     .option("-d, --dry-run", "Simulate the deployment without uploading files")
     .option("-y, --yes", "Skip confirmation prompt")
+    .option("-f, --force", "Force upload even if hash matches")
     .option("-v, --verbose", "Enable verbose logging")
     .parse(process.argv);
 
 const options = program.opts<{
     dryRun: boolean;
     yes: boolean;
+    force: boolean;
     verbose: boolean;
 }>();
 
 const STORAGE_ZONE_NAME = process.env.BUNNY_STORAGE_ZONE_NAME;
 const ACCESS_KEY = process.env.BUNNY_STORAGE_ACCESS_KEY;
 const REGION = process.env.BUNNY_STORAGE_REGION || "";
+const PUBLIC_CDN_URL = "https://databuddy.b-cdn.net";
 
 if (!STORAGE_ZONE_NAME) {
     console.error(chalk.red("❌ Missing BUNNY_STORAGE_ZONE_NAME env var"));
@@ -41,6 +43,24 @@ const BASE_URL = REGION
 
 const DIST_DIR = join(import.meta.dir, "dist");
 
+function getHash(content: string): string {
+    return hash(content).toString();
+}
+
+async function fetchRemoteHash(filename: string): Promise<string | null> {
+    try {
+        const url = `${PUBLIC_CDN_URL}/${filename}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+            return null;
+        }
+        const text = await response.text();
+        return getHash(text);
+    } catch {
+        return null;
+    }
+}
+
 async function uploadFile(filename: string) {
     const filePath = join(DIST_DIR, filename);
     const fileContent = file(filePath);
@@ -50,13 +70,26 @@ async function uploadFile(filename: string) {
         return;
     }
 
+    const content = await fileContent.text();
+    const localHash = getHash(content);
+    const remoteHash = await fetchRemoteHash(filename);
+
+    if (remoteHash === localHash && !options.force) {
+        if (options.verbose) {
+            console.log(chalk.gray(`⏭️  Skipping ${filename} (hash match)`));
+        } else {
+            console.log(chalk.gray(`⏭️  ${filename}`));
+        }
+        return;
+    }
+
     const url = `${BASE_URL}/${STORAGE_ZONE_NAME}/${filename}`;
     const size = (await fileContent.size) / 1024; // KB
 
     if (options.dryRun) {
         console.log(
             chalk.cyan(`[DRY RUN] Would upload ${chalk.bold(filename)}`) +
-            chalk.dim(` (${size.toFixed(2)} KB) to ${url}`),
+            chalk.dim(` (${size.toFixed(2)} KB) to ${url}`)
         );
         return;
     }
@@ -73,7 +106,7 @@ async function uploadFile(filename: string) {
                 AccessKey: ACCESS_KEY as string,
                 "Content-Type": "application/javascript",
             },
-            body: fileContent,
+            body: content, // Use text content to match hash calculation
         });
 
         if (!response.ok) {
@@ -83,8 +116,7 @@ async function uploadFile(filename: string) {
 
         const duration = (performance.now() - start).toFixed(0);
         console.log(
-            chalk.green(`✅ Uploaded ${filename}`) +
-            chalk.dim(` in ${duration}ms`),
+            chalk.green(`✅ Uploaded ${filename}`) + chalk.dim(` in ${duration}ms`)
         );
     } catch (error) {
         console.error(chalk.red(`❌ Failed to upload ${filename}:`), error);
@@ -96,7 +128,7 @@ async function deploy() {
     try {
         const files = await readdir(DIST_DIR);
         const jsFiles = files.filter(
-            (f) => f.endsWith(".js") || f.endsWith(".map"),
+            (f) => f.endsWith(".js") || f.endsWith(".map")
         );
 
         if (jsFiles.length === 0) {
@@ -106,8 +138,8 @@ async function deploy() {
 
         console.log(
             chalk.bold(
-                `\n🚀 Preparing to deploy ${jsFiles.length} files to ${chalk.cyan(STORAGE_ZONE_NAME)}...`,
-            ),
+                `\n🚀 Preparing to deploy ${jsFiles.length} files to ${chalk.cyan(STORAGE_ZONE_NAME)}...`
+            )
         );
 
         if (options.verbose) {
@@ -115,11 +147,24 @@ async function deploy() {
             console.log(chalk.dim(`Files: ${jsFiles.join(", ")}`));
         }
 
+        // Only prompt if not skipping checks and there are actual changes to deploy
+        // But we need to check hashes first to know if there are changes.
+        // For simplicity, we'll iterate files, check hash, and upload/skip.
+        // The prompt is "Are you sure you want to deploy these files?" implies ALL files.
+        // Let's keep the prompt before starting the process.
+
         const skipConfirmation = options.yes || options.dryRun;
 
         if (!skipConfirmation) {
+            // Ideally we would pre-calculate what NEEDS uploading, but that requires fetching all remote hashes first.
+            // Let's do a quick check or just prompt generally.
+            // Given the request is just "skip uploading if hash matches", we can do it per-file.
+            // But user might want to know WHAT will be uploaded before confirming.
+            // For now, let's keep the simple flow: Prompt -> Iterate & Check/Upload.
+
+            const { confirm } = await import("@inquirer/prompts");
             const answer = await confirm({
-                message: "Are you sure you want to deploy these files?",
+                message: "Are you sure you want to start the deployment process?",
                 default: false,
             });
 
@@ -133,13 +178,13 @@ async function deploy() {
 
         if (options.dryRun) {
             console.log(
-                chalk.cyan("\n✨ Dry run completed. No files were uploaded."),
+                chalk.cyan("\n✨ Dry run completed. No files were uploaded.")
             );
         } else {
             console.log(
                 chalk.green(
-                    `\n✨ Deployment completed successfully! (${jsFiles.length} files)`,
-                ),
+                    `\n✨ Deployment process completed! (${jsFiles.length} files processed)`
+                )
             );
         }
     } catch (error) {

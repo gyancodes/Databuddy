@@ -341,8 +341,8 @@ export type EventName = keyof EventTypeMap;
  */
 export type PropertiesForEvent<T extends EventName> =
 	T extends keyof EventTypeMap
-		? EventTypeMap[T] & EventProperties
-		: EventProperties;
+	? EventTypeMap[T] & EventProperties
+	: EventProperties;
 
 /**
  * Databuddy tracker instance interface

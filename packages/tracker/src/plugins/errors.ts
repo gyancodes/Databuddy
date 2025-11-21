@@ -71,7 +71,6 @@ export function initErrorTracking(tracker: BaseTracker) {
             try {
                 message = JSON.stringify(reason);
             } catch {
-                // Message remains String(reason) if stringify fails
             }
         }
 

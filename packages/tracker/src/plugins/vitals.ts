@@ -8,26 +8,26 @@ export function initWebVitalsTracking(tracker: BaseTracker) {
     }
 
     const metrics: {
-        fcp: number | null;
-        lcp: number | null;
+        fcp: number | undefined;
+        lcp: number | undefined;
         cls: number;
-        inp: number | null;
-        ttfb: number | null;
+        inp: number | undefined;
+        ttfb: number | undefined;
     } = {
-        fcp: null,
-        lcp: null,
+        fcp: undefined,
+        lcp: undefined,
         cls: 0,
-        inp: null,
-        ttfb: null,
+        inp: undefined,
+        ttfb: undefined,
     };
     let reported = false;
 
     const sendVitals = () => {
-        if (!Object.values(metrics).some((m) => m !== null && m !== 0)) {
+        if (!Object.values(metrics).some((m) => m !== undefined && m !== 0)) {
             return;
         }
 
-        const clamp = (v: number | null) =>
+        const clamp = (v: number | undefined) =>
             typeof v === "number" ? Math.min(60_000, Math.max(0, v)) : v;
 
         const payload = {
