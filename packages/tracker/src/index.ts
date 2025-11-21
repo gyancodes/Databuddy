@@ -8,11 +8,10 @@ import {
     initWebVitalsTracking,
 } from "./plugins";
 
-class Databuddy extends BaseTracker {
+export class Databuddy extends BaseTracker {
     constructor(options: TrackerOptions) {
         super(options);
 
-        // Initialize specialized trackers if enabled
         if (this.options.trackWebVitals) {
             initWebVitalsTracking(this);
         }

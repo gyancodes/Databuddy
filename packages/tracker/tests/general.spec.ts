@@ -12,7 +12,7 @@ test.describe("General Tracking", () => {
         });
     });
 
-    test("loads and initializes successfully", async ({ page }) => {
+    test("loads and initializes successfully via window.databuddyConfig", async ({ page }) => {
         await page.goto("/");
         await page.evaluate(() => {
             (window as any).databuddyConfig = { clientId: "test-client-id", ignoreBotDetection: true };
@@ -20,6 +20,43 @@ test.describe("General Tracking", () => {
         await page.addScriptTag({ url: "/dist/databuddy.js", type: "module" });
 
         await expect.poll(async () => await page.evaluate(() => !!(window as any).databuddy)).toBeTruthy();
+
+        const tracker = await page.evaluate(() => (window as any).databuddy.options);
+        expect(tracker.clientId).toBe("test-client-id");
+    });
+
+    test("initializes via data- attributes (classic script)", async ({ page }) => {
+        await page.goto("/");
+        // We inject a script tag manually to simulate classic script usage with data attributes
+        await page.evaluate(() => {
+            const script = document.createElement('script');
+            script.src = "/dist/databuddy.js";
+            script.setAttribute("data-client-id", "data-attr-client");
+            script.setAttribute("data-ignore-bot-detection", "true");
+            document.body.appendChild(script);
+        });
+
+        await expect.poll(async () => await page.evaluate(() => !!(window as any).databuddy)).toBeTruthy();
+
+        const tracker = await page.evaluate(() => (window as any).databuddy.options);
+        expect(tracker.clientId).toBe("data-attr-client");
+        expect(tracker.ignoreBotDetection).toBe(true);
+    });
+
+    test("initializes via query parameters (classic script)", async ({ page }) => {
+        await page.goto("/");
+        // We inject a script tag manually to simulate classic script usage with query params
+        await page.evaluate(() => {
+            const script = document.createElement('script');
+            script.src = "/dist/databuddy.js?clientId=query-param-client&ignoreBotDetection=true";
+            document.body.appendChild(script);
+        });
+
+        await expect.poll(async () => await page.evaluate(() => !!(window as any).databuddy)).toBeTruthy();
+
+        const tracker = await page.evaluate(() => (window as any).databuddy.options);
+        expect(tracker.clientId).toBe("query-param-client");
+        expect(tracker.ignoreBotDetection).toBe(true);
     });
 
     test("sends screen_view event on load", async ({ page }) => {
@@ -36,7 +73,7 @@ test.describe("General Tracking", () => {
         await page.evaluate(() => {
             (window as any).databuddyConfig = { clientId: "test-client-id", ignoreBotDetection: true };
         });
-        await page.addScriptTag({ url: "/dist/databuddy.js" });
+        await page.addScriptTag({ url: "/dist/databuddy.js" }); // Defaults to classic if not specified, or we can be explicit
 
         const request = await requestPromise;
         const payload = request.postDataJSON();
@@ -74,6 +111,10 @@ test.describe("General Tracking", () => {
 
     test("blocks tracking when bot detection is active (default)", async ({ page }) => {
         // Should NOT send a request if ignoreBotDetection is not set (default false)
+        // We need to make sure the browser context actually looks like a bot to Playwright (headless usually does)
+        // or we rely on the fact that we are NOT setting ignoreBotDetection: true.
+        // However, standard Playwright headless chrome matches HEADLESS_CHROME_REGEX.
+
         let requestSent = false;
         page.on("request", (req) => {
             if (req.url().includes("/basket.databuddy.cc/")) {
@@ -83,7 +124,7 @@ test.describe("General Tracking", () => {
 
         await page.goto("/");
         await page.evaluate(() => {
-            (window as any).databuddyConfig = { clientId: "test-client-id" };
+            (window as any).databuddyConfig = { clientId: "test-client-id" }; // ignoreBotDetection defaults to false
         });
         await page.addScriptTag({ url: "/dist/databuddy.js" });
 
