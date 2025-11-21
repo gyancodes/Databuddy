@@ -12,6 +12,9 @@ program
     .option("-d, --dry-run", "Simulate the deployment without uploading files")
     .option("-y, --yes", "Skip confirmation prompt")
     .option("-f, --force", "Force upload even if hash matches")
+    .option("-m, --message <text>", "Add a note to the deployment notification")
+    .option("--skip-notification", "Skip sending Discord notification")
+    .option("-p, --purge", "Only purge cache, skip deployment")
     .option("-v, --verbose", "Enable verbose logging")
     .parse(process.argv);
 
@@ -19,12 +22,18 @@ const options = program.opts<{
     dryRun: boolean;
     yes: boolean;
     force: boolean;
+    message?: string;
+    skipNotification?: boolean;
+    purge?: boolean;
     verbose: boolean;
 }>();
 
 const STORAGE_ZONE_NAME = process.env.BUNNY_STORAGE_ZONE_NAME;
 const ACCESS_KEY = process.env.BUNNY_STORAGE_ACCESS_KEY;
+const API_KEY = process.env.BUNNY_API_KEY;
+const PULL_ZONE_ID = process.env.BUNNY_PULL_ZONE_ID;
 const REGION = process.env.BUNNY_STORAGE_REGION || "";
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const PUBLIC_CDN_URL = "https://databuddy.b-cdn.net";
 
 if (!STORAGE_ZONE_NAME) {
@@ -61,37 +70,52 @@ async function fetchRemoteHash(filename: string): Promise<string | null> {
     }
 }
 
-async function uploadFile(filename: string) {
+async function checkFileStatus(filename: string): Promise<{
+    filename: string;
+    status: "changed" | "same" | "new" | "error";
+    size: number;
+    content?: string;
+}> {
     const filePath = join(DIST_DIR, filename);
     const fileContent = file(filePath);
 
     if (!(await fileContent.exists())) {
-        console.warn(chalk.yellow(`⚠️ File not found: ${filename}`));
-        return;
+        return { filename, status: "error", size: 0 };
     }
 
     const content = await fileContent.text();
     const localHash = getHash(content);
     const remoteHash = await fetchRemoteHash(filename);
+    const size = (await fileContent.size) / 1024; // KB
 
-    if (remoteHash === localHash && !options.force) {
-        if (options.verbose) {
-            console.log(chalk.gray(`⏭️  Skipping ${filename} (hash match)`));
-        } else {
-            console.log(chalk.gray(`⏭️  ${filename}`));
-        }
-        return;
+    if (!remoteHash) {
+        return { filename, status: "new", size, content };
     }
 
+    if (remoteHash !== localHash || options.force) {
+        return { filename, status: "changed", size, content };
+    }
+
+    return { filename, status: "same", size };
+}
+
+async function uploadFile(
+    filename: string,
+    content: string,
+    size: number
+): Promise<{
+    filename: string;
+    status: "uploaded" | "dry-run" | "error";
+    size: number;
+}> {
     const url = `${BASE_URL}/${STORAGE_ZONE_NAME}/${filename}`;
-    const size = (await fileContent.size) / 1024; // KB
 
     if (options.dryRun) {
         console.log(
             chalk.cyan(`[DRY RUN] Would upload ${chalk.bold(filename)}`) +
             chalk.dim(` (${size.toFixed(2)} KB) to ${url}`)
         );
-        return;
+        return { filename, status: "dry-run", size };
     }
 
     if (options.verbose) {
@@ -106,7 +130,7 @@ async function uploadFile(filename: string) {
                 AccessKey: ACCESS_KEY as string,
                 "Content-Type": "application/javascript",
             },
-            body: content, // Use text content to match hash calculation
+            body: content,
         });
 
         if (!response.ok) {
@@ -118,9 +142,97 @@ async function uploadFile(filename: string) {
         console.log(
             chalk.green(`✅ Uploaded ${filename}`) + chalk.dim(` in ${duration}ms`)
         );
+        return { filename, status: "uploaded", size };
     } catch (error) {
         console.error(chalk.red(`❌ Failed to upload ${filename}:`), error);
-        process.exit(1);
+        return { filename, status: "error", size };
+    }
+}
+
+async function sendDiscordNotification(
+    uploadedFiles: { filename: string; size: number }[],
+    message?: string
+) {
+    if (!DISCORD_WEBHOOK_URL) {
+        return;
+    }
+
+    try {
+        const totalSize = uploadedFiles.reduce((acc, f) => acc + f.size, 0);
+        const fileList = uploadedFiles
+            .map((f) => `- **${f.filename}** (${f.size.toFixed(2)} KB)`)
+            .join("\n");
+
+        const embed = {
+            title: "Tracker Scripts Deployed",
+            description: message
+                ? `> ${message}`
+                : "A new version of the tracker scripts has been deployed to the CDN.",
+            color: 5_763_719, // Green
+            fields: [
+                {
+                    name: "Updated Files",
+                    value: fileList,
+                    inline: false,
+                },
+                {
+                    name: "Deployment Stats",
+                    value: `**Total Size:** ${totalSize.toFixed(2)} KB\n**Files:** ${uploadedFiles.length}\n**Environment:** Production`,
+                    inline: false,
+                },
+            ],
+            timestamp: new Date().toISOString(),
+            footer: {
+                text: "Databuddy Tracker Deployment",
+            },
+        };
+
+        await fetch(DISCORD_WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] }),
+        });
+        console.log(chalk.blue("\n📨 Discord notification sent"));
+    } catch (error) {
+        console.error(
+            chalk.yellow("⚠️ Failed to send Discord notification:"),
+            error
+        );
+    }
+}
+
+async function purgePullZoneCache() {
+    if (!(API_KEY && PULL_ZONE_ID)) {
+        console.warn(
+            chalk.yellow(
+                "⚠️ Missing BUNNY_API_KEY or BUNNY_PULL_ZONE_ID. Skipping cache purge."
+            )
+        );
+        return;
+    }
+
+    try {
+        const url = `https://api.bunny.net/pullzone/${PULL_ZONE_ID}/purgeCache`;
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                AccessKey: API_KEY,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (response.status === 204 || response.ok) {
+            console.log(chalk.green("🧹 Successfully purged Pull Zone cache"));
+        } else {
+            const text = await response.text();
+            console.error(
+                chalk.red(
+                    `❌ Failed to purge Pull Zone cache: ${response.status} - ${text}`
+                )
+            );
+        }
+    } catch (error) {
+        console.error(chalk.red("❌ Failed to purge Pull Zone cache:"), error);
     }
 }
 
@@ -147,25 +259,43 @@ async function deploy() {
             console.log(chalk.dim(`Files: ${jsFiles.join(", ")}`));
         }
 
-        // Only prompt if not skipping checks and there are actual changes to deploy
-        // But we need to check hashes first to know if there are changes.
-        // For simplicity, we'll iterate files, check hash, and upload/skip.
-        // The prompt is "Are you sure you want to deploy these files?" implies ALL files.
-        // Let's keep the prompt before starting the process.
+        // Check file statuses first
+        console.log(chalk.dim("Checking for changes..."));
+        const fileStatuses = await Promise.all(jsFiles.map(checkFileStatus));
+
+        const changedFiles = fileStatuses.filter(
+            (f) => f.status === "changed" || f.status === "new"
+        );
+
+        if (changedFiles.length === 0) {
+            console.log(
+                chalk.green("✨ No changes detected. Everything is up to date.")
+            );
+            return;
+        }
+
+        console.log(
+            chalk.bold(
+                `\n📦 Found ${changedFiles.length} files to update in ${chalk.cyan(STORAGE_ZONE_NAME)}:`
+            )
+        );
+
+        for (const file of changedFiles) {
+            const icon = file.status === "new" ? "🆕" : "🔄";
+            console.log(
+                ` ${icon} ${chalk.white(file.filename)} ${chalk.dim(
+                    `(${file.size.toFixed(2)} KB)`
+                )}`
+            );
+        }
 
         const skipConfirmation = options.yes || options.dryRun;
 
         if (!skipConfirmation) {
-            // Ideally we would pre-calculate what NEEDS uploading, but that requires fetching all remote hashes first.
-            // Let's do a quick check or just prompt generally.
-            // Given the request is just "skip uploading if hash matches", we can do it per-file.
-            // But user might want to know WHAT will be uploaded before confirming.
-            // For now, let's keep the simple flow: Prompt -> Iterate & Check/Upload.
-
             const { confirm } = await import("@inquirer/prompts");
             const answer = await confirm({
-                message: "Are you sure you want to start the deployment process?",
-                default: false,
+                message: "Do you want to proceed with the deployment?",
+                default: true,
             });
 
             if (!answer) {
@@ -174,7 +304,20 @@ async function deploy() {
             }
         }
 
-        await Promise.all(jsFiles.map(uploadFile));
+        const uploadPromises = changedFiles.map((f) => {
+            if (!f.content) {
+                // Should not happen given checkFileStatus logic for changed/new
+                return Promise.resolve({
+                    filename: f.filename,
+                    status: "error" as const,
+                    size: 0,
+                });
+            }
+            return uploadFile(f.filename, f.content, f.size);
+        });
+
+        const results = await Promise.all(uploadPromises);
+        const uploaded = results.filter((r) => r.status === "uploaded");
 
         if (options.dryRun) {
             console.log(
@@ -183,9 +326,22 @@ async function deploy() {
         } else {
             console.log(
                 chalk.green(
-                    `\n✨ Deployment process completed! (${jsFiles.length} files processed)`
+                    `\n✨ Deployment process completed! (${uploaded.length} files updated)`
                 )
             );
+
+            if (uploaded.length > 0) {
+                console.log(chalk.dim("\n🧹 Purging Pull Zone cache..."));
+                await purgePullZoneCache();
+
+                if (options.skipNotification) {
+                    console.log(
+                        chalk.gray("🔕 Skipping Discord notification (--skip-notification)")
+                    );
+                } else {
+                    await sendDiscordNotification(uploaded, options.message);
+                }
+            }
         }
     } catch (error) {
         console.error(chalk.red("❌ Deployment failed:"), error);
@@ -193,4 +349,14 @@ async function deploy() {
     }
 }
 
-deploy();
+if (options.purge) {
+    console.log(chalk.bold("\n🧹 Purging Pull Zone cache..."));
+    purgePullZoneCache().then(() => {
+        process.exit(0);
+    }).catch((error) => {
+        console.error(chalk.red("❌ Purge failed:"), error);
+        process.exit(1);
+    });
+} else {
+    deploy();
+}
