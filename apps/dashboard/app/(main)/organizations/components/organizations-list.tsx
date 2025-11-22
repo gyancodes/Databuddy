@@ -7,6 +7,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { Organization } from "@/components/providers/organizations-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,13 +17,11 @@ import { EmptyState } from "./empty-state";
 
 dayjs.extend(relativeTime);
 
-interface OrganizationsListProps {
-	organizations: ReturnType<typeof authClient.useListOrganizations>["data"];
-	activeOrganization: ReturnType<
-		typeof authClient.useActiveOrganization
-	>["data"];
+type OrganizationsListProps = {
+	organizations: Organization[] | null | undefined;
+	activeOrganization: Organization | null | undefined;
 	isLoading: boolean;
-}
+};
 
 function OrganizationSkeleton() {
 	return (

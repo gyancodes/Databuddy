@@ -7,6 +7,7 @@ import { AutumnProvider } from "autumn-js/react";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState } from "react";
+import { OrganizationsProvider } from "@/components/providers/organizations-provider";
 
 const defaultQueryClientOptions = {
 	defaultOptions: {
@@ -51,7 +52,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 							process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 						}
 					>
-						<NuqsAdapter>{children}</NuqsAdapter>
+						<OrganizationsProvider>
+							<NuqsAdapter>{children}</NuqsAdapter>
+						</OrganizationsProvider>
 					</AutumnProvider>
 				</FlagsProviderWrapper>
 			</QueryClientProvider>

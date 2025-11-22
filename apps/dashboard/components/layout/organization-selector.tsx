@@ -8,9 +8,10 @@ import {
 	SpinnerGapIcon,
 	UserIcon,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
+import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -125,16 +126,40 @@ function OrganizationSelectorTrigger({
 }
 
 export function OrganizationSelector() {
-	const { data: organizations, isPending: isLoadingOrgs } =
-		authClient.useListOrganizations();
-	const { data: activeOrganization, isPending: isLoadingActive } =
-		authClient.useActiveOrganization();
+	const { organizations, activeOrganization, isLoading } =
+		useOrganizationsContext();
 	const [isOpen, setIsOpen] = useState(false);
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
 	const [query, setQuery] = useState("");
 	const [isSwitching, setIsSwitching] = useState(false);
 
-	const isLoading = isLoadingOrgs || isLoadingActive;
+	const prevStateRef = useRef<{
+		isLoading: boolean;
+		organizationsCount: number;
+		hasActiveOrg: boolean;
+		activeOrgName?: string;
+	} | null>(null);
+
+	useEffect(() => {
+		const currentState = {
+			isLoading,
+			organizationsCount: organizations.length,
+			hasActiveOrg: !!activeOrganization,
+			activeOrgName: activeOrganization?.name,
+		};
+
+		const prevState = prevStateRef.current;
+		if (
+			!prevState ||
+			prevState.isLoading !== currentState.isLoading ||
+			prevState.organizationsCount !== currentState.organizationsCount ||
+			prevState.hasActiveOrg !== currentState.hasActiveOrg ||
+			prevState.activeOrgName !== currentState.activeOrgName
+		) {
+			console.log("[OrganizationSelector] State changed:", currentState);
+			prevStateRef.current = currentState;
+		}
+	}, [isLoading, organizations.length, activeOrganization]);
 
 	const handleSelectOrganization = async (organizationId: string | null) => {
 		if (organizationId === activeOrganization?.id) {

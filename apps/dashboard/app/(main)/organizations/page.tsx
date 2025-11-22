@@ -1,7 +1,7 @@
 "use client";
 
-import { authClient } from "@databuddy/auth/client";
 import { Suspense } from "react";
+import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OrganizationsList } from "./components/organizations-list";
@@ -37,12 +37,8 @@ function OrganizationsSkeleton() {
 }
 
 export default function OrganizationsPage() {
-	const { data: organizations, isPending: isOrganizationsPending } =
-		authClient.useListOrganizations();
-	const { data: activeOrganization, isPending: isActiveOrganizationPending } =
-		authClient.useActiveOrganization();
-
-	const isLoading = isOrganizationsPending || isActiveOrganizationPending;
+	const { organizations, activeOrganization, isLoading } =
+		useOrganizationsContext();
 
 	return (
 		<div className="flex h-full flex-col">

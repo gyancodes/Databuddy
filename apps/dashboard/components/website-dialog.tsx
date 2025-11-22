@@ -1,6 +1,5 @@
 "use client";
 
-import { authClient } from "@databuddy/auth/client";
 import type { InferSelectModel, websites } from "@databuddy/db";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
@@ -8,6 +7,7 @@ import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -70,7 +70,7 @@ export function WebsiteDialog({
 	onSave,
 }: WebsiteDialogProps) {
 	const isEditing = !!website;
-	const { data: activeOrganization } = authClient.useActiveOrganization();
+	const { activeOrganization } = useOrganizationsContext();
 	const formRef = useRef<HTMLFormElement>(null);
 
 	const createWebsiteMutation = useCreateWebsite();
