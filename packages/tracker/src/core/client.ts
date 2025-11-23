@@ -47,6 +47,19 @@ export class HttpClient {
 		options: RequestInit = {},
 		retryCount = 0
 	): Promise<T | null> {
+		if (retryCount === 0 && typeof navigator !== "undefined" && navigator.sendBeacon && options.keepalive) {
+			try {
+				const blob = new Blob([JSON.stringify(data ?? {})], {
+					type: "application/json",
+				});
+				if (navigator.sendBeacon(url, blob)) {
+					return { success: true } as any;
+				}
+			} catch (e) {
+				console.error("Error sending beacon", e);
+			}
+		}
+
 		try {
 			const fetchOptions: RequestInit = {
 				method: "POST",

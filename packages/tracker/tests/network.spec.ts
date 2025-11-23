@@ -83,4 +83,49 @@ test.describe("Network & Batching", () => {
 		expect(payload.find((e: any) => e.name === "event1")).toBeTruthy();
 		expect(payload.find((e: any) => e.name === "event2")).toBeTruthy();
 	});
+
+	test("tries sendBeacon first for single events", async ({ page, browserName }) => {
+		// WebKit issue with intercepting beacons in some versions
+		test.skip(browserName === "webkit", "WebKit beacon interception issues");
+
+		await page.route("**/basket.databuddy.cc/*", async (route) => {
+			await route.fulfill({
+				status: 200,
+				body: JSON.stringify({ success: true }),
+			});
+		});
+
+		await page.goto("/test");
+		await page.evaluate(() => {
+			(window as any).databuddyConfig = {
+				clientId: "test-beacon",
+				ignoreBotDetection: true,
+				enableBatching: false,
+			};
+		});
+		await page.addScriptTag({ url: "/dist/databuddy.js" });
+
+		// We need to check if the request was made via beacon
+		// Playwright doesn't easily expose the transport method directly in req.method(),
+		// but beacons are usually POST. The key difference is headers/type.
+		// However, we can spy on navigator.sendBeacon
+		const beaconCalled = await page.evaluate(async () => {
+			let called = false;
+			const originalBeacon = navigator.sendBeacon;
+			navigator.sendBeacon = (url, data) => {
+				called = true;
+				return originalBeacon.call(navigator, url, data);
+			};
+
+			if ((window as any).db) {
+				await (window as any).db.track("beacon_event");
+			}
+
+			// Restore
+			navigator.sendBeacon = originalBeacon;
+			return called;
+		});
+
+		expect(beaconCalled).toBe(true);
+	});
 });

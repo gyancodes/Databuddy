@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { file, hash } from "bun";
+import { file, hash, spawn } from "bun";
 import chalk from "chalk";
 import { Command } from "commander";
 
@@ -14,6 +14,7 @@ program
 	.option("-f, --force", "Force upload even if hash matches")
 	.option("-m, --message <text>", "Add a note to the deployment notification")
 	.option("--skip-notification", "Skip sending Discord notification")
+	.option("--skip-tests", "Skip running E2E tests before deployment")
 	.option("-p, --purge", "Only purge cache, skip deployment")
 	.option("-v, --verbose", "Enable verbose logging")
 	.parse(process.argv);
@@ -24,6 +25,7 @@ const options = program.opts<{
 	force: boolean;
 	message?: string;
 	skipNotification?: boolean;
+	skipTests?: boolean;
 	purge?: boolean;
 	verbose: boolean;
 }>();
@@ -54,6 +56,42 @@ const DIST_DIR = join(import.meta.dir, "dist");
 
 function getHash(content: string): string {
 	return hash(content).toString();
+}
+
+async function runTests() {
+	console.log(chalk.blue("\n🧪 Running tests before deployment..."));
+	const testProcess = spawn(["bun", "run", "test:e2e"], {
+		stdout: "inherit",
+		stderr: "inherit",
+		cwd: import.meta.dir,
+	});
+
+	const exitCode = await testProcess.exited;
+
+	if (exitCode !== 0) {
+		console.error(chalk.red("\n❌ Tests failed! Deployment aborted."));
+		process.exit(exitCode);
+	}
+
+	console.log(chalk.green("✅ Tests passed!"));
+}
+
+async function runBuild() {
+	console.log(chalk.blue("\n🛠️  Building project..."));
+	const buildProcess = spawn(["bun", "run", "build"], {
+		stdout: "inherit",
+		stderr: "inherit",
+		cwd: import.meta.dir,
+	});
+
+	const exitCode = await buildProcess.exited;
+
+	if (exitCode !== 0) {
+		console.error(chalk.red("\n❌ Build failed! Deployment aborted."));
+		process.exit(exitCode);
+	}
+
+	console.log(chalk.green("✅ Build successful!"));
 }
 
 async function fetchRemoteHash(filename: string): Promise<string | null> {
@@ -113,7 +151,7 @@ async function uploadFile(
 	if (options.dryRun) {
 		console.log(
 			chalk.cyan(`[DRY RUN] Would upload ${chalk.bold(filename)}`) +
-				chalk.dim(` (${size.toFixed(2)} KB) to ${url}`)
+			chalk.dim(` (${size.toFixed(2)} KB) to ${url}`)
 		);
 		return { filename, status: "dry-run", size };
 	}
@@ -238,6 +276,11 @@ async function purgePullZoneCache() {
 
 async function deploy() {
 	try {
+		if (!(options.skipTests || options.dryRun)) {
+			await runBuild();
+			await runTests();
+		}
+
 		const files = await readdir(DIST_DIR);
 		const jsFiles = files.filter(
 			(f) => f.endsWith(".js") || f.endsWith(".map")

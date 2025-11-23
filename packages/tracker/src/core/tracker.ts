@@ -216,6 +216,25 @@ export class BaseTracker {
 			logger.log("Tracking skipped: Bot detected");
 			return true;
 		}
+
+		if (this.options.skipPatterns) {
+			const pathname = window.location.pathname;
+			for (const pattern of this.options.skipPatterns) {
+				if (pattern === pathname) {
+					logger.log("Tracking skipped: path matches skipPattern", pattern);
+					return true;
+				}
+				const starIndex = pattern.indexOf("*");
+				if (starIndex !== -1) {
+					const prefix = pattern.substring(0, starIndex);
+					if (pathname.startsWith(prefix)) {
+						logger.log("Tracking skipped: path matches skipPattern", pattern);
+						return true;
+					}
+				}
+			}
+		}
+
 		return false;
 	}
 
@@ -348,16 +367,10 @@ export class BaseTracker {
 		logger.log("Flushing batch", batchEvents.length);
 
 		try {
-			const beaconResult = await this.sendBatchBeacon(batchEvents);
-			if (beaconResult) {
-				logger.log("Batch sent via beacon");
-				return beaconResult;
-			}
-
 			const result = await this.api.fetch("/batch", batchEvents, {
 				keepalive: true,
 			});
-			logger.log("Batch sent via fetch", result);
+			logger.log("Batch sent", result);
 			return result;
 		} catch (_error) {
 			logger.error("Batch failed, retrying individually", _error);
@@ -366,53 +379,5 @@ export class BaseTracker {
 			}
 			return null;
 		}
-	}
-
-	sendBatchBeacon(events: any[]) {
-		if (this.isServer() || !navigator.sendBeacon || !this.options.clientId) {
-			return null;
-		}
-		try {
-			const url = `${this.api.baseUrl}/batch?client_id=${encodeURIComponent(this.options.clientId)}&sdk_name=${encodeURIComponent(this.options.sdk || "web")}&sdk_version=${encodeURIComponent(this.options.sdkVersion || "2.0.0")}`;
-			const blob = new Blob([JSON.stringify(events)], {
-				type: "application/json",
-			});
-			if (navigator.sendBeacon(url, blob)) {
-				return { success: true };
-			}
-		} catch (_error) {
-			// ignore
-		}
-		return null;
-	}
-
-	sendBeacon(event: any) {
-		if (this.isServer()) {
-			return null;
-		}
-		try {
-			const eventData = event;
-			if (this.shouldSkipTracking()) {
-				return null;
-			}
-
-			const url = new URL("/", this.api.baseUrl);
-			if (this.options.clientId) {
-				url.searchParams.set("client_id", this.options.clientId);
-			}
-			url.searchParams.set("sdk_name", this.options.sdk || "web");
-			url.searchParams.set("sdk_version", this.options.sdkVersion || "2.0.0");
-
-			const blob = new Blob([JSON.stringify(eventData)], {
-				type: "application/json",
-			});
-			if (navigator.sendBeacon(url.toString(), blob)) {
-				logger.log("Event sent via beacon", eventData);
-				return { success: true };
-			}
-		} catch (_error) {
-			// ignore
-		}
-		return null;
 	}
 }
