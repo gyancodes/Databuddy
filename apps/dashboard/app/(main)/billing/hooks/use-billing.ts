@@ -1,26 +1,29 @@
+import { useQuery } from "@tanstack/react-query";
 import type { Customer, CustomerProduct } from "autumn-js";
 import { useCustomer, usePricingTable } from "autumn-js/react";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import AttachDialog from "@/components/autumn/attach-dialog";
+import { useOrganizations } from "@/hooks/use-organizations";
+import { orpc } from "@/lib/orpc";
 import {
 	calculateFeatureUsage,
 	type FeatureUsage,
 } from "../utils/feature-usage";
-
 
 export type Usage = {
 	features: FeatureUsage[];
 };
 
 export type { Customer, CustomerInvoice as Invoice } from "autumn-js";
+export type { CustomerWithPaymentMethod } from "../types/billing";
 
 export type CancelTarget = {
 	id: string;
 	name: string;
 	currentPeriodEnd?: number;
-}
+};
 
 export function useBilling(refetch?: () => void) {
 	const { attach, cancel, check, track, openBillingPortal } = useCustomer();
@@ -145,6 +148,7 @@ export function useBilling(refetch?: () => void) {
 }
 
 export function useBillingData() {
+	const { activeOrganization, isLoading: isOrgLoading } = useOrganizations();
 	const {
 		customer,
 		isLoading: isCustomerLoading,
@@ -160,6 +164,31 @@ export function useBillingData() {
 		refetch: refetchPricing,
 	} = usePricingTable();
 
+	const activeProduct = useMemo(
+		() =>
+			customer?.products?.find(
+				(p) =>
+					p.status === "active" ||
+					(p.canceled_at && dayjs(p.current_period_end).isAfter(dayjs()))
+			),
+		[customer?.products]
+	);
+
+	const { data: realUsage } = useQuery({
+		...orpc.billing.getUsage.queryOptions({
+			input: {
+				startDate: activeProduct?.current_period_start
+					? dayjs(activeProduct.current_period_start).toISOString()
+					: undefined,
+				endDate: activeProduct?.current_period_end
+					? dayjs(activeProduct.current_period_end).toISOString()
+					: undefined,
+				organizationId: activeOrganization?.id ?? null,
+			},
+		}),
+		enabled: !!customer && !isOrgLoading,
+	});
+
 	const isLoading = isCustomerLoading || isPricingLoading;
 
 	const refetch = () => {
@@ -171,7 +200,19 @@ export function useBillingData() {
 
 	const usage: Usage = {
 		features: customer?.features
-			? Object.values(customer.features).map(calculateFeatureUsage)
+			? Object.values(customer.features).map((feature) => {
+				const calculated = calculateFeatureUsage(feature);
+				const isNegative = (feature.usage ?? 0) < 0;
+
+				if (
+					(isNegative || calculated.hasExtraCredits) &&
+					feature.name.toLowerCase().includes("event") &&
+					realUsage
+				) {
+					calculated.used = realUsage.totalEvents;
+				}
+				return calculated;
+			})
 			: [],
 	};
 
