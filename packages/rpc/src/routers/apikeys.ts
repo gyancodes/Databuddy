@@ -1,52 +1,42 @@
-import { randomBytes, scryptSync } from "node:crypto";
 import { websitesApi } from "@databuddy/auth";
-import {
-	and,
-	apikey,
-	apikeyAccess,
-	desc,
-	eq,
-	type InferInsertModel,
-	type InferSelectModel,
-	isNull,
-	sql,
-} from "@databuddy/db";
+import { and, apikey, desc, eq, type InferSelectModel, isNull } from "@databuddy/db";
 import { ORPCError } from "@orpc/server";
-import { customAlphabet, nanoid } from "nanoid";
+import { createKeys, hasAllScopes, hasAnyScope, hasScope, isExpired } from "keypal";
 import { z } from "zod";
-import { logger } from "../lib/logger";
 import type { Context } from "../orpc";
 import { protectedProcedure } from "../orpc";
 
-type ApiScope = InferSelectModel<typeof apikey>["scopes"][number];
+const keys = createKeys({ prefix: "dbdy_", length: 48 });
 
-const API_SCOPE_VALUES = [
+export { keys };
+
+type ApiKey = InferSelectModel<typeof apikey>;
+type ApiScope = ApiKey["scopes"][number];
+type Metadata = { resources?: Record<string, string[]> };
+
+export const API_SCOPES = [
 	"read:data",
 	"write:data",
 	"read:experiments",
 	"track:events",
 	"admin:apikeys",
-	// New scopes for core use cases
 	"read:analytics",
 	"write:custom-sql",
 	"read:export",
 	"write:otel",
-	// Administrative scopes
 	"admin:users",
 	"admin:organizations",
 	"admin:websites",
-	// Rate limiting and usage scopes
 	"rate:standard",
 	"rate:premium",
 	"rate:enterprise",
 ] as const;
 
-const API_RESOURCE_TYPE_VALUES = [
+export const RESOURCE_TYPES = [
 	"global",
 	"website",
 	"ab_experiment",
 	"feature_flag",
-	// New resource types for data categories
 	"analytics_data",
 	"error_data",
 	"web_vitals",
@@ -54,680 +44,389 @@ const API_RESOURCE_TYPE_VALUES = [
 	"export_data",
 ] as const;
 
+const scopeEnum = z.enum(API_SCOPES);
+const resourcesSchema = z.record(z.string(), z.array(scopeEnum));
+
 const accessEntrySchema = z.object({
-	resourceType: z.enum(API_RESOURCE_TYPE_VALUES),
+	resourceType: z.string(),
 	resourceId: z.string().optional(),
-	scopes: z.array(z.enum(API_SCOPE_VALUES)).default([]),
+	scopes: z.array(scopeEnum),
 });
 
-const jsonValue: z.ZodType<unknown> = z.lazy(() =>
-	z.union([
-		z.string(),
-		z.number(),
-		z.boolean(),
-		z.null(),
-		z.array(jsonValue),
-		z.record(z.string(), jsonValue),
-	])
-);
-
-const createApiKeySchema = z.object({
+const createSchema = z.object({
 	name: z.string().min(1).max(100),
 	organizationId: z.string().optional(),
-	type: z.enum(["user", "sdk", "automation"]).optional(),
-	globalScopes: z.array(z.enum(API_SCOPE_VALUES)).default([]),
+	type: z.enum(["user", "sdk", "automation"]).default("user"),
+	globalScopes: z.array(scopeEnum).default([]),
 	access: z.array(accessEntrySchema).default([]),
-	rateLimitEnabled: z.boolean().optional(),
-	rateLimitTimeWindow: z.number().int().positive().optional(),
-	rateLimitMax: z.number().int().positive().optional(),
 	expiresAt: z.string().optional(),
-	metadata: z.record(z.string(), jsonValue).optional(),
+	rateLimit: z
+		.object({
+			enabled: z.boolean().default(true),
+			max: z.number().int().positive().optional(),
+			window: z.number().int().positive().optional(),
+		})
+		.optional(),
 });
 
-const updateApiKeySchema = z.object({
+const updateSchema = z.object({
 	id: z.string(),
 	name: z.string().min(1).max(100).optional(),
 	enabled: z.boolean().optional(),
-	rateLimitEnabled: z.boolean().optional(),
-	rateLimitTimeWindow: z.number().int().positive().optional(),
-	rateLimitMax: z.number().int().positive().optional(),
+	scopes: z.array(scopeEnum).optional(),
+	resources: resourcesSchema.optional(),
 	expiresAt: z.string().nullable().optional(),
-	metadata: z.record(z.string(), jsonValue).optional(),
+	rateLimit: z
+		.object({
+			enabled: z.boolean().optional(),
+			max: z.number().int().positive().optional(),
+			window: z.number().int().positive().optional(),
+		})
+		.optional(),
 });
 
-const setAccessListSchema = z.object({
-	apikeyId: z.string(),
-	access: z.array(accessEntrySchema),
-});
+const getMeta = (key: ApiKey): Metadata => (key.metadata as Metadata) ?? {};
 
-const addOrUpdateAccessSchema = accessEntrySchema.extend({
-	apikeyId: z.string(),
-});
-
-const removeAccessSchema = z.object({
-	apikeyId: z.string(),
-	resourceType: z.enum(API_RESOURCE_TYPE_VALUES),
-	resourceId: z.string().optional(),
-});
-
-const rotateApiKeySchema = z.object({ id: z.string() });
-
-const resolveAccessSchema = z.object({
-	apikeyId: z.string(),
-	resourceType: z.enum(API_RESOURCE_TYPE_VALUES),
-	resourceId: z.string().optional(),
-});
-
-const generateKeyMaterial = () => {
-	const alphabet =
-		"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-	const nano = customAlphabet(alphabet, 48);
-	const prefix = "dbdy";
-	const secret = `${prefix}_${nano()}`;
-	const start = secret.slice(0, 8);
-	return { secret, prefix, start } as const;
-};
-
-const hashSecretScrypt = (secret: string) => {
-	const salt = randomBytes(16);
-	const derived = scryptSync(secret, salt, 64);
-	return `scrypt:${salt.toString("base64")}:${derived.toString("base64")}`;
-};
-
-async function assertOrgPermission(
-	ctx: Context & { user: NonNullable<Context["user"]> },
-	requiredScopes: string[] = []
-) {
-	if (ctx.user.role === "ADMIN") {
-		logger.info("Organization permission granted via admin role", {
-			userId: ctx.user.id,
-			requiredScopes,
-		});
-		return;
+function resourcesToAccess(resources: Record<string, string[]> | undefined) {
+	if (!resources) {
+		return [];
 	}
-
-	const { success } = await websitesApi.hasPermission({
-		headers: ctx.headers,
-		body: { permissions: { website: ["configure"] } },
-	});
-
-	if (!success) {
-		logger.warn("Organization permission denied", {
-			userId: ctx.user.id,
-			requiredScopes,
-			reason: "User lacks organization-level configure permission",
-		});
-		throw new ORPCError("FORBIDDEN", {
-			message:
-				"Missing organization permissions. You need configure access to manage organization API keys.",
-		});
-	}
-
-	logger.info("Organization permission granted", {
-		userId: ctx.user.id,
-		requiredScopes,
-		source: "website_configure_permission",
+	return Object.entries(resources).map(([key, scopes], idx) => {
+		const isGlobal = key === "global";
+		const [resourceType, resourceId] = isGlobal ? ["global", null] : key.split(":");
+		return {
+			id: `access-${idx}`,
+			resourceType: resourceType ?? "global",
+			resourceId: resourceId ?? null,
+			scopes,
+		};
 	});
 }
 
-function assertUserOwnershipOrAdmin(
-	ctx: Context & { user: NonNullable<Context["user"]> },
-	userId: string | null
-) {
-	if (ctx.user.role === "ADMIN") {
-		logger.info("User ownership check bypassed via admin role", {
-			adminUserId: ctx.user.id,
-			targetUserId: userId,
-		});
-		return;
+function accessToResources(access: Array<{ resourceType: string; resourceId?: string; scopes: string[] }>) {
+	const resources: Record<string, string[]> = {};
+	for (const entry of access) {
+		const key = entry.resourceType === "global" ? "global" : `${entry.resourceType}:${entry.resourceId}`;
+		resources[key] = entry.scopes;
 	}
-	if (!userId || userId !== ctx.user.id) {
-		logger.warn("User ownership check failed", {
-			requestingUserId: ctx.user.id,
-			targetUserId: userId,
-			reason: userId ? "Ownership mismatch" : "No user ID provided",
-		});
-		throw new ORPCError("FORBIDDEN", {
-			message: "Not authorized. You can only manage your own API keys.",
-		});
-	}
-
-	logger.debug("User ownership check passed", {
-		userId: ctx.user.id,
-		targetUserId: userId,
-	});
+	return resources;
 }
 
-async function assertCanManageKey(
-	ctx: Context & { user: NonNullable<Context["user"]> },
-	key: InferSelectModel<typeof apikey>
-) {
+async function assertCanManage(ctx: Context & { user: NonNullable<Context["user"]> }, key: ApiKey) {
+	if (ctx.user.role === "ADMIN") {
+		return;
+	}
 	if (key.organizationId) {
-		// Organization API key - requires organization permissions
-		await assertOrgPermission(ctx, ["admin:apikeys"]);
-		logger.info("Organization API key management authorized", {
-			apikeyId: key.id,
-			organizationId: key.organizationId,
-			userId: ctx.user.id,
-			scopes: key.scopes,
+		const { success } = await websitesApi.hasPermission({
+			headers: ctx.headers,
+			body: { permissions: { website: ["configure"] } },
 		});
-		return;
+		if (!success) {
+			throw new ORPCError("FORBIDDEN", { message: "Missing organization permissions" });
+		}
+	} else if (key.userId !== ctx.user.id) {
+		throw new ORPCError("FORBIDDEN", { message: "Not authorized to manage this key" });
 	}
-
-	// Personal API key - user must own it or be admin
-	assertUserOwnershipOrAdmin(ctx, key.userId ?? null);
-	logger.info("Personal API key management authorized", {
-		apikeyId: key.id,
-		ownerUserId: key.userId,
-		requestingUserId: ctx.user.id,
-		scopes: key.scopes,
-	});
 }
 
-async function fetchKeyOrThrow(
-	ctx: Context & { user: NonNullable<Context["user"]> },
-	id: string
-) {
-	const existing = await ctx.db.query.apikey.findFirst({
-		where: eq(apikey.id, id),
-	});
-	if (!existing) {
+async function getKey(ctx: Context & { user: NonNullable<Context["user"]> }, id: string) {
+	const key = await ctx.db.query.apikey.findFirst({ where: eq(apikey.id, id) });
+	if (!key) {
 		throw new ORPCError("NOT_FOUND", { message: "API key not found" });
 	}
-	return existing;
+	return key;
+}
+
+function getScopes(key: ApiKey, resource?: string): ApiScope[] {
+	const scopes = new Set<ApiScope>(key.scopes);
+	const resources = getMeta(key).resources;
+
+	if (resources) {
+		for (const s of resources.global ?? []) {
+			scopes.add(s as ApiScope);
+		}
+		if (resource && resources[resource]) {
+			for (const s of resources[resource]) {
+				scopes.add(s as ApiScope);
+			}
+		}
+	}
+
+	return [...scopes];
+}
+
+function checkValidity(key: ApiKey): { valid: boolean; reason?: string } {
+	if (!key.enabled) {
+		return { valid: false, reason: "disabled" };
+	}
+	if (key.revokedAt) {
+		return { valid: false, reason: "revoked" };
+	}
+	if (isExpired(key.expiresAt)) {
+		return { valid: false, reason: "expired" };
+	}
+	return { valid: true };
+}
+
+function mapKeyToResponse(key: ApiKey, includeDetails = false) {
+	const base = {
+		id: key.id,
+		name: key.name,
+		prefix: key.prefix,
+		start: key.start,
+		type: key.type,
+		enabled: key.enabled,
+		scopes: key.scopes,
+		expiresAt: key.expiresAt,
+		revokedAt: key.revokedAt,
+		createdAt: key.createdAt,
+		updatedAt: key.updatedAt,
+	};
+
+	if (includeDetails) {
+		return {
+			...base,
+			access: resourcesToAccess(getMeta(key).resources),
+			rateLimit: {
+				enabled: key.rateLimitEnabled,
+				max: key.rateLimitMax,
+				window: key.rateLimitTimeWindow,
+			},
+		};
+	}
+
+	return base;
 }
 
 export const apikeysRouter = {
 	list: protectedProcedure
 		.input(z.object({ organizationId: z.string().optional() }).default({}))
 		.handler(async ({ context, input }) => {
-			try {
-				const rows = await context.db
-					.select()
-					.from(apikey)
-					.where(
-						input.organizationId
-							? eq(apikey.organizationId, input.organizationId)
-							: and(
-									eq(apikey.userId, context.user.id),
-									isNull(apikey.organizationId)
-								)
-					)
-					.orderBy(desc(apikey.createdAt));
+			const rows = await context.db
+				.select()
+				.from(apikey)
+				.where(
+					input.organizationId
+						? eq(apikey.organizationId, input.organizationId)
+						: and(eq(apikey.userId, context.user.id), isNull(apikey.organizationId))
+				)
+				.orderBy(desc(apikey.createdAt));
 
-				return rows.map((row) => ({
-					id: row.id,
-					name: row.name,
-					prefix: row.prefix,
-					start: row.start,
-					type: row.type,
-					enabled: row.enabled,
-					revokedAt: row.revokedAt,
-					expiresAt: row.expiresAt,
-					scopes: row.scopes,
-					rateLimitEnabled: row.rateLimitEnabled,
-					rateLimitTimeWindow: row.rateLimitTimeWindow,
-					rateLimitMax: row.rateLimitMax,
-					createdAt: row.createdAt,
-					updatedAt: row.updatedAt,
-					metadata: row.metadata,
-				}));
-			} catch (error: unknown) {
-				logger.error("Failed to list API keys", {
-					error: error instanceof Error ? error : new Error(String(error)),
-					userId: context.user.id,
-					organizationId: input.organizationId,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to list API keys",
-				});
-			}
+			return rows.map((r) => mapKeyToResponse(r));
 		}),
 
 	getById: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
-			try {
-				const key = await context.db.query.apikey.findFirst({
-					where: eq(apikey.id, input.id),
-				});
-				if (!key) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "API key not found",
-					});
-				}
-				await assertCanManageKey(context, key);
-
-				const access = await context.db
-					.select()
-					.from(apikeyAccess)
-					.where(eq(apikeyAccess.apikeyId, input.id));
-
-				return {
-					id: key.id,
-					name: key.name,
-					prefix: key.prefix,
-					start: key.start,
-					type: key.type,
-					enabled: key.enabled,
-					revokedAt: key.revokedAt,
-					expiresAt: key.expiresAt,
-					scopes: key.scopes,
-					rateLimitEnabled: key.rateLimitEnabled,
-					rateLimitTimeWindow: key.rateLimitTimeWindow,
-					rateLimitMax: key.rateLimitMax,
-					createdAt: key.createdAt,
-					updatedAt: key.updatedAt,
-					metadata: key.metadata,
-					access,
-				};
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to fetch API key", {
-					error: error instanceof Error ? error.message : String(error),
-					id: input.id,
-					userId: context.user.id,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to fetch API key",
-				});
-			}
+			const key = await getKey(context, input.id);
+			await assertCanManage(context, key);
+			return mapKeyToResponse(key, true);
 		}),
 
-	create: protectedProcedure
-		.input(createApiKeySchema)
-		.handler(async ({ context, input }) => {
-			const nowIso = new Date();
-			const { secret, prefix, start } = generateKeyMaterial();
-			const keyHash = hashSecretScrypt(secret);
+	create: protectedProcedure.input(createSchema).handler(async ({ context, input }) => {
+		try {
+			const { key: secret, record } = await keys.create({
+				ownerId: input.organizationId ?? context.user.id,
+				name: input.name,
+				scopes: input.globalScopes,
+				expiresAt: input.expiresAt ?? null,
+			});
 
-			try {
-				const [created] = await context.db
-					.insert(apikey)
-					.values({
-						id: nanoid(),
-						name: input.name,
-						prefix,
-						start,
-						key: secret,
-						keyHash,
-						userId: input.organizationId ? null : context.user.id,
-						organizationId: input.organizationId ?? null,
-						type: input.type ?? "user",
-						scopes: input.globalScopes,
-						enabled: true,
-						rateLimitEnabled: input.rateLimitEnabled ?? true,
-						rateLimitTimeWindow: input.rateLimitTimeWindow,
-						rateLimitMax: input.rateLimitMax,
-						expiresAt: input.expiresAt ?? null,
-						metadata: input.metadata ?? {},
-						createdAt: nowIso,
-						updatedAt: nowIso,
-					})
-					.returning();
+			const resources = accessToResources(input.access);
+			const now = new Date();
+			const [created] = await context.db
+				.insert(apikey)
+				.values({
+					id: record.id,
+					name: input.name,
+					prefix: secret.split("_")[0] ?? "dbdy",
+					start: secret.slice(0, 8),
+					keyHash: record.keyHash,
+					userId: input.organizationId ? null : context.user.id,
+					organizationId: input.organizationId ?? null,
+					type: input.type,
+					scopes: input.globalScopes,
+					enabled: true,
+					rateLimitEnabled: input.rateLimit?.enabled ?? true,
+					rateLimitMax: input.rateLimit?.max,
+					rateLimitTimeWindow: input.rateLimit?.window,
+					expiresAt: input.expiresAt ?? null,
+					metadata: { resources },
+					createdAt: now,
+					updatedAt: now,
+				})
+				.returning();
 
-				if (input.access.length > 0) {
-					const accessRows: InferInsertModel<typeof apikeyAccess>[] =
-						input.access.map((a) => ({
-							id: nanoid(),
-							apikeyId: created.id,
-							resourceType: a.resourceType,
-							resourceId: a.resourceId ?? null,
-							scopes: a.scopes,
-							createdAt: nowIso,
-							updatedAt: nowIso,
-						}));
-					await context.db.insert(apikeyAccess).values(accessRows);
-				}
+			return { id: created.id, secret, prefix: created.prefix, start: created.start };
+		} catch (error) {
+			console.error("API key creation failed:", error);
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: error instanceof Error ? error.message : "Failed to create API key",
+			});
+		}
+	}),
 
-				logger.info("API key created", {
-					apikeyId: created.id,
-					userId: context.user.id,
-					organizationId: input.organizationId,
-				});
+	update: protectedProcedure.input(updateSchema).handler(async ({ context, input }) => {
+		const key = await getKey(context, input.id);
+		await assertCanManage(context, key);
 
-				return {
-					id: created.id,
-					secret,
-					prefix: created.prefix,
-					start: created.start,
-				};
-			} catch (error) {
-				logger.error("Failed to create API key", {
-					error: error instanceof Error ? error.message : String(error),
-					userId: context.user.id,
-					organizationId: input.organizationId,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to create API key",
-				});
-			}
-		}),
+		const updates: Record<string, unknown> = { updatedAt: new Date() };
 
-	update: protectedProcedure
-		.input(updateApiKeySchema)
-		.handler(async ({ context, input }) => {
-			try {
-				const key = await context.db.query.apikey.findFirst({
-					where: eq(apikey.id, input.id),
-				});
-				if (!key) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "API key not found",
-					});
-				}
-				await assertCanManageKey(context, key);
-				const [updated] = await context.db
-					.update(apikey)
-					.set({
-						name: input.name ?? key.name,
-						enabled: input.enabled ?? key.enabled,
-						rateLimitEnabled: input.rateLimitEnabled ?? key.rateLimitEnabled,
-						rateLimitTimeWindow:
-							input.rateLimitTimeWindow ?? key.rateLimitTimeWindow,
-						rateLimitMax: input.rateLimitMax ?? key.rateLimitMax,
-						expiresAt:
-							input.expiresAt === undefined
-								? key.expiresAt
-								: (input.expiresAt as string | null),
-						metadata: input.metadata ?? key.metadata,
-						updatedAt: new Date(),
-					})
-					.where(eq(apikey.id, input.id))
-					.returning();
+		if (input.name) {
+			updates.name = input.name;
+		}
+		if (input.enabled !== undefined) {
+			updates.enabled = input.enabled;
+		}
+		if (input.scopes) {
+			updates.scopes = input.scopes;
+		}
+		if (input.expiresAt !== undefined) {
+			updates.expiresAt = input.expiresAt;
+		}
+		if (input.rateLimit?.enabled !== undefined) {
+			updates.rateLimitEnabled = input.rateLimit.enabled;
+		}
+		if (input.rateLimit?.max !== undefined) {
+			updates.rateLimitMax = input.rateLimit.max;
+		}
+		if (input.rateLimit?.window !== undefined) {
+			updates.rateLimitTimeWindow = input.rateLimit.window;
+		}
+		if (input.resources) {
+			updates.metadata = { ...getMeta(key), resources: input.resources };
+		}
 
-				return updated;
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to update API key", {
-					error: error instanceof Error ? error.message : String(error),
-					id: input.id,
-					userId: context.user.id,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to update API key",
-				});
-			}
-		}),
+		const [updated] = await context.db
+			.update(apikey)
+			.set(updates)
+			.where(eq(apikey.id, input.id))
+			.returning();
+
+		return { id: updated.id, name: updated.name, enabled: updated.enabled };
+	}),
 
 	revoke: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
-			try {
-				const key = await context.db.query.apikey.findFirst({
-					where: eq(apikey.id, input.id),
-				});
-				if (!key) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "API key not found",
-					});
-				}
-				await assertCanManageKey(context, key);
-				await context.db
-					.update(apikey)
-					.set({
-						enabled: false,
-						revokedAt: new Date(),
-						updatedAt: new Date(),
-					})
-					.where(eq(apikey.id, input.id));
-				return { success: true };
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to revoke API key", {
-					error: error instanceof Error ? error.message : String(error),
-					id: input.id,
-					userId: context.user.id,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to revoke API key",
-				});
-			}
+			const key = await getKey(context, input.id);
+			await assertCanManage(context, key);
+
+			await context.db
+				.update(apikey)
+				.set({ enabled: false, revokedAt: new Date(), updatedAt: new Date() })
+				.where(eq(apikey.id, input.id));
+
+			return { success: true };
 		}),
 
 	rotate: protectedProcedure
-		.input(rotateApiKeySchema)
+		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
-			const { secret, prefix, start } = generateKeyMaterial();
-			const keyHash = hashSecretScrypt(secret);
-			try {
-				const key = await context.db.query.apikey.findFirst({
-					where: eq(apikey.id, input.id),
-				});
-				if (!key) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "API key not found",
-					});
-				}
-				await assertCanManageKey(context, key);
-				const [updated] = await context.db
-					.update(apikey)
-					.set({
-						prefix,
-						start,
-						key: secret,
-						keyHash,
-						updatedAt: new Date(),
-					})
-					.where(eq(apikey.id, input.id))
-					.returning();
+			const key = await getKey(context, input.id);
+			await assertCanManage(context, key);
 
-				logger.info("API key rotated", {
-					apikeyId: updated.id,
-					userId: context.user.id,
-				});
-				return {
-					id: updated.id,
-					secret,
-					prefix: updated.prefix,
-					start: updated.start,
-				};
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to rotate API key", {
-					error: error instanceof Error ? error.message : String(error),
-					id: input.id,
-					userId: context.user.id,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to rotate API key",
-				});
-			}
-		}),
+			const { key: secret, record } = await keys.create({
+				ownerId: key.organizationId ?? key.userId ?? context.user.id,
+				name: key.name,
+				scopes: key.scopes,
+				expiresAt: key.expiresAt ?? null,
+			});
 
-	setAccessList: protectedProcedure
-		.input(setAccessListSchema)
-		.handler(async ({ context, input }) => {
-			try {
-				const key = await fetchKeyOrThrow(context, input.apikeyId);
-				await assertCanManageKey(context, key);
+			const [updated] = await context.db
+				.update(apikey)
+				.set({
+					prefix: secret.split("_")[0] ?? "dbdy",
+					start: secret.slice(0, 8),
+					keyHash: record.keyHash,
+					updatedAt: new Date(),
+				})
+				.where(eq(apikey.id, input.id))
+				.returning();
 
-				await context.db.transaction(async (tx) => {
-					await tx
-						.delete(apikeyAccess)
-						.where(eq(apikeyAccess.apikeyId, input.apikeyId));
-					if (input.access.length > 0) {
-						const now = new Date();
-						const rows: InferInsertModel<typeof apikeyAccess>[] =
-							input.access.map((a) => ({
-								id: nanoid(),
-								apikeyId: input.apikeyId,
-								resourceType: a.resourceType,
-								resourceId: a.resourceId ?? null,
-								scopes: a.scopes,
-								createdAt: now,
-								updatedAt: now,
-							}));
-						await tx.insert(apikeyAccess).values(rows);
-					}
-				});
-				return { success: true };
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to set access list", {
-					error: error instanceof Error ? error.message : String(error),
-					apikeyId: input.apikeyId,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to set access list",
-				});
-			}
-		}),
-
-	addOrUpdateAccess: protectedProcedure
-		.input(addOrUpdateAccessSchema)
-		.handler(async ({ context, input }) => {
-			try {
-				const key = await fetchKeyOrThrow(context, input.apikeyId);
-				await assertCanManageKey(context, key);
-				const now = new Date();
-				const [row] = await context.db
-					.insert(apikeyAccess)
-					.values({
-						id: nanoid(),
-						apikeyId: input.apikeyId,
-						resourceType: input.resourceType,
-						resourceId: input.resourceId ?? null,
-						scopes: input.scopes,
-						createdAt: now,
-						updatedAt: now,
-					})
-					.onConflictDoUpdate({
-						target: [
-							apikeyAccess.apikeyId,
-							apikeyAccess.resourceType,
-							apikeyAccess.resourceId,
-						],
-						set: { scopes: input.scopes, updatedAt: now },
-					})
-					.returning();
-				return row;
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to upsert access entry", {
-					error: error instanceof Error ? error.message : String(error),
-					apikeyId: input.apikeyId,
-					resourceType: input.resourceType,
-					resourceId: input.resourceId ?? null,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to upsert access entry",
-				});
-			}
-		}),
-
-	removeAccess: protectedProcedure
-		.input(removeAccessSchema)
-		.handler(async ({ context, input }) => {
-			try {
-				const key = await fetchKeyOrThrow(context, input.apikeyId);
-				await assertCanManageKey(context, key);
-				await context.db
-					.delete(apikeyAccess)
-					.where(
-						and(
-							eq(apikeyAccess.apikeyId, input.apikeyId),
-							eq(apikeyAccess.resourceType, input.resourceType),
-							input.resourceId
-								? eq(apikeyAccess.resourceId, input.resourceId)
-								: sql`1=1`
-						)
-					);
-				return { success: true };
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to remove access entry", {
-					error: error instanceof Error ? error.message : String(error),
-					apikeyId: input.apikeyId,
-					resourceType: input.resourceType,
-					resourceId: input.resourceId ?? null,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to remove access entry",
-				});
-			}
+			return { id: updated.id, secret, prefix: updated.prefix, start: updated.start };
 		}),
 
 	delete: protectedProcedure
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
-			try {
-				const key = await fetchKeyOrThrow(context, input.id);
-				await assertCanManageKey(context, key);
-				await context.db.delete(apikey).where(eq(apikey.id, input.id));
-				return { success: true };
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to delete API key", {
-					error: error instanceof Error ? error.message : String(error),
-					id: input.id,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to delete API key",
-				});
-			}
+			const key = await getKey(context, input.id);
+			await assertCanManage(context, key);
+			await context.db.delete(apikey).where(eq(apikey.id, input.id));
+			return { success: true };
 		}),
 
-	resolveAccess: protectedProcedure
-		.input(resolveAccessSchema)
+	verify: protectedProcedure
+		.input(z.object({ secret: z.string(), resource: z.string().optional() }))
 		.handler(async ({ context, input }) => {
-			try {
-				const key = await fetchKeyOrThrow(context, input.apikeyId);
-				if (!key.enabled || key.revokedAt != null) {
-					return { enabled: false, scopes: [] as ApiScope[] };
-				}
-				await assertCanManageKey(context, key);
+			const keyHash = keys.hashKey(input.secret);
+			const key = await context.db.query.apikey.findFirst({
+				where: eq(apikey.keyHash, keyHash),
+			});
 
-				const entries = await context.db
-					.select()
-					.from(apikeyAccess)
-					.where(eq(apikeyAccess.apikeyId, input.apikeyId));
-
-				const effectiveScopes = new Set<ApiScope>();
-				for (const s of key.scopes) {
-					effectiveScopes.add(s as ApiScope);
-				}
-				for (const entry of entries) {
-					if (
-						entry.resourceType === "global" ||
-						(entry.resourceType === input.resourceType &&
-							(input.resourceId ?? null) === (entry.resourceId ?? null))
-					) {
-						for (const s of entry.scopes) {
-							effectiveScopes.add(s as ApiScope);
-						}
-					}
-				}
-				return { enabled: true, scopes: Array.from(effectiveScopes) };
-			} catch (error) {
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-				logger.error("Failed to resolve access", {
-					error: error instanceof Error ? error.message : String(error),
-					apikeyId: input.apikeyId,
-					resourceType: input.resourceType,
-					resourceId: input.resourceId ?? null,
-				});
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to resolve access",
-				});
+			if (!key) {
+				return { valid: false, reason: "invalid" };
 			}
+
+			const validity = checkValidity(key);
+			if (!validity.valid) {
+				return { valid: false, reason: validity.reason };
+			}
+
+			return {
+				valid: true,
+				keyId: key.id,
+				ownerId: key.organizationId ?? key.userId,
+				scopes: getScopes(key, input.resource),
+			};
+		}),
+
+	checkAccess: protectedProcedure
+		.input(
+			z.object({
+				apikeyId: z.string(),
+				scopes: z.array(scopeEnum).optional(),
+				resource: z.string().optional(),
+				mode: z.enum(["any", "all"]).default("any"),
+			})
+		)
+		.handler(async ({ context, input }) => {
+			const key = await getKey(context, input.apikeyId);
+			const validity = checkValidity(key);
+
+			if (!validity.valid) {
+				return { valid: false, reason: validity.reason, hasAccess: false, scopes: [] };
+			}
+
+			const scopes = getScopes(key, input.resource);
+
+			if (!input.scopes?.length) {
+				return { valid: true, hasAccess: true, scopes };
+			}
+
+			const checkFn = input.mode === "all" ? hasAllScopes : hasAnyScope;
+			return {
+				valid: true,
+				hasAccess: checkFn(scopes, input.scopes),
+				scopes,
+				matched: input.scopes.filter((s) => hasScope(scopes, s)),
+			};
+		}),
+
+	setResources: protectedProcedure
+		.input(z.object({ id: z.string(), resources: resourcesSchema }))
+		.handler(async ({ context, input }) => {
+			const key = await getKey(context, input.id);
+			await assertCanManage(context, key);
+
+			await context.db
+				.update(apikey)
+				.set({
+					metadata: { ...getMeta(key), resources: input.resources },
+					updatedAt: new Date(),
+				})
+				.where(eq(apikey.id, input.id));
+
+			return { success: true };
 		}),
 };

@@ -9,13 +9,11 @@ import {
 } from "@databuddy/rpc";
 import { logger } from "@databuddy/shared/logger";
 import cors from "@elysiajs/cors";
-import { cron } from "@elysiajs/cron";
 import { context } from "@opentelemetry/api";
 import { ORPCError, onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { autumnHandler } from "autumn-js/elysia";
 import { Elysia } from "elysia";
-import { performClickHouseBackup } from "./lib/clickhouse-backup";
 import {
 	endRequestSpan,
 	initTracing,
@@ -56,30 +54,6 @@ const app = new Elysia()
 			],
 		}),
 	)
-	.use(
-		cron({
-			name: "clickhouse-backup",
-			pattern: process.env.BACKUP_SCHEDULE ?? "0 0 * * *",
-			run: async () => {
-				try {
-					logger.info("Starting scheduled ClickHouse backup");
-					const result = await performClickHouseBackup();
-
-					if (result.success) {
-						logger.info(
-							`Scheduled backup completed successfully: ${result.backupName}`
-						);
-					} else {
-						logger.error(
-							`Scheduled backup failed: ${result.error}`,
-						);
-					}
-				} catch (error) {
-					logger.error({ error }, "Cron job failed to execute backup");
-				}
-			},
-		}),
-	)
 	.use(publicApi)
 	.use(health)
 	.onBeforeHandle(function startTrace({ request, path, store }) {
@@ -113,11 +87,15 @@ const app = new Elysia()
 						headers: request.headers,
 					});
 
+					if (!session?.user) {
+						return null;
+					}
+
 					return {
-						customerId: session?.user.id ?? undefined,
+						customerId: session.user.id,
 						customerData: {
-							name: session?.user.name ?? undefined,
-							email: session?.user.email ?? undefined,
+							name: session.user.name,
+							email: session.user.email,
 						},
 					};
 				} catch (error) {

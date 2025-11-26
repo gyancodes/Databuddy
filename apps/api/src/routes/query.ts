@@ -1,8 +1,13 @@
 import { auth } from "@databuddy/auth";
-import { and, apikeyAccess, db, eq, isNull, websites } from "@databuddy/db";
+import { and, db, eq, inArray, isNull, websites } from "@databuddy/db";
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import { Elysia, t } from "elysia";
-import { getApiKeyFromHeader, isApiKeyPresent } from "../lib/api-key";
+import {
+	getAccessibleWebsiteIds,
+	getApiKeyFromHeader,
+	hasGlobalAccess,
+	isApiKeyPresent,
+} from "../lib/api-key";
 import { record, setAttributes } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
 import { compileQuery, executeQuery } from "../query";
@@ -81,28 +86,15 @@ async function getAccessibleWebsites(request: Request) {
 	}
 
 	if (apiKey) {
-		// Check for global access first
-		const hasGlobalAccess = await db
-			.select({ count: apikeyAccess.apikeyId })
-			.from(apikeyAccess)
-			.where(
-				and(
-					eq(apikeyAccess.apikeyId, apiKey.id),
-					eq(apikeyAccess.resourceType, "global")
-				)
-			)
-			.limit(1);
-
-		if (hasGlobalAccess.length > 0) {
-			// Global access - return all websites for the API key's scope
+		if (hasGlobalAccess(apiKey)) {
 			const filter = apiKey.organizationId
 				? eq(websites.organizationId, apiKey.organizationId)
 				: apiKey.userId
 					? and(
-							eq(websites.userId, apiKey.userId),
-							isNull(websites.organizationId)
-						)
-					: eq(websites.id, ""); // No matches if no user/org
+						eq(websites.userId, apiKey.userId),
+						isNull(websites.organizationId)
+					)
+					: eq(websites.id, "");
 
 			return db
 				.select(baseSelect)
@@ -111,18 +103,15 @@ async function getAccessibleWebsites(request: Request) {
 				.orderBy((table) => table.createdAt);
 		}
 
-		// Specific website access - join with access table
+		const websiteIds = getAccessibleWebsiteIds(apiKey);
+		if (websiteIds.length === 0) {
+			return [];
+		}
+
 		return db
 			.select(baseSelect)
 			.from(websites)
-			.innerJoin(
-				apikeyAccess,
-				and(
-					eq(apikeyAccess.resourceId, websites.id),
-					eq(apikeyAccess.resourceType, "website"),
-					eq(apikeyAccess.apikeyId, apiKey.id)
-				)
-			)
+			.where(inArray(websites.id, websiteIds))
 			.orderBy((table) => table.createdAt);
 	}
 
@@ -423,12 +412,12 @@ function executeDynamicQuery(
 			parameterInput:
 				| string
 				| {
-						name: string;
-						start_date?: string;
-						end_date?: string;
-						granularity?: string;
-						id?: string;
-				  },
+					name: string;
+					start_date?: string;
+					end_date?: string;
+					granularity?: string;
+					id?: string;
+				},
 			dynamicRequest: DynamicQueryRequestType,
 			params: QueryParams,
 			siteId: string | undefined,

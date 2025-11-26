@@ -39,6 +39,7 @@
     "drizzle-orm": "^0.42.0",
     "elysia": "^1.4.16",
     "jszip": "^3.10.1",
+    "keypal": "^0.1.0",
     "zod": "catalog:"
   }
 }
