@@ -4,7 +4,7 @@ import { SuperJSON } from "superjson";
 
 const DEFAULT_OPTIONS: RedisOptions = {
 	connectTimeout: 10_000,
-	commandTimeout: 300,
+	commandTimeout: 5000,
 	retryStrategy: (times) => Math.min(times * 100, 3000),
 	maxRetriesPerRequest: 3,
 };

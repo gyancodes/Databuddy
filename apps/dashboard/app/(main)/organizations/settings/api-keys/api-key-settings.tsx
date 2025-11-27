@@ -38,7 +38,7 @@ function SkeletonRow() {
 function ApiKeysSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="divide-y border-b lg:border-b-0 lg:border-r">
+			<div className="divide-y border-b lg:border-r lg:border-b-0">
 				<SkeletonRow />
 				<SkeletonRow />
 				<SkeletonRow />
@@ -52,20 +52,16 @@ function ApiKeysSkeleton() {
 	);
 }
 
-function EmptyState({ onCreateNew }: { onCreateNew: () => void }) {
+function EmptyState() {
 	return (
 		<div className="flex h-full flex-col items-center justify-center p-8 text-center">
 			<div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
 				<KeyIcon className="text-primary" size={28} weight="duotone" />
 			</div>
 			<h3 className="mb-1 font-semibold text-lg">No API keys yet</h3>
-			<p className="mb-6 max-w-sm text-muted-foreground text-sm">
+			<p className="max-w-sm text-muted-foreground text-sm">
 				Create your first API key to start integrating with our platform
 			</p>
-			<Button onClick={onCreateNew}>
-				<PlusIcon className="mr-2" size={16} />
-				Create API Key
-			</Button>
 		</div>
 	);
 }
@@ -94,7 +90,9 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 	const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
 
 	const { data, isLoading, isError, refetch } = useQuery({
-		...orpc.apikeys.list.queryOptions({ input: { organizationId: organization.id } }),
+		...orpc.apikeys.list.queryOptions({
+			input: { organizationId: organization.id },
+		}),
 		refetchOnMount: true,
 		refetchOnReconnect: true,
 		staleTime: 0,
@@ -102,28 +100,32 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 
 	const items = data ?? [];
 	const activeCount = items.filter((k) => k.enabled && !k.revokedAt).length;
+	const isEmpty = items.length === 0;
 
 	if (isLoading) return <ApiKeysSkeleton />;
 	if (isError) return <ErrorState onRetry={refetch} />;
-	if (items.length === 0) return <EmptyState onCreateNew={() => setShowCreateDialog(true)} />;
 
 	return (
 		<>
 			<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-				{/* Keys List */}
-				<div className="flex flex-col border-b lg:border-b-0 lg:border-r">
-					<div className="flex-1 divide-y overflow-y-auto">
-						{items.map((apiKey) => (
-							<ApiKeyRow
-								apiKey={apiKey}
-								key={apiKey.id}
-								onSelect={(id) => {
-									setSelectedKeyId(id);
-									setShowDetailDialog(true);
-								}}
-							/>
-						))}
-					</div>
+				{/* Keys List / Empty State */}
+				<div className="flex flex-col border-b lg:border-r lg:border-b-0">
+					{isEmpty ? (
+						<EmptyState />
+					) : (
+						<div className="flex-1 divide-y overflow-y-auto">
+							{items.map((apiKey) => (
+								<ApiKeyRow
+									apiKey={apiKey}
+									key={apiKey.id}
+									onSelect={(id) => {
+										setSelectedKeyId(id);
+										setShowDetailDialog(true);
+									}}
+								/>
+							))}
+						</div>
+					)}
 				</div>
 
 				{/* Sidebar */}
@@ -135,22 +137,31 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 					</Button>
 
 					{/* Stats Card */}
-					<div className="flex items-center gap-3 rounded border bg-background p-4">
-						<div className="flex h-10 w-10 items-center justify-center rounded bg-primary/10">
-							<ShieldCheckIcon className="text-primary" size={20} weight="duotone" />
+					{!isEmpty && (
+						<div className="flex items-center gap-3 rounded border bg-background p-4">
+							<div className="flex h-10 w-10 items-center justify-center rounded bg-primary/10">
+								<ShieldCheckIcon
+									className="text-primary"
+									size={20}
+									weight="duotone"
+								/>
+							</div>
+							<div>
+								<p className="font-semibold tabular-nums">
+									{activeCount}{" "}
+									<span className="font-normal text-muted-foreground">
+										/ {items.length}
+									</span>
+								</p>
+								<p className="text-muted-foreground text-sm">Active keys</p>
+							</div>
 						</div>
-						<div>
-							<p className="font-semibold tabular-nums">
-								{activeCount} <span className="font-normal text-muted-foreground">/ {items.length}</span>
-							</p>
-							<p className="text-muted-foreground text-sm">Active keys</p>
-						</div>
-					</div>
+					)}
 
 					{/* Actions */}
 					<Button asChild className="w-full justify-start" variant="outline">
 						<a
-							href="https://www.databuddy.cc/docs/api-keys"
+							href="https://www.databuddy.cc/docs/getting-started"
 							rel="noopener noreferrer"
 							target="_blank"
 						>
@@ -163,7 +174,8 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 					<div className="mt-auto rounded border border-dashed bg-background/50 p-4">
 						<p className="mb-2 font-medium text-sm">Security reminder</p>
 						<p className="text-muted-foreground text-xs leading-relaxed">
-							Keep your API keys secure. Never share them publicly or commit them to version control.
+							Keep your API keys secure. Never share them publicly or commit
+							them to version control.
 						</p>
 					</div>
 				</aside>

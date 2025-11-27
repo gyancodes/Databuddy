@@ -13,8 +13,8 @@ import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWebsiteTransfer } from "@/hooks/use-website-transfer";
-import { cn } from "@/lib/utils";
 import type { Website } from "@/hooks/use-websites";
+import { cn } from "@/lib/utils";
 
 interface WebsiteItemProps {
 	website: Website;
@@ -47,7 +47,9 @@ function WebsiteItem({ website, selected, onClick }: WebsiteItemProps) {
 			/>
 			<div className="min-w-0 flex-1">
 				<p className="truncate text-sm">{website.name ?? website.domain}</p>
-				<p className="truncate text-muted-foreground text-xs">{website.domain}</p>
+				<p className="truncate text-muted-foreground text-xs">
+					{website.domain}
+				</p>
 			</div>
 		</button>
 	);
@@ -135,7 +137,9 @@ export function TransferAssets({ organizationId }: { organizationId: string }) {
 					className="mb-3 text-muted-foreground/50"
 					size={32}
 				/>
-				<p className="font-medium text-muted-foreground">No websites to transfer</p>
+				<p className="font-medium text-muted-foreground">
+					No websites to transfer
+				</p>
 				<p className="mt-1 text-muted-foreground/70 text-sm">
 					Add websites to your account or organization first
 				</p>
