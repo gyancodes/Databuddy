@@ -20,7 +20,7 @@ export function CreditCardDisplay({ customer }: CreditCardDisplayProps) {
 
 	if (!card) {
 		return (
-			<div className="flex aspect-[1.586/1] w-full flex-col items-center justify-center rounded-xl border border-dashed bg-background">
+			<div className="flex aspect-[1.586/1] w-full flex-col items-center justify-center rounded border border-dashed bg-muted/30">
 				<CreditCardIcon
 					className="mb-2 text-muted-foreground"
 					size={28}
@@ -41,68 +41,124 @@ export function CreditCardDisplay({ customer }: CreditCardDisplayProps) {
 	const brand = (card.brand || "card").toLowerCase();
 
 	return (
-		<div className="relative aspect-[1.586/1] w-full">
+		<div className="relative aspect-[1.586/1] w-full select-none">
+			{/* Card base */}
 			<div
 				className={cn(
-					"absolute inset-0 flex flex-col justify-between overflow-hidden rounded-xl p-4",
-					"bg-linear-to-tr from-foreground to-foreground/80 dark:from-zinc-800 dark:to-zinc-900",
-					"before:pointer-events-none before:absolute before:inset-0 before:z-1 before:rounded-[inherit] before:ring-1 before:ring-white/20 before:ring-inset"
+					"absolute inset-0 flex flex-col justify-between overflow-hidden rounded p-4",
+					"bg-[#0a0a0a]",
+					"ring-1 ring-white/[0.06] ring-inset"
 				)}
 			>
-				<div className="relative z-2 flex items-start justify-between">
-					<WifiHighIcon
-						className="rotate-90 text-white/80"
-						size={20}
-						weight="bold"
-					/>
-					<span className="font-semibold text-white/60 text-xs uppercase tracking-wider">
+				{/* Holographic strip */}
+				<div
+					className="pointer-events-none absolute top-0 right-0 h-full w-1/3 opacity-30"
+					style={{
+						background: `
+							linear-gradient(
+								115deg,
+								transparent 20%,
+								hsl(var(--primary) / 0.4) 35%,
+								rgba(139, 92, 246, 0.3) 45%,
+								rgba(6, 182, 212, 0.3) 55%,
+								hsl(var(--primary) / 0.4) 65%,
+								transparent 80%
+							)
+						`,
+					}}
+				/>
+
+				{/* Top row */}
+				<div className="relative z-10 flex items-start justify-between">
+					<div className="flex items-center gap-2.5">
+						{/* EMV Chip */}
+						<div className="relative flex h-8 w-10 items-center justify-center overflow-hidden rounded-sm bg-linear-to-br from-amber-200 via-amber-300 to-amber-400 shadow-sm">
+							<div className="absolute inset-0.5 rounded-[2px] bg-linear-to-br from-amber-100 to-amber-300 opacity-60" />
+							<div className="relative grid h-5 w-6 grid-cols-3 grid-rows-3 gap-px">
+								{Array.from({ length: 9 }).map((_, i) => (
+									<div
+										className="rounded-[1px] bg-amber-600/40"
+										key={i.toString()}
+									/>
+								))}
+							</div>
+						</div>
+						{/* Contactless */}
+						<WifiHighIcon
+							className="rotate-90 text-white/40"
+							size={18}
+							weight="bold"
+						/>
+					</div>
+					<span className="font-mono text-[10px] text-white/40 uppercase tracking-[0.25em]">
 						{brand}
 					</span>
 				</div>
 
-				<div className="relative z-2 flex flex-col gap-2">
+				{/* Bottom content */}
+				<div className="relative z-10 flex flex-col gap-3">
 					{showCardDetails ? (
 						<>
-							<div className="flex items-end gap-2">
-								<p className="font-semibold text-white/80 text-xs uppercase tracking-wide">
-									{cardHolder}
-								</p>
-								<p className="ml-auto font-semibold text-white/80 text-xs tabular-nums">
-									{expiration}
-								</p>
-							</div>
-							<div className="flex items-end justify-between gap-3">
-								<button
-									aria-label="Hide card details"
-									className="cursor-pointer font-semibold text-white tabular-nums tracking-wider transition-opacity hover:opacity-80"
-									onClick={() => setShowCardDetails(false)}
-									type="button"
-								>
-									{cardNumber}
-								</button>
-								<CardBrandLogo brand={brand} />
+							<button
+								aria-label="Hide card details"
+								className="w-fit cursor-pointer text-left font-mono text-[15px] text-white/90 tabular-nums tracking-[0.2em] transition-colors hover:text-white"
+								onClick={() => setShowCardDetails(false)}
+								type="button"
+							>
+								{cardNumber}
+							</button>
+							<div className="flex items-end justify-between">
+								<div className="flex flex-col">
+									<span className="text-[8px] text-white/30 uppercase tracking-wider">
+										Card Holder
+									</span>
+									<p className="font-medium text-white/70 text-xs uppercase tracking-wide">
+										{cardHolder}
+									</p>
+								</div>
+								<div className="flex items-end gap-4">
+									<div className="flex flex-col text-right">
+										<span className="text-[8px] text-white/30 uppercase tracking-wider">
+											Expires
+										</span>
+										<p className="font-mono text-white/70 text-xs tabular-nums">
+											{expiration}
+										</p>
+									</div>
+									<CardBrandLogo brand={brand} />
+								</div>
 							</div>
 						</>
 					) : (
 						<>
-							<div className="flex items-end gap-2">
-								<p className="font-semibold text-white/40 text-xs uppercase tracking-wide">
-									•••• ••••
-								</p>
-								<p className="ml-auto font-semibold text-white/40 text-xs tabular-nums">
-									••/••
-								</p>
-							</div>
-							<div className="flex items-end justify-between gap-3">
-								<button
-									aria-label="Show card details"
-									className="cursor-pointer font-semibold text-white/40 tabular-nums tracking-wider transition-opacity hover:opacity-80"
-									onClick={() => setShowCardDetails(true)}
-									type="button"
-								>
-									•••• •••• •••• ••••
-								</button>
-								<CardBrandLogo brand={brand} />
+							<button
+								aria-label="Show card details"
+								className="w-fit cursor-pointer text-left font-mono text-[15px] text-white/25 tabular-nums tracking-[0.2em] transition-colors hover:text-white/40"
+								onClick={() => setShowCardDetails(true)}
+								type="button"
+							>
+								•••• •••• •••• ••••
+							</button>
+							<div className="flex items-end justify-between">
+								<div className="flex flex-col">
+									<span className="text-[8px] text-white/30 uppercase tracking-wider">
+										Card Holder
+									</span>
+									<p className="font-medium text-white/25 text-xs uppercase tracking-wide">
+										•••• ••••
+									</p>
+								</div>
+								<div className="flex items-end gap-4">
+									<div className="flex flex-col text-right">
+										<span className="text-[8px] text-white/30 uppercase tracking-wider">
+											Expires
+										</span>
+										<p className="font-mono text-white/25 text-xs tabular-nums">
+											••/••
+										</p>
+									</div>
+									<CardBrandLogo brand={brand} />
+								</div>
 							</div>
 						</>
 					)}
@@ -115,7 +171,7 @@ export function CreditCardDisplay({ customer }: CreditCardDisplayProps) {
 function CardBrandLogo({ brand }: { brand: string }) {
 	if (brand === "visa") {
 		return (
-			<div className="flex h-6 w-10 items-center justify-center rounded bg-white/10 font-bold text-white text-xs italic">
+			<div className="flex h-6 w-10 items-center justify-center font-bold text-sm text-white/80 italic tracking-tight">
 				VISA
 			</div>
 		);
@@ -124,22 +180,22 @@ function CardBrandLogo({ brand }: { brand: string }) {
 		return (
 			<div className="flex h-6 w-10 items-center justify-center">
 				<div className="relative flex">
-					<div className="h-5 w-5 rounded-full bg-red-500/90" />
-					<div className="-ml-2 h-5 w-5 rounded-full bg-yellow-500/90" />
+					<div className="h-5 w-5 rounded-full bg-[#eb001b]" />
+					<div className="-ml-2.5 h-5 w-5 rounded-full bg-[#f79e1b] mix-blend-hard-light" />
 				</div>
 			</div>
 		);
 	}
 	if (brand === "amex") {
 		return (
-			<div className="flex h-6 w-10 items-center justify-center rounded bg-white/10 font-bold text-[8px] text-white">
+			<div className="flex h-6 w-10 items-center justify-center font-bold text-[#006fcf] text-[9px]">
 				AMEX
 			</div>
 		);
 	}
 	return (
-		<div className="flex h-6 w-10 items-center justify-center rounded bg-white/10">
-			<CreditCardIcon className="text-white/80" size={16} weight="duotone" />
+		<div className="flex h-6 w-10 items-center justify-center">
+			<CreditCardIcon className="text-white/50" size={18} weight="duotone" />
 		</div>
 	);
 }
