@@ -4,8 +4,10 @@
   "devDependencies": {
     "@biomejs/biome": "^2.3.7",
     "@types/bun": "latest",
+    "@types/node": "^24.10.1",
     "chalk": "^5.6.2",
     "dotenv-cli": "^10.0.0",
+    "knip": "^5.70.2",
     "turbo": "^2.6.1",
     "typescript": "^5.9.3",
     "ultracite": "^6.3.6"

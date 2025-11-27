@@ -1,104 +1,104 @@
 "use client";
 
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import {
 	BuildingsIcon,
 	EnvelopeIcon,
 	GearIcon,
 	GlobeIcon,
 	KeyIcon,
-	PlusIcon,
-	UserPlusIcon,
 	UsersIcon,
 	WarningIcon,
 } from "@phosphor-icons/react";
+import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrganizations } from "@/hooks/use-organizations";
+import {
+	activeOrganizationAtom,
+	isLoadingOrganizationsAtom,
+} from "@/stores/jotai/organizationsAtoms";
+
+type PageInfo = {
+	title: string;
+	description: string;
+	icon: PhosphorIcon;
+	requiresOrg?: boolean;
+};
+
+const PAGE_INFO_MAP: Record<string, PageInfo> = {
+	"/organizations": {
+		title: "Organizations",
+		description: "Manage your organizations and team collaboration",
+		icon: BuildingsIcon,
+	},
+	"/organizations/members": {
+		title: "Team Members",
+		description: "Manage team members and their roles",
+		icon: UsersIcon,
+		requiresOrg: true,
+	},
+	"/organizations/invitations": {
+		title: "Pending Invitations",
+		description: "View and manage pending team invitations",
+		icon: EnvelopeIcon,
+		requiresOrg: true,
+	},
+	"/organizations/settings": {
+		title: "General Settings",
+		description: "Manage organization name, slug, and basic settings",
+		icon: GearIcon,
+		requiresOrg: true,
+	},
+	"/organizations/settings/websites": {
+		title: "Website Management",
+		description: "Manage websites associated with this organization",
+		icon: GlobeIcon,
+		requiresOrg: true,
+	},
+	"/organizations/settings/api-keys": {
+		title: "API Keys",
+		description: "Create and manage API keys for this organization",
+		icon: KeyIcon,
+		requiresOrg: true,
+	},
+	"/organizations/settings/danger": {
+		title: "Danger Zone",
+		description: "Irreversible and destructive actions",
+		icon: WarningIcon,
+		requiresOrg: true,
+	},
+};
+
+const DEFAULT_PAGE_INFO: PageInfo = {
+	title: "Organizations",
+	description: "Manage your organizations and team collaboration",
+	icon: BuildingsIcon,
+};
 
 export function OrganizationProvider({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	const { activeOrganization, isLoading } = useOrganizations();
+	// Subscribe directly to atoms - no hook overhead
+	const activeOrganization = useAtomValue(activeOrganizationAtom);
+	const isLoading = useAtomValue(isLoadingOrganizationsAtom);
+
 	const pathname = usePathname();
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
 	const [showInviteMemberDialog, setShowInviteMemberDialog] = useState(false);
-
-	const getPageInfo = () => {
-		if (pathname === "/organizations") {
-			return {
-				title: "Organizations",
-				description: "Manage your organizations and team collaboration",
-				icon: BuildingsIcon,
-			};
-		}
-		if (pathname === "/organizations/members") {
-			return {
-				title: "Team Members",
-				description: "Manage team members and their roles",
-				icon: UsersIcon,
-				requiresOrg: true,
-			};
-		}
-		if (pathname === "/organizations/invitations") {
-			return {
-				title: "Pending Invitations",
-				description: "View and manage pending team invitations",
-				icon: EnvelopeIcon,
-				requiresOrg: true,
-			};
-		}
-		if (pathname === "/organizations/settings") {
-			return {
-				title: "General Settings",
-				description: "Manage organization name, slug, and basic settings",
-				icon: GearIcon,
-				requiresOrg: true,
-			};
-		}
-		if (pathname === "/organizations/settings/websites") {
-			return {
-				title: "Website Management",
-				description: "Manage websites associated with this organization",
-				icon: GlobeIcon,
-				requiresOrg: true,
-			};
-		}
-		if (pathname === "/organizations/settings/api-keys") {
-			return {
-				title: "API Keys",
-				description: "Create and manage API keys for this organization",
-				icon: KeyIcon,
-				requiresOrg: true,
-			};
-		}
-		if (pathname === "/organizations/settings/danger") {
-			return {
-				title: "Danger Zone",
-				description: "Irreversible and destructive actions",
-				icon: WarningIcon,
-				requiresOrg: true,
-			};
-		}
-		return {
-			title: "Organizations",
-			description: "Manage your organizations and team collaboration",
-			icon: BuildingsIcon,
-		};
-	};
 
 	const {
 		title,
 		description,
 		icon: Icon,
 		requiresOrg,
-	} = getPageInfo();
+	} = useMemo(() => PAGE_INFO_MAP[pathname] ?? DEFAULT_PAGE_INFO, [pathname]);
 
 	if (isLoading) {
 		return (
