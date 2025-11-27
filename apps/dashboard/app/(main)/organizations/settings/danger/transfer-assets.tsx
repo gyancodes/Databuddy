@@ -16,11 +16,11 @@ import { useWebsiteTransfer } from "@/hooks/use-website-transfer";
 import type { Website } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 
-interface WebsiteItemProps {
+type WebsiteItemProps = {
 	website: Website;
 	selected: boolean;
 	onClick: () => void;
-}
+};
 
 function WebsiteItem({ website, selected, onClick }: WebsiteItemProps) {
 	return (
@@ -55,7 +55,11 @@ function WebsiteItem({ website, selected, onClick }: WebsiteItemProps) {
 	);
 }
 
-function EmptyList({ label }: { label: string }) {
+type EmptyListProps = {
+	label: string;
+};
+
+function EmptyList({ label }: EmptyListProps) {
 	return (
 		<div className="flex flex-col items-center justify-center py-8 text-center">
 			<GlobeIcon className="mb-2 text-muted-foreground/50" size={24} />
@@ -84,7 +88,11 @@ function LoadingSkeleton() {
 	);
 }
 
-export function TransferAssets({ organizationId }: { organizationId: string }) {
+type TransferAssetsProps = {
+	organizationId: string;
+};
+
+export function TransferAssets({ organizationId }: TransferAssetsProps) {
 	const {
 		personalWebsites,
 		organizationWebsites,

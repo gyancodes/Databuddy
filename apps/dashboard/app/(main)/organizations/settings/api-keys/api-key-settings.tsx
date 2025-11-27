@@ -17,9 +17,9 @@ import type { Organization } from "@/hooks/use-organizations";
 import { orpc } from "@/lib/orpc";
 import { ApiKeyRow } from "./api-key-row";
 
-interface ApiKeySettingsProps {
+type ApiKeySettingsProps = {
 	organization: Organization;
-}
+};
 
 function SkeletonRow() {
 	return (
@@ -102,8 +102,12 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 	const activeCount = items.filter((k) => k.enabled && !k.revokedAt).length;
 	const isEmpty = items.length === 0;
 
-	if (isLoading) return <ApiKeysSkeleton />;
-	if (isError) return <ErrorState onRetry={refetch} />;
+	if (isLoading) {
+		return <ApiKeysSkeleton />;
+	}
+	if (isError) {
+		return <ErrorState onRetry={refetch} />;
+	}
 
 	return (
 		<>
