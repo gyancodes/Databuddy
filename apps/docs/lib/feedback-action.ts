@@ -8,17 +8,39 @@ const client = new Databuddy({
     debug: process.env.NODE_ENV === "development",
 });
 
+const MAX_MESSAGE_LENGTH = 1000;
+const VALID_OPINIONS = ["good", "bad"] as const;
+
 export async function onRateDocs(
     url: string,
     feedback: Feedback
 ): Promise<ActionResponse> {
+
+    if (!VALID_OPINIONS.includes(feedback.opinion)) {
+        return { success: false, error: "Please select good or bad" };
+    }
+
+    if (typeof feedback.message !== "string") {
+        return { success: false, error: "Message is required" };
+    }
+
+    const trimmedMessage = feedback.message.trim();
+
+    if (trimmedMessage.length === 0) {
+        return { success: false, error: "Message cannot be empty" };
+    }
+
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+        return { success: false, error: `Message must be under ${MAX_MESSAGE_LENGTH} characters` };
+    }
+
     try {
         await client.track({
             name: "docs_feedback",
             properties: {
                 url,
                 opinion: feedback.opinion,
-                message: feedback.message,
+                message: trimmedMessage,
             },
         });
 
@@ -27,7 +49,7 @@ export async function onRateDocs(
         return { success: true };
     } catch (error) {
         console.error("Failed to capture docs feedback:", error);
-        return { success: false };
+        return { success: false, error: "Something went wrong. Please try again." };
     }
 }
 

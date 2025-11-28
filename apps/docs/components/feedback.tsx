@@ -31,6 +31,7 @@ export type Feedback = {
 
 export type ActionResponse = {
 	success: boolean;
+	error?: string;
 };
 
 interface Result extends Feedback {
@@ -46,6 +47,7 @@ export function Feedback({
 	const [previous, setPrevious] = useState<Result | null>(null);
 	const [opinion, setOpinion] = useState<"good" | "bad" | null>(null);
 	const [message, setMessage] = useState("");
+	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 
 	useEffect(() => {
@@ -72,6 +74,8 @@ export function Feedback({
 			return;
 		}
 
+		setError(null);
+
 		startTransition(() => {
 			const feedback: Feedback = {
 				opinion,
@@ -79,12 +83,16 @@ export function Feedback({
 			};
 
 			onRateAction(url, feedback).then((response) => {
-				setPrevious({
-					response,
-					...feedback,
-				});
-				setMessage("");
-				setOpinion(null);
+				if (response.success) {
+					setPrevious({
+						response,
+						...feedback,
+					});
+					setMessage("");
+					setOpinion(null);
+				} else {
+					setError(response.error ?? "Something went wrong");
+				}
 			});
 		});
 
@@ -154,6 +162,7 @@ export function Feedback({
 							onClick={() => {
 								setOpinion(previous.opinion);
 								setPrevious(null);
+								setError(null);
 							}}
 							type="button"
 						>
@@ -164,8 +173,18 @@ export function Feedback({
 					<form className="flex flex-col gap-3" onSubmit={submit}>
 						<textarea
 							autoFocus
-							className="resize-none rounded border border-border bg-muted/30 p-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50"
-							onChange={(e) => setMessage(e.target.value)}
+							className={cn(
+								"resize-none rounded border bg-muted/30 p-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1",
+								error
+									? "border-red-500 focus-visible:ring-red-500/50"
+									: "border-border focus-visible:ring-primary/50"
+							)}
+							onChange={(e) => {
+								setMessage(e.target.value);
+								if (error) {
+									setError(null);
+								}
+							}}
 							onKeyDown={(e) => {
 								if (!e.shiftKey && e.key === "Enter") {
 									submit(e);
@@ -175,6 +194,7 @@ export function Feedback({
 							required
 							value={message}
 						/>
+						{error && <p className="text-red-500 text-sm">{error}</p>}
 						<button
 							className={cn(
 								buttonVariants({ variant: "outline" }),
