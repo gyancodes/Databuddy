@@ -235,8 +235,8 @@ export class SimpleQueryBuilder {
 				${buildSessionFieldsSelect(timeField)}
 			FROM ${table}
 			WHERE client_id = {websiteId:String}
-				AND ${timeField} >= parseDateTimeBestEffort({${fromParam}:String})
-				AND ${timeField} <= parseDateTimeBestEffort(concat({${toParam}:String}, ' 23:59:59'))
+				AND ${timeField} >= toDateTime({${fromParam}:String})
+				AND ${timeField} <= toDateTime(concat({${toParam}:String}, ' 23:59:59'))
 				AND session_id != ''
 			GROUP BY session_id
 		)`;
@@ -385,10 +385,10 @@ export class SimpleQueryBuilder {
 			const timeField = this.config.timeField || "time";
 			whereConditions.push("client_id = {websiteId:String}");
 			whereConditions.push(
-				`${timeField} >= parseDateTimeBestEffort({from:String})`
+				`${timeField} >= toDateTime({from:String})`
 			);
 			whereConditions.push(
-				`${timeField} <= parseDateTimeBestEffort(concat({to:String}, ' 23:59:59'))`
+				`${timeField} <= toDateTime(concat({to:String}, ' 23:59:59'))`
 			);
 		}
 
@@ -542,8 +542,8 @@ export class SimpleQueryBuilder {
 			FROM ${table} e
 			${this.generateSessionAttributionJoin("e")}
 			WHERE e.client_id = {websiteId:String}
-				AND e.${timeField} >= parseDateTimeBestEffort({from:String})
-				AND e.${timeField} <= parseDateTimeBestEffort(concat({to:String}, ' 23:59:59'))
+				AND e.${timeField} >= toDateTime({from:String})
+				AND e.${timeField} <= toDateTime(concat({to:String}, ' 23:59:59'))
 				AND e.session_id != ''
 				AND ${additionalWhere}${finalWhereClause}
 		)
@@ -571,16 +571,16 @@ export class SimpleQueryBuilder {
 		if (!this.config.skipDateFilter) {
 			const timeField = this.config.timeField || "time";
 			whereClause.push(
-				`${timeField} >= parseDateTimeBestEffort({from:String})`
+				`${timeField} >= toDateTime({from:String})`
 			);
 
 			if (this.config.appendEndOfDayToTo !== false) {
 				whereClause.push(
-					`${timeField} <= parseDateTimeBestEffort(concat({to:String}, ' 23:59:59'))`
+					`${timeField} <= toDateTime(concat({to:String}, ' 23:59:59'))`
 				);
 			} else {
 				whereClause.push(
-					`${timeField} <= parseDateTimeBestEffort({to:String})`
+					`${timeField} <= toDateTime({to:String})`
 				);
 			}
 		}

@@ -187,6 +187,9 @@ export async function performClickHouseBackup(): Promise<BackupResult> {
             SETTINGS 
                 async = false,
                 s3_max_redirects = 10,
+                s3_retry_attempts = 5,
+                s3_max_put_rps = 100,
+                s3_max_put_burst = 50,
                 compression_method = 'zstd',
                 compression_level = 3,
                 max_backup_bandwidth = 104857600${baseBackupSetting}

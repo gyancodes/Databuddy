@@ -218,10 +218,10 @@ export const time: TimeFunctions = {
         expr(`toTimeZone(${field}, '${timezone}')`),
 
     parse: (paramName: string) =>
-        expr(`parseDateTimeBestEffort({${paramName}:String})`),
+        expr(`toDateTime({${paramName}:String})`),
 
     parseEndOfDay: (paramName: string) =>
-        expr(`parseDateTimeBestEffort(concat({${paramName}:String}, ' 23:59:59'))`),
+        expr(`toDateTime(concat({${paramName}:String}, ' 23:59:59'))`),
 };
 
 /**
@@ -451,16 +451,16 @@ export const where: WhereBuilder = {
         includeEndOfDay = true
     ) => {
         const conditions = [
-            `${timeField} >= parseDateTimeBestEffort({${startParam}:String})`,
+            `${timeField} >= toDateTime({${startParam}:String})`,
         ];
 
         if (includeEndOfDay) {
             conditions.push(
-                `${timeField} <= parseDateTimeBestEffort(concat({${endParam}:String}, ' 23:59:59'))`
+                `${timeField} <= toDateTime(concat({${endParam}:String}, ' 23:59:59'))`
             );
         } else {
             conditions.push(
-                `${timeField} <= parseDateTimeBestEffort({${endParam}:String})`
+                `${timeField} <= toDateTime({${endParam}:String})`
             );
         }
 
@@ -545,8 +545,8 @@ export const sessionAttribution: SessionAttributionBuilder = {
 				${sessionAttribution.selectFields(timeField).join(",\n\t\t\t\t")}
 			FROM ${table}
 			WHERE client_id = {websiteId:String}
-				AND ${timeField} >= parseDateTimeBestEffort({${startParam}:String})
-				AND ${timeField} <= parseDateTimeBestEffort(concat({${endParam}:String}, ' 23:59:59'))
+				AND ${timeField} >= toDateTime({${startParam}:String})
+				AND ${timeField} <= toDateTime(concat({${endParam}:String}, ' 23:59:59'))
 				AND session_id != ''
 			GROUP BY session_id
 		)`,
