@@ -1,4 +1,5 @@
 import { DocsBody, DocsPage, DocsTitle } from "fumadocs-ui/page";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DocsFooter } from "@/components/docs-footer";
 import { Feedback } from "@/components/feedback";
@@ -50,7 +51,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata(props: {
 	params: Promise<{ slug?: string[] }>;
-}) {
+}): Promise<Metadata> {
 	const params = await props.params;
 	const page = source.getPage(params.slug);
 	if (!page) {
