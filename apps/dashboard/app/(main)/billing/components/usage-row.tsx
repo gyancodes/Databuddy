@@ -53,11 +53,12 @@ export const UsageRow = memo(function UsageRowComponent({
 }: {
 	feature: FeatureUsage;
 }) {
-	const remainingPercent = feature.unlimited
-		? 100
-		: Math.min(Math.max((feature.balance / feature.limit) * 100, 0), 100);
+	const used = feature.limit - feature.balance;
+	const usedPercent = feature.unlimited
+		? 0
+		: Math.min(Math.max((used / feature.limit) * 100, 0), 100);
 	const hasNormalLimit = !(feature.unlimited || feature.hasExtraCredits);
-	const isLow = hasNormalLimit && remainingPercent < 20;
+	const isLow = hasNormalLimit && usedPercent > 80;
 	const hasOverage = feature.overage !== null;
 
 	const Icon = getFeatureIcon(feature.name);
@@ -110,9 +111,9 @@ export const UsageRow = memo(function UsageRowComponent({
 				) : feature.hasExtraCredits ? (
 					<div className="text-right">
 						<span className="font-mono text-base">
-							{formatCompactNumber(feature.balance)}
+							{formatCompactNumber(used)}
 						</span>
-						<div className="text-muted-foreground text-xs">remaining</div>
+						<div className="text-muted-foreground text-xs">used</div>
 					</div>
 				) : feature.overage ? (
 					<div className="text-right">
@@ -131,10 +132,9 @@ export const UsageRow = memo(function UsageRowComponent({
 								isLow ? "text-warning" : "text-foreground"
 							)}
 						>
-							{formatCompactNumber(feature.balance)} /{" "}
-							{formatCompactNumber(feature.limit)}
+							{formatCompactNumber(used)} / {formatCompactNumber(feature.limit)}
 						</span>
-						<div className="text-muted-foreground text-xs">remaining</div>
+						<div className="text-muted-foreground text-xs">used</div>
 					</div>
 				)}
 			</div>
@@ -151,7 +151,7 @@ export const UsageRow = memo(function UsageRowComponent({
 										? "bg-warning"
 										: "bg-primary"
 							)}
-							style={{ width: hasOverage ? "100%" : `${remainingPercent}%` }}
+							style={{ width: hasOverage ? "100%" : `${usedPercent}%` }}
 						/>
 					</div>
 					{(isLow || hasOverage) && (
