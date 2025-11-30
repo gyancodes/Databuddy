@@ -13,6 +13,7 @@ export class Databuddy extends BaseTracker {
 	private originalReplaceState: typeof history.replaceState | null = null;
 	private globalProperties: Record<string, unknown> = {};
 	private hasInitialized = false;
+	private hasSentExitBeacon = false;
 
 	constructor(options: TrackerOptions) {
 		super(options);
@@ -62,9 +63,7 @@ export class Databuddy extends BaseTracker {
 		}
 
 		this.trackScreenViews();
-		this.setupPageExitTracking();
-		this.setupVisibilityTracking();
-		this.setupBfCacheHandling();
+		this.setupPageLifecycle();
 
 		if (document.visibilityState === "visible") {
 			this.startEngagement();
@@ -160,10 +159,11 @@ export class Databuddy extends BaseTracker {
 		}
 
 		if (this.lastPath) {
-			this.trackPageExit();
+			this.trackPageExit(this.lastPath);
 			this.notifyRouteChange(window.location.pathname);
 		}
 
+		this.hasSentExitBeacon = false;
 		this.lastPath = url;
 		this.pageCount += 1;
 		this.resetPageEngagement();
@@ -173,84 +173,94 @@ export class Databuddy extends BaseTracker {
 		});
 	}
 
-	private setupPageExitTracking() {
-		const handleExit = () => this.sendPageExitBeacon();
-		window.addEventListener("beforeunload", handleExit);
-		window.addEventListener("pagehide", handleExit);
-		this.cleanupFns.push(() => {
-			window.removeEventListener("beforeunload", handleExit);
-			window.removeEventListener("pagehide", handleExit);
-		});
-	}
+	private setupPageLifecycle() {
+		const handleHide = () => this.handlePageHide();
+		const handleResume = () => this.handlePageResume();
 
-	private setupVisibilityTracking() {
-		const handler = () => {
+		window.addEventListener("beforeunload", handleHide);
+		window.addEventListener("pagehide", handleHide);
+
+		const visibilityHandler = () => {
 			if (document.visibilityState === "hidden") {
-				this.pauseEngagement();
-				this.sendPageExitBeacon();
+				handleHide();
 			} else {
-				this.startEngagement();
+				handleResume();
 			}
 		};
-		document.addEventListener("visibilitychange", handler);
-		this.cleanupFns.push(() =>
-			document.removeEventListener("visibilitychange", handler)
-		);
-	}
+		document.addEventListener("visibilitychange", visibilityHandler);
 
-	private setupBfCacheHandling() {
-		const handler = (event: PageTransitionEvent) => {
+		const pageshowHandler = (event: PageTransitionEvent) => {
 			if (!event.persisted) { return; }
-
-			this.resetEngagement();
-			this.startEngagement();
-
-			const sessionTimestamp = sessionStorage.getItem("did_session_timestamp");
-			if (sessionTimestamp) {
-				const sessionAge = Date.now() - Number.parseInt(sessionTimestamp, 10);
-				if (sessionAge >= 30 * 60 * 1000) {
-					this.sessionId = this.generateSessionId();
-					sessionStorage.setItem("did_session", this.sessionId);
-					sessionStorage.setItem(
-						"did_session_timestamp",
-						Date.now().toString()
-					);
-				}
-			}
-
-			this.notifyRouteChange(window.location.pathname);
-			this.lastPath = "";
-			this.screenView({ navigation_type: "back_forward_cache" });
+			this.handleBfCacheRestore();
 		};
-		window.addEventListener("pageshow", handler);
-		this.cleanupFns.push(() => window.removeEventListener("pageshow", handler));
-	}
+		window.addEventListener("pageshow", pageshowHandler);
 
-	private trackPageExit() {
-		this._trackInternal("page_exit", {
-			time_on_page: Math.round((Date.now() - this.pageStartTime) / 1000),
-			scroll_depth: this.maxScrollDepth,
-			interaction_count: this.interactionCount,
-			page_count: this.pageCount,
+		this.cleanupFns.push(() => {
+			window.removeEventListener("beforeunload", handleHide);
+			window.removeEventListener("pagehide", handleHide);
+			document.removeEventListener("visibilitychange", visibilityHandler);
+			window.removeEventListener("pageshow", pageshowHandler);
 		});
 	}
 
-	private sendPageExitBeacon() {
+	private handlePageHide() {
+		this.pauseEngagement();
+		if (this.hasSentExitBeacon) { return; }
+		this.hasSentExitBeacon = true;
+
+		const now = Date.now();
 		this.sendBatchBeacon([
 			{
 				eventId: generateUUIDv4(),
 				name: "page_exit",
 				anonymousId: this.anonymousId,
 				sessionId: this.sessionId,
-				timestamp: Date.now(),
+				timestamp: now,
 				...this.getBaseContext(),
 				...this.globalProperties,
-				time_on_page: Math.round((Date.now() - this.pageStartTime) / 1000),
+				time_on_page: Math.round((now - this.pageStartTime) / 1000),
 				scroll_depth: this.maxScrollDepth,
 				interaction_count: this.interactionCount,
 				page_count: this.pageCount,
 			},
 		]);
+	}
+
+	private handlePageResume() {
+		this.hasSentExitBeacon = false;
+		this.startEngagement();
+	}
+
+	private handleBfCacheRestore() {
+		this.hasSentExitBeacon = false;
+		this.resetEngagement();
+		this.startEngagement();
+
+		const sessionTimestamp = sessionStorage.getItem("did_session_timestamp");
+		if (sessionTimestamp) {
+			const sessionAge = Date.now() - Number.parseInt(sessionTimestamp, 10);
+			if (sessionAge >= 30 * 60 * 1000) {
+				this.sessionId = this.generateSessionId();
+				sessionStorage.setItem("did_session", this.sessionId);
+				sessionStorage.setItem("did_session_timestamp", Date.now().toString());
+			}
+		}
+
+		this.notifyRouteChange(window.location.pathname);
+		this.lastPath = "";
+		this.screenView({ navigation_type: "back_forward_cache" });
+	}
+
+	private trackPageExit(exitPath?: string) {
+		const now = Date.now();
+		this._trackInternal("page_exit", {
+			path: exitPath,
+			timestamp: now,
+			time_on_page: Math.round((now - this.pageStartTime) / 1000),
+			scroll_depth: this.maxScrollDepth,
+			interaction_count: this.interactionCount,
+			page_count: this.pageCount,
+		});
 	}
 
 	private resetPageEngagement() {
